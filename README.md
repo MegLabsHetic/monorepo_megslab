@@ -8,7 +8,8 @@ obtient des analyses sans ecrire de SQL.
 
 ```bash
 cp .env.example .env      # renseigner au moins une cle de fournisseur LLM
-docker compose up --build # front :3000 - back :8000 - swagger :8000/docs
+docker compose up --build # front :3001 - back :8000 - swagger :8000/docs
+# le port 3000 est remappe en 3001 car un autre service (Grafana) occupe deja le 3000 en local
 ```
 
 ## Commandes
