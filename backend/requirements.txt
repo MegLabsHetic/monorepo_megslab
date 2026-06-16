@@ -1,0 +1,13 @@
+# API
+fastapi==0.118.0
+uvicorn[standard]==0.37.0
+pydantic==2.11.9
+pydantic-settings==2.10.1
+python-multipart==0.0.20
+
+# Persistance
+SQLAlchemy[asyncio]==2.0.43
+aiosqlite==0.21.0
+
+# Divers
+python-dotenv==1.1.1
