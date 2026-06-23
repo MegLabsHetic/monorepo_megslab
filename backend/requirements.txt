@@ -8,6 +8,11 @@ python-multipart==0.0.20
 # Persistance
 SQLAlchemy[asyncio]==2.0.43
 aiosqlite==0.21.0
+alembic==1.13.3
+
+# Authentification
+argon2-cffi==23.1.0
+pyjwt==2.9.0
 
 # Divers
 python-dotenv==1.1.1
