@@ -2,10 +2,12 @@
 
 import jwt
 import pytest
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import get_settings
 from app.core.errors import ErreurUtilisateur
+from app.models.membership import Membership, Role
 from app.services.auth_service import AuthService
 
 
@@ -14,6 +16,17 @@ async def test_le_mot_de_passe_en_clair_n_est_jamais_stocke(db: AsyncSession) ->
     utilisateur = await service.inscrire("ada@example.com", "mot-de-passe-solide", "Ada")
 
     assert utilisateur.mot_de_passe_hache != "mot-de-passe-solide"
+
+
+async def test_l_inscription_cree_une_organisation_dont_l_utilisateur_est_owner(
+    db: AsyncSession,
+) -> None:
+    service = AuthService(db)
+    utilisateur = await service.inscrire("ada@example.com", "mot-de-passe-solide", "Ada")
+
+    resultat = await db.execute(select(Membership).where(Membership.user_id == utilisateur.id))
+    membership = resultat.scalar_one()
+    assert membership.role == Role.OWNER
 
 
 async def test_un_email_deja_utilise_est_refuse(db: AsyncSession) -> None:
