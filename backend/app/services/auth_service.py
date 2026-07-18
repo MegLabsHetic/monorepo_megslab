@@ -11,6 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.config import get_settings
 from app.core.errors import ErreurUtilisateur
 from app.models.user import User
+from app.services.organization_service import OrganizationService
 
 _hacheur = PasswordHasher()
 ALGORITHME_JWT = "HS256"
@@ -24,7 +25,12 @@ class AuthService:
         self._db = db
 
     async def inscrire(self, email: str, mot_de_passe: str, nom_complet: str) -> User:
-        """Cree un compte. Refuse si l'email est deja pris."""
+        """Cree un compte et son organisation par defaut, dans une seule transaction.
+
+        Un utilisateur sans organisation ne peut rien faire d'utile dans MegLabs
+        (aucune source de donnees n'existe hors d'une organisation) : les deux
+        naissent ensemble, ou ni l'un ni l'autre.
+        """
         existant = await self._trouver_par_email(email)
         if existant is not None:
             raise ErreurUtilisateur("Un compte existe deja avec cet email.", code_http=409)
@@ -35,6 +41,12 @@ class AuthService:
             nom_complet=nom_complet,
         )
         self._db.add(utilisateur)
+        await self._db.flush()  # attribue l'id de l'utilisateur sans cloturer la transaction
+
+        await OrganizationService(self._db).creer_avec_proprietaire(
+            nom=f"Espace de {nom_complet}", proprietaire=utilisateur
+        )
+
         await self._db.commit()
         await self._db.refresh(utilisateur)
         return utilisateur
