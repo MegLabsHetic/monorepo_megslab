@@ -1,5 +1,6 @@
 """Configuration de l'application, lue une fois depuis l'environnement."""
 
+import secrets
 from functools import lru_cache
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -12,6 +13,10 @@ class Settings(BaseSettings):
 
     cors_origins: str = "http://localhost:3000"
     database_url: str = "sqlite+aiosqlite:///./data/megslab.db"
+
+    # Vide par defaut : get_settings() genere un secret ephemere si absent, pour
+    # qu'un oubli en dev ne signe jamais les jetons avec une chaine vide.
+    jwt_secret: str = ""
 
     anthropic_api_key: str = ""
     openai_api_key: str = ""
@@ -27,6 +32,11 @@ def get_settings() -> Settings:
     """Point d'entree unique pour lire la configuration.
 
     Mise en cache volontaire : l'environnement ne change pas en cours de vie du
-    processus, pas besoin de relire le fichier .env a chaque appel.
+    processus, pas besoin de relire le fichier .env a chaque appel. Ca permet
+    aussi au secret JWT ephemere ci-dessous de rester stable pendant la vie du
+    processus, meme s'il n'est pas fourni.
     """
-    return Settings()
+    reglages = Settings()
+    if not reglages.jwt_secret:
+        reglages.jwt_secret = secrets.token_hex(32)
+    return reglages

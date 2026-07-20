@@ -1,9 +1,12 @@
 """Point d'entree de l'API. Cree l'application et branche les routes."""
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
+from app.api.auth import router as auth_router
 from app.core.config import get_settings
+from app.core.errors import ErreurUtilisateur
 
 
 def create_app() -> FastAPI:
@@ -19,9 +22,15 @@ def create_app() -> FastAPI:
         allow_headers=["*"],
     )
 
+    @app.exception_handler(ErreurUtilisateur)
+    async def gerer_erreur_utilisateur(_: Request, erreur: ErreurUtilisateur) -> JSONResponse:
+        return JSONResponse(status_code=erreur.code_http, content={"detail": erreur.message})
+
     @app.get("/health")
     async def health() -> dict[str, str]:
         return {"status": "ok"}
+
+    app.include_router(auth_router)
 
     return app
 
