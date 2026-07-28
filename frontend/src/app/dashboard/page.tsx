@@ -35,10 +35,12 @@ export default function PageTableauDeBord() {
   if (chargement) return null;
 
   return (
-    <main className="flex min-h-screen items-center justify-center px-4">
+    <main className="flex min-h-screen items-center justify-center bg-bg px-4">
       <Card className="max-w-sm text-center">
-        <h1 className="mb-2 text-xl font-semibold">Bonjour, {utilisateur?.nom_complet}</h1>
-        <p className="mb-6 text-sm text-zinc-500">{utilisateur?.email}</p>
+        <h1 className="mb-2 font-display text-xl font-semibold text-text">
+          Bonjour, {utilisateur?.nom_complet}
+        </h1>
+        <p className="mb-6 text-sm text-muted">{utilisateur?.email}</p>
         <Button variante="discret" onClick={deconnecter}>
           Se deconnecter
         </Button>
