@@ -3,6 +3,28 @@
 import { useEffect, useRef } from "react";
 import * as THREE from "three";
 
+/** Degrade radial blanc->transparent : la base d'un halo lumineux en sprite additif. */
+function _texturelueur(): THREE.Texture {
+  const taille = 128;
+  const canvas = document.createElement("canvas");
+  canvas.width = canvas.height = taille;
+  const contexte = canvas.getContext("2d")!;
+  const degrade = contexte.createRadialGradient(
+    taille / 2,
+    taille / 2,
+    0,
+    taille / 2,
+    taille / 2,
+    taille / 2
+  );
+  degrade.addColorStop(0, "rgba(255,255,255,1)");
+  degrade.addColorStop(0.4, "rgba(255,255,255,0.5)");
+  degrade.addColorStop(1, "rgba(255,255,255,0)");
+  contexte.fillStyle = degrade;
+  contexte.fillRect(0, 0, taille, taille);
+  return new THREE.CanvasTexture(canvas);
+}
+
 /**
  * Le "Data Core" : un losange filaire avec un nuage de points, tournant
  * lentement, qui reagit legerement au curseur. Composant isole expres (brief) :
@@ -37,7 +59,7 @@ export function DataCore() {
     groupe.add(filaire);
 
     // Le nuage de points : des donnees dispersees autour du losange.
-    const nombrePoints = 180;
+    const nombrePoints = 220;
     const positions = new Float32Array(nombrePoints * 3);
     for (let i = 0; i < nombrePoints; i++) {
       const rayon = 2.6 + Math.random() * 1.4;
@@ -54,6 +76,37 @@ export function DataCore() {
       new THREE.PointsMaterial({ color: 0x3fbfae, size: 0.035, transparent: true, opacity: 0.5 })
     );
     groupe.add(points);
+
+    // Des noeuds lumineux aux 6 sommets du losange (rayon 2, comme la geometrie
+    // ci-dessus) : un halo degrade en sprite additif, pas une vraie lumiere
+    // Three.js — le materiau du filaire ne reagit pas a l'eclairage, une
+    // PointLight resterait donc invisible ici.
+    const RAYON_LOSANGE = 2;
+    const positionsSommets: [number, number, number][] = [
+      [RAYON_LOSANGE, 0, 0],
+      [-RAYON_LOSANGE, 0, 0],
+      [0, RAYON_LOSANGE, 0],
+      [0, -RAYON_LOSANGE, 0],
+      [0, 0, RAYON_LOSANGE],
+      [0, 0, -RAYON_LOSANGE],
+    ];
+    const texture = _texturelueur();
+    const halos = positionsSommets.map(([x, y, z]) => {
+      const halo = new THREE.Sprite(
+        new THREE.SpriteMaterial({
+          map: texture,
+          color: 0x5fe0c8,
+          transparent: true,
+          opacity: 0.85,
+          blending: THREE.AdditiveBlending,
+          depthWrite: false,
+        })
+      );
+      halo.position.set(x, y, z);
+      halo.scale.setScalar(0.9);
+      groupe.add(halo);
+      return halo;
+    });
 
     let cibleX = 0;
     let cibleY = 0;
@@ -76,13 +129,22 @@ export function DataCore() {
     observateur.observe(conteneur);
 
     let idAnimation: number;
-    const animer = () => {
+    const animer = (temps: number) => {
       groupe.rotation.x += (cibleX - groupe.rotation.x) * 0.05;
       groupe.rotation.y += (cibleY - groupe.rotation.y + (reduireMouvement ? 0 : 0.003)) * 0.05;
+
+      if (!reduireMouvement) {
+        halos.forEach((halo, i) => {
+          const pulsation = 0.75 + 0.25 * Math.sin(temps / 900 + i * 1.3);
+          halo.scale.setScalar(0.7 + pulsation * 0.35);
+          (halo.material as THREE.SpriteMaterial).opacity = 0.5 + pulsation * 0.4;
+        });
+      }
+
       renderer.render(scene, camera);
       idAnimation = requestAnimationFrame(animer);
     };
-    animer();
+    idAnimation = requestAnimationFrame(animer);
 
     return () => {
       cancelAnimationFrame(idAnimation);
@@ -93,6 +155,8 @@ export function DataCore() {
       (filaire.material as THREE.Material).dispose();
       geometriePoints.dispose();
       (points.material as THREE.Material).dispose();
+      texture.dispose();
+      halos.forEach((halo) => (halo.material as THREE.Material).dispose());
       renderer.dispose();
     };
   }, []);
