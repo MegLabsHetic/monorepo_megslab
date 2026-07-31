@@ -6,6 +6,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
+import { SocialAuthButtons } from "@/components/auth/socialAuthButtons";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -44,6 +45,8 @@ export function SignupForm() {
 
   return (
     <form noValidate onSubmit={soumettre} className="flex flex-col gap-4">
+      <SocialAuthButtons />
+
       <div>
         <Label htmlFor="nom_complet">Nom complet</Label>
         <Input id="nom_complet" autoComplete="name" {...register("nom_complet")} />

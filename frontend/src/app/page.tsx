@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 
 import { DataCore } from "@/components/marketing/dataCore";
@@ -86,8 +87,17 @@ export default function Accueil() {
         </div>
       </section>
 
-      <footer className="border-t border-line px-6 py-8 text-center text-xs text-muted">
-        MegLabs — projet HETIC
+      <footer className="flex flex-col items-center gap-4 border-t border-line px-6 py-8 text-center text-xs text-muted">
+        <a
+          href="https://airbyte.com"
+          target="_blank"
+          rel="noreferrer"
+          className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1.5"
+        >
+          <span className="text-zinc-500">Connecteurs propulses par</span>
+          <Image src="/logos/airbyte.svg" alt="Airbyte" width={72} height={29} />
+        </a>
+        <p>MegLabs — projet HETIC</p>
       </footer>
     </main>
   );
