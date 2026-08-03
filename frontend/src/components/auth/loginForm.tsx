@@ -6,6 +6,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
+import { SocialAuthButtons } from "@/components/auth/socialAuthButtons";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -42,6 +43,8 @@ export function LoginForm() {
 
   return (
     <form noValidate onSubmit={soumettre} className="flex flex-col gap-4">
+      <SocialAuthButtons />
+
       <div>
         <Label htmlFor="email">Email</Label>
         <Input id="email" type="email" autoComplete="email" {...register("email")} />

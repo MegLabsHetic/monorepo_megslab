@@ -5,14 +5,16 @@ import { Card } from "@/components/ui/card";
 
 export default function PageConnexion() {
   return (
-    <main className="flex min-h-screen items-center justify-center px-4">
+    <main className="flex min-h-screen items-center justify-center bg-bg px-4">
       <Card className="max-w-sm">
-        <h1 className="mb-1 text-2xl font-semibold tracking-tight">Content de vous revoir</h1>
-        <p className="mb-6 text-sm text-zinc-500">Connectez-vous pour retrouver votre espace.</p>
+        <h1 className="mb-1 font-display text-2xl font-semibold tracking-tight text-text">
+          Content de vous revoir
+        </h1>
+        <p className="mb-6 text-sm text-muted">Connectez-vous pour retrouver votre espace.</p>
         <LoginForm />
-        <p className="mt-6 text-center text-sm text-zinc-500">
+        <p className="mt-6 text-center text-sm text-muted">
           Pas encore de compte ?{" "}
-          <Link href="/register" className="font-medium text-zinc-900 underline">
+          <Link href="/register" className="font-medium text-accent underline">
             Creer un compte
           </Link>
         </p>
