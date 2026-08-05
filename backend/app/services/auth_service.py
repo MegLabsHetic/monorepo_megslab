@@ -8,6 +8,7 @@ from argon2.exceptions import VerifyMismatchError
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.airbyte_client import AirbyteClient, get_airbyte_client
 from app.core.config import get_settings
 from app.core.errors import ErreurUtilisateur
 from app.models.user import User
@@ -21,15 +22,18 @@ DUREE_SESSION = timedelta(hours=12)
 class AuthService:
     """Une methode = une etape du parcours d'authentification."""
 
-    def __init__(self, db: AsyncSession) -> None:
+    def __init__(self, db: AsyncSession, airbyte_client: AirbyteClient | None = None) -> None:
         self._db = db
+        self._airbyte_client = airbyte_client or get_airbyte_client()
 
     async def inscrire(self, email: str, mot_de_passe: str, nom_complet: str) -> User:
         """Cree un compte et son organisation par defaut, dans une seule transaction.
 
         Un utilisateur sans organisation ne peut rien faire d'utile dans MegLabs
         (aucune source de donnees n'existe hors d'une organisation) : les deux
-        naissent ensemble, ou ni l'un ni l'autre.
+        naissent ensemble, ou ni l'un ni l'autre. Si le workspace Airbyte ne
+        peut pas etre cree, on annule tout plutot que de laisser un compte a
+        moitie forme.
         """
         existant = await self._trouver_par_email(email)
         if existant is not None:
@@ -43,9 +47,13 @@ class AuthService:
         self._db.add(utilisateur)
         await self._db.flush()  # attribue l'id de l'utilisateur sans cloturer la transaction
 
-        await OrganizationService(self._db).creer_avec_proprietaire(
-            nom=f"Espace de {nom_complet}", proprietaire=utilisateur
-        )
+        try:
+            await OrganizationService(self._db, self._airbyte_client).creer_avec_proprietaire(
+                nom=f"Espace de {nom_complet}", proprietaire=utilisateur
+            )
+        except Exception:
+            await self._db.rollback()
+            raise
 
         await self._db.commit()
         await self._db.refresh(utilisateur)

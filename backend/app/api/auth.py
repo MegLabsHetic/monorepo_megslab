@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import utilisateur_courant
+from app.core.airbyte_client import AirbyteClient, get_airbyte_client
 from app.core.database import get_db
 from app.models.user import User
 from app.schemas.auth import (
@@ -18,8 +19,12 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 
 
 @router.post("/inscription", response_model=UtilisateurReponse, status_code=201)
-async def inscription(demande: InscriptionDemande, db: AsyncSession = Depends(get_db)):
-    service = AuthService(db)
+async def inscription(
+    demande: InscriptionDemande,
+    db: AsyncSession = Depends(get_db),
+    airbyte_client: AirbyteClient = Depends(get_airbyte_client),
+):
+    service = AuthService(db, airbyte_client)
     return await service.inscrire(demande.email, demande.mot_de_passe, demande.nom_complet)
 
 

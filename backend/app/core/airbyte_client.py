@@ -5,8 +5,11 @@ workspace (et quoi faire si Airbyte est injoignable) appartient a l'appelant.
 """
 
 from datetime import UTC, datetime, timedelta
+from functools import lru_cache
 
 import httpx
+
+from app.core.config import get_settings
 
 MARGE_EXPIRATION = timedelta(seconds=60)
 
@@ -61,3 +64,11 @@ class AirbyteClient:
         self._jeton = corps["access_token"]
         duree = timedelta(seconds=corps.get("expires_in", 3600)) - MARGE_EXPIRATION
         self._expire_le = datetime.now(UTC) + duree
+
+
+@lru_cache
+def get_airbyte_client() -> AirbyteClient:
+    reglages = get_settings()
+    return AirbyteClient(
+        reglages.airbyte_base_url, reglages.airbyte_client_id, reglages.airbyte_client_secret
+    )

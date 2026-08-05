@@ -2,14 +2,22 @@
 
 import secrets
 from functools import lru_cache
+from pathlib import Path
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+# Le .env vit a la racine du depot, pas dans backend/. Un chemin relatif au
+# repertoire courant casse des qu'on lance uvicorn depuis backend/ (le cas
+# local le plus courant) : on resout depuis l'emplacement de ce fichier a la
+# place. Docker Compose n'en a pas besoin, il injecte deja de vraies variables
+# d'environnement, silencieusement ignorees si ce fichier n'existe pas.
+_RACINE_DEPOT = Path(__file__).resolve().parents[3]
 
 
 class Settings(BaseSettings):
     """Variables d'environnement du backend, avec des valeurs par defaut sures."""
 
-    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+    model_config = SettingsConfigDict(env_file=_RACINE_DEPOT / ".env", extra="ignore")
 
     cors_origins: str = "http://localhost:3000"
     database_url: str = "sqlite+aiosqlite:///./data/megslab.db"
@@ -21,6 +29,10 @@ class Settings(BaseSettings):
     anthropic_api_key: str = ""
     openai_api_key: str = ""
     groq_api_key: str = ""
+
+    airbyte_base_url: str = ""
+    airbyte_client_id: str = ""
+    airbyte_client_secret: str = ""
 
     @property
     def cors_origins_list(self) -> list[str]:
