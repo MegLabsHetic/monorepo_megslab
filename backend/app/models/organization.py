@@ -2,8 +2,11 @@
 
 `airbyte_workspace_id` fait le lien avec le workspace Airbyte cree pour cette
 organisation (une organisation = un workspace, pour que les identifiants de
-connexion d'une equipe ne soient jamais visibles d'une autre). Nul tant que le
-provisioning cote Airbyte n'a pas encore eu lieu.
+connexion d'une equipe ne soient jamais visibles d'une autre).
+
+`airbyte_destination_id` pointe vers l'entrepot partage (une seule base
+Postgres pour toutes les organisations), mais dans le schema propre a cette
+organisation : l'isolation des donnees se fait par schema, pas par serveur.
 """
 
 from typing import TYPE_CHECKING
@@ -23,5 +26,6 @@ class Organization(HorodatageMixin, Base):
 
     nom: Mapped[str] = mapped_column(String(255))
     airbyte_workspace_id: Mapped[str | None] = mapped_column(String(64), default=None)
+    airbyte_destination_id: Mapped[str | None] = mapped_column(String(64), default=None)
 
     memberships: Mapped[list["Membership"]] = relationship(back_populates="organization")
