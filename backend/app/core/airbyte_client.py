@@ -15,6 +15,11 @@ from app.core.config import get_settings
 
 MARGE_EXPIRATION = timedelta(seconds=60)
 
+# Le httpx par defaut (5s) suffit pour l'auth, mais decouverte et sync lancent
+# un vrai pod Kubernetes derriere chaque appel : ca peut prendre plus d'une
+# minute au demarrage a froid. Constate en pratique (ReadTimeout a 5s).
+DELAI_APPEL_SECONDES = 120
+
 
 @dataclass(frozen=True)
 class StreamDecouvert:
@@ -36,7 +41,7 @@ class AirbyteClient:
         self._base_url = base_url.rstrip("/")
         self._client_id = client_id
         self._client_secret = client_secret
-        self._http = http or httpx.AsyncClient()
+        self._http = http or httpx.AsyncClient(timeout=DELAI_APPEL_SECONDES)
         self._jeton: str | None = None
         self._expire_le: datetime | None = None
 

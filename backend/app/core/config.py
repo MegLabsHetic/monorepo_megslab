@@ -34,6 +34,15 @@ class Settings(BaseSettings):
     airbyte_client_id: str = ""
     airbyte_client_secret: str = ""
 
+    # Entrepot partage : chaque organisation y a son propre schema (voir
+    # OrganizationService), pas sa propre base. Adresse jointe par Airbyte
+    # (reseau "kind" du cluster), pas par le backend lui-meme pour l'instant.
+    warehouse_postgres_host: str = ""
+    warehouse_postgres_port: int = 5432
+    warehouse_postgres_database: str = ""
+    warehouse_postgres_username: str = ""
+    warehouse_postgres_password: str = ""
+
     @property
     def cors_origins_list(self) -> list[str]:
         return [origine.strip() for origine in self.cors_origins.split(",") if origine.strip()]
