@@ -10,7 +10,7 @@ from app.core.airbyte_client import AirbyteClient
 from app.core.database import Base
 
 # Import necessaire pour que Base.metadata connaisse les tables a creer.
-from app.models import membership, organization, user  # noqa: F401
+from app.models import data_source, membership, organization, user  # noqa: F401
 
 
 @pytest.fixture
@@ -28,12 +28,30 @@ async def db() -> AsyncGenerator[AsyncSession, None]:
 
 @pytest.fixture
 def airbyte_client_factice() -> AirbyteClient:
-    """Repond avec succes a l'authentification et a la creation de workspace."""
+    """Repond avec succes a n'importe quel appel Airbyte, sans jamais toucher le reseau."""
 
     def gestionnaire(requete: httpx.Request) -> httpx.Response:
-        if requete.url.path.endswith("/applications/token"):
+        chemin = requete.url.path
+        if chemin.endswith("/applications/token"):
             return httpx.Response(200, json={"access_token": "jeton-test", "expires_in": 3600})
-        return httpx.Response(200, json={"workspaceId": "workspace-test"})
+        if chemin.endswith("/workspaces"):
+            return httpx.Response(200, json={"workspaceId": "workspace-test"})
+        if chemin.endswith("/destinations"):
+            return httpx.Response(200, json={"destinationId": "destination-test"})
+        if chemin.endswith("/sources"):
+            return httpx.Response(200, json={"sourceId": "source-test"})
+        if "/connections" in chemin:
+            return httpx.Response(200, json={"connectionId": "connexion-test"})
+        if "/jobs" in chemin:
+            return httpx.Response(200, json={"jobId": 1, "status": "succeeded", "rowsSynced": 0})
+        if "/streams" in chemin:
+            return httpx.Response(
+                200,
+                json=[
+                    {"streamName": "customers", "streamnamespace": "public", "propertyFields": []}
+                ],
+            )
+        return httpx.Response(200, json={})
 
     http = httpx.AsyncClient(transport=httpx.MockTransport(gestionnaire))
     return AirbyteClient("http://airbyte.local", "id", "secret", http=http)
