@@ -3,6 +3,7 @@
 import logging
 
 import httpx
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.airbyte_client import AirbyteClient, StreamDecouvert
@@ -58,6 +59,9 @@ class SourceService:
             nom=nom,
             airbyte_source_id=source_id,
             schema_entrepot=f"org_{organisation.id}",
+            flux_decouverts=[
+                {"nom": f.nom, "namespace": f.namespace, "colonnes": f.colonnes} for f in flux
+            ],
         )
         self._db.add(source)
         await self._db.commit()
@@ -87,8 +91,18 @@ class SourceService:
             raise ErreurUtilisateur(_ERREUR_AIRBYTE_INJOIGNABLE, code_http=503) from erreur
 
         source.statut = StatutSource.SYNCHRONISATION
+        source.flux_selectionnes = noms_flux
         await self._db.commit()
         return job_id
+
+    async def lister(self, organisation: Organization) -> list[DataSource]:
+        """Les sources connectees par une organisation, la plus recente d'abord."""
+        resultat = await self._db.execute(
+            select(DataSource)
+            .where(DataSource.organization_id == organisation.id)
+            .order_by(DataSource.cree_le.desc())
+        )
+        return list(resultat.scalars().all())
 
     async def statut_sync(self, source: DataSource, job_id: int) -> dict:
         """Interroge Airbyte pour l'etat d'un job, et met a jour la source si termine."""
