@@ -5,7 +5,7 @@ Aucun appel reseau reel : un transport factice rejoue des reponses preparees.
 
 import httpx
 
-from app.core.airbyte_client import AirbyteClient
+from app.core.airbyte_client import AirbyteClient, StreamDecouvert
 
 
 def _client_factice(reponses: list[httpx.Response]) -> tuple[AirbyteClient, list[httpx.Request]]:
@@ -66,3 +66,100 @@ async def test_reauthentifie_une_fois_le_jeton_expire() -> None:
     await client.creer_workspace("Deux")
 
     assert len(_appels_authentification(appels)) == 2
+
+
+async def test_creer_source_postgres_renvoie_son_id() -> None:
+    client, appels = _client_factice(
+        [
+            httpx.Response(200, json={"access_token": "jeton-1", "expires_in": 3600}),
+            httpx.Response(200, json={"sourceId": "source-1"}),
+        ]
+    )
+
+    source_id = await client.creer_source_postgres(
+        "workspace-1", "Ma source", "hote", 5432, "base", "user", "mdp"
+    )
+
+    assert source_id == "source-1"
+    corps = appels[1].content
+    assert b'"sourceType":"postgres"' in corps
+
+
+async def test_lister_streams_extrait_noms_namespace_et_colonnes() -> None:
+    client, _ = _client_factice(
+        [
+            httpx.Response(200, json={"access_token": "jeton-1", "expires_in": 3600}),
+            httpx.Response(
+                200,
+                json=[
+                    {
+                        "streamName": "customers",
+                        "streamnamespace": "public",
+                        "propertyFields": [["id"], ["email"]],
+                    }
+                ],
+            ),
+        ]
+    )
+
+    flux = await client.lister_streams("source-1")
+
+    assert flux == [StreamDecouvert(nom="customers", namespace="public", colonnes=["id", "email"])]
+
+
+async def test_creer_destination_postgres_renvoie_son_id() -> None:
+    client, _ = _client_factice(
+        [
+            httpx.Response(200, json={"access_token": "jeton-1", "expires_in": 3600}),
+            httpx.Response(200, json={"destinationId": "destination-1"}),
+        ]
+    )
+
+    destination_id = await client.creer_destination_postgres(
+        "workspace-1", "Mon entrepot", "hote", 5432, "warehouse", "user", "mdp"
+    )
+
+    assert destination_id == "destination-1"
+
+
+async def test_creer_connexion_puis_selectionner_streams() -> None:
+    client, appels = _client_factice(
+        [
+            httpx.Response(200, json={"access_token": "jeton-1", "expires_in": 3600}),
+            httpx.Response(200, json={"connectionId": "connexion-1"}),
+            httpx.Response(200, json={"connectionId": "connexion-1"}),
+        ]
+    )
+
+    connection_id = await client.creer_connexion("source-1", "destination-1", "Ma connexion")
+    await client.selectionner_streams(connection_id, ["customers", "orders"])
+
+    assert connection_id == "connexion-1"
+    assert appels[2].method == "PATCH"
+
+
+async def test_declencher_sync_renvoie_le_job_id() -> None:
+    client, _ = _client_factice(
+        [
+            httpx.Response(200, json={"access_token": "jeton-1", "expires_in": 3600}),
+            httpx.Response(200, json={"jobId": 42, "status": "pending"}),
+        ]
+    )
+
+    job_id = await client.declencher_sync("connexion-1")
+
+    assert job_id == 42
+
+
+async def test_obtenir_job_renvoie_le_statut() -> None:
+    client, _ = _client_factice(
+        [
+            httpx.Response(200, json={"access_token": "jeton-1", "expires_in": 3600}),
+            httpx.Response(200, json={"jobId": 42, "status": "succeeded", "rowsSynced": 100}),
+        ]
+    )
+
+    job = await client.obtenir_job(42)
+
+    assert job["status"] == "succeeded"
+    assert job["rowsSynced"] == 100

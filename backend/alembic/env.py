@@ -8,7 +8,7 @@ from app.core.database import Base
 
 # Importer chaque module de modele enregistre sa table sur Base.metadata.
 # Sans cet import, autogenerate ne verrait aucune table.
-from app.models import membership, organization, user  # noqa: F401
+from app.models import data_source, membership, organization, user  # noqa: F401
 
 config = context.config
 

@@ -1,9 +1,11 @@
-"""Client pour l'API publique d'Airbyte : authentification et workspaces.
+"""Client pour l'API publique d'Airbyte : authentification, sources, destinations,
+connexions et synchronisations.
 
-Ne connait que le protocole HTTP d'Airbyte. La decision de quand creer un
-workspace (et quoi faire si Airbyte est injoignable) appartient a l'appelant.
+Ne connait que le protocole HTTP d'Airbyte. La decision de quand creer quoi (et
+quoi faire si Airbyte est injoignable) appartient a l'appelant.
 """
 
+from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from functools import lru_cache
 
@@ -12,6 +14,20 @@ import httpx
 from app.core.config import get_settings
 
 MARGE_EXPIRATION = timedelta(seconds=60)
+
+# Le httpx par defaut (5s) suffit pour l'auth, mais decouverte et sync lancent
+# un vrai pod Kubernetes derriere chaque appel : ca peut prendre plus d'une
+# minute au demarrage a froid. Constate en pratique (ReadTimeout a 5s).
+DELAI_APPEL_SECONDES = 120
+
+
+@dataclass(frozen=True)
+class StreamDecouvert:
+    """Une table trouvee par Airbyte lors de la decouverte du schema d'une source."""
+
+    nom: str
+    namespace: str
+    colonnes: list[str]
 
 
 class AirbyteClient:
@@ -25,14 +41,137 @@ class AirbyteClient:
         self._base_url = base_url.rstrip("/")
         self._client_id = client_id
         self._client_secret = client_secret
-        self._http = http or httpx.AsyncClient()
+        self._http = http or httpx.AsyncClient(timeout=DELAI_APPEL_SECONDES)
         self._jeton: str | None = None
         self._expire_le: datetime | None = None
+
+    # --- Workspaces --------------------------------------------------------
 
     async def creer_workspace(self, nom: str) -> str:
         """Cree un workspace Airbyte et renvoie son id."""
         corps = await self._appeler("POST", "/api/public/v1/workspaces", json={"name": nom})
         return corps["workspaceId"]
+
+    # --- Sources -------------------------------------------------------------
+
+    async def creer_source_postgres(
+        self,
+        workspace_id: str,
+        nom: str,
+        host: str,
+        port: int,
+        database: str,
+        username: str,
+        password: str,
+        schemas: list[str] | None = None,
+    ) -> str:
+        """Cree une source PostgreSQL. Airbyte verifie la connexion a la creation :
+        une reponse 200 signifie que la base a reellement ete jointe."""
+        corps = await self._appeler(
+            "POST",
+            "/api/public/v1/sources",
+            json={
+                "name": nom,
+                "workspaceId": workspace_id,
+                "configuration": {
+                    "sourceType": "postgres",
+                    "host": host,
+                    "port": port,
+                    "database": database,
+                    "username": username,
+                    "password": password,
+                    "schemas": schemas or ["public"],
+                    "ssl_mode": {"mode": "disable"},
+                    "tunnel_method": {"tunnel_method": "NO_TUNNEL"},
+                    "replication_method": {"method": "Standard"},
+                },
+            },
+        )
+        return corps["sourceId"]
+
+    async def lister_streams(self, source_id: str) -> list[StreamDecouvert]:
+        """Decouvre les tables et colonnes visibles par une source deja creee."""
+        corps = await self._appeler("GET", "/api/public/v1/streams", params={"sourceId": source_id})
+        return [
+            StreamDecouvert(
+                nom=flux["streamName"],
+                namespace=flux["streamnamespace"],
+                colonnes=[champ[0] for champ in flux.get("propertyFields", []) if champ],
+            )
+            for flux in corps
+        ]
+
+    # --- Destinations --------------------------------------------------------
+
+    async def creer_destination_postgres(
+        self,
+        workspace_id: str,
+        nom: str,
+        host: str,
+        port: int,
+        database: str,
+        username: str,
+        password: str,
+        schema: str = "public",
+    ) -> str:
+        corps = await self._appeler(
+            "POST",
+            "/api/public/v1/destinations",
+            json={
+                "name": nom,
+                "workspaceId": workspace_id,
+                "configuration": {
+                    "destinationType": "postgres",
+                    "host": host,
+                    "port": port,
+                    "database": database,
+                    "username": username,
+                    "password": password,
+                    "schema": schema,
+                    "ssl_mode": {"mode": "disable"},
+                    "tunnel_method": {"tunnel_method": "NO_TUNNEL"},
+                },
+            },
+        )
+        return corps["destinationId"]
+
+    # --- Connexions et synchronisation ----------------------------------------
+
+    async def creer_connexion(self, source_id: str, destination_id: str, nom: str) -> str:
+        """Cree la connexion sans flux selectionne : `selectionner_streams` les
+        active ensuite. Deux appels separes parce que c'est la sequence
+        reellement validee contre l'API (une tentative d'envoyer les flux des
+        la creation n'a pas ete confirmee)."""
+        corps = await self._appeler(
+            "POST",
+            "/api/public/v1/connections",
+            json={"sourceId": source_id, "destinationId": destination_id, "name": nom},
+        )
+        return corps["connectionId"]
+
+    async def selectionner_streams(self, connection_id: str, noms_flux: list[str]) -> None:
+        await self._appeler(
+            "PATCH",
+            f"/api/public/v1/connections/{connection_id}",
+            json={
+                "configurations": {
+                    "streams": [
+                        {"name": nom, "syncMode": "full_refresh_overwrite"} for nom in noms_flux
+                    ]
+                }
+            },
+        )
+
+    async def declencher_sync(self, connection_id: str) -> int:
+        corps = await self._appeler(
+            "POST",
+            "/api/public/v1/jobs",
+            json={"connectionId": connection_id, "jobType": "sync"},
+        )
+        return corps["jobId"]
+
+    async def obtenir_job(self, job_id: int) -> dict:
+        return await self._appeler("GET", f"/api/public/v1/jobs/{job_id}")
 
     # --- Authentification -----------------------------------------------
 
