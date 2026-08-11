@@ -62,6 +62,11 @@ async def test_connecter_puis_synchroniser_puis_suivre_le_statut(
         assert corps["flux_disponibles"] == [
             {"nom": "customers", "namespace": "public", "colonnes": []}
         ]
+        assert corps["nb_tables"] == 1
+
+        reponse_liste = await client.get("/sources")
+        assert reponse_liste.status_code == 200
+        assert [s["id"] for s in reponse_liste.json()] == [corps["id"]]
 
         reponse_sync = await client.post(
             f"/sources/{corps['id']}/synchroniser", json={"flux": ["customers"]}
@@ -72,3 +77,8 @@ async def test_connecter_puis_synchroniser_puis_suivre_le_statut(
         reponse_statut = await client.get(f"/sources/{corps['id']}/synchronisation/{job_id}")
         assert reponse_statut.status_code == 200
         assert reponse_statut.json()["statut"] == "succeeded"
+
+        reponse_detail = await client.get(f"/sources/{corps['id']}")
+        assert reponse_detail.status_code == 200
+        assert reponse_detail.json()["flux_selectionnes"] == ["customers"]
+        assert reponse_detail.json()["statut"] == "prete"

@@ -8,7 +8,7 @@ secret ici n'apporterait rien et serait une surface de fuite en plus.
 import enum
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Enum, ForeignKey, String
+from sqlalchemy import JSON, Enum, ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.database import Base
@@ -39,4 +39,19 @@ class DataSource(HorodatageMixin, Base):
     airbyte_connection_id: Mapped[str | None] = mapped_column(String(64), default=None)
     schema_entrepot: Mapped[str] = mapped_column(String(64))
 
+    # Le schema decouvert, garde tel quel : sans ca, les tables d'une source ne
+    # seraient consultables qu'une seule fois, juste apres sa connexion.
+    # Forme : [{"nom": ..., "namespace": ..., "colonnes": [...]}]
+    flux_decouverts: Mapped[list] = mapped_column(JSON, default=list)
+    # Les flux que l'utilisateur a choisi de synchroniser, parmi les decouverts.
+    flux_selectionnes: Mapped[list] = mapped_column(JSON, default=list)
+
     organization: Mapped["Organization"] = relationship()
+
+    @property
+    def nb_tables(self) -> int:
+        return len(self.flux_decouverts or [])
+
+    @property
+    def nb_colonnes(self) -> int:
+        return sum(len(flux.get("colonnes", [])) for flux in self.flux_decouverts or [])

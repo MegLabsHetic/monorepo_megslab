@@ -22,6 +22,36 @@ from app.services.source_service import SourceService
 router = APIRouter(prefix="/sources", tags=["sources"])
 
 
+def _en_reponse(source: DataSource) -> SourceReponse:
+    return SourceReponse(
+        id=source.id,
+        nom=source.nom,
+        type_source=source.type_source,
+        statut=source.statut.value,
+        schema_entrepot=source.schema_entrepot,
+        nb_tables=source.nb_tables,
+        nb_colonnes=source.nb_colonnes,
+        flux_disponibles=[
+            FluxReponse(
+                nom=flux["nom"], namespace=flux["namespace"], colonnes=flux.get("colonnes", [])
+            )
+            for flux in source.flux_decouverts or []
+        ],
+        flux_selectionnes=source.flux_selectionnes or [],
+        cree_le=source.cree_le,
+    )
+
+
+@router.get("", response_model=list[SourceReponse])
+async def lister(
+    organisation: Organization = Depends(organisation_courante),
+    db: AsyncSession = Depends(get_db),
+    airbyte_client: AirbyteClient = Depends(get_airbyte_client),
+):
+    sources = await SourceService(db, airbyte_client).lister(organisation)
+    return [_en_reponse(source) for source in sources]
+
+
 @router.post("", response_model=SourceReponse, status_code=201)
 async def connecter(
     demande: ConnexionPostgresDemande,
@@ -30,7 +60,7 @@ async def connecter(
     airbyte_client: AirbyteClient = Depends(get_airbyte_client),
 ):
     service = SourceService(db, airbyte_client)
-    source, flux = await service.connecter_postgres(
+    source, _ = await service.connecter_postgres(
         organisation,
         demande.nom,
         demande.host,
@@ -39,14 +69,16 @@ async def connecter(
         demande.username,
         demande.mot_de_passe,
     )
-    return SourceReponse(
-        id=source.id,
-        nom=source.nom,
-        statut=source.statut.value,
-        flux_disponibles=[
-            FluxReponse(nom=f.nom, namespace=f.namespace, colonnes=f.colonnes) for f in flux
-        ],
-    )
+    return _en_reponse(source)
+
+
+@router.get("/{source_id}", response_model=SourceReponse)
+async def detail(
+    source_id: str,
+    organisation: Organization = Depends(organisation_courante),
+    db: AsyncSession = Depends(get_db),
+):
+    return _en_reponse(await _charger_source(db, source_id, organisation))
 
 
 @router.post("/{source_id}/synchroniser", response_model=SynchronisationReponse)
