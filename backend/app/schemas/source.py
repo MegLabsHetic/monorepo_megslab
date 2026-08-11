@@ -1,5 +1,7 @@
 """Contrats d'entree/sortie des routes de connexion de sources."""
 
+from datetime import datetime
+
 from pydantic import BaseModel, Field
 
 
@@ -19,12 +21,18 @@ class FluxReponse(BaseModel):
 
 
 class SourceReponse(BaseModel):
+    """Vue complete d'une source : ce que le catalogue et la fiche detail affichent."""
+
     id: str
     nom: str
+    type_source: str
     statut: str
-    flux_disponibles: list[FluxReponse] = []
-
-    model_config = {"from_attributes": True}
+    schema_entrepot: str
+    nb_tables: int
+    nb_colonnes: int
+    flux_disponibles: list[FluxReponse]
+    flux_selectionnes: list[str]
+    cree_le: datetime
 
 
 class SynchronisationDemande(BaseModel):
