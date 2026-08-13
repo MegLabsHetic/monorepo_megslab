@@ -1,5 +1,9 @@
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
+# Les tests d'integration parlent a de vrais services (entrepot, Airbyte) et
+# supposent le tunnel de lecture ouvert : `pytest` doit rester vert sans eux.
+# Pour les lancer : `pytest -m integration`.
+addopts = "-m 'not integration'"
 markers = [
     "integration: necessite un service externe reel (base de donnees, cle API)",
 ]
