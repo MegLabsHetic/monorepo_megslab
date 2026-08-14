@@ -10,6 +10,10 @@ SQLAlchemy[asyncio]==2.0.43
 aiosqlite==0.21.0
 alembic==1.13.3
 
+# Moteur analytique + garde-fou SQL
+duckdb==1.5.5
+sqlglot==30.18.0
+
 # Authentification
 argon2-cffi==23.1.0
 pyjwt==2.9.0

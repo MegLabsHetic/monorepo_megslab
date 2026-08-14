@@ -16,12 +16,29 @@ docker compose up --build # front :3001 - back :8000 - swagger :8000/docs
 
 ```bash
 cd backend && python -m venv .venv && .venv/Scripts/pip install -r requirements-dev.txt
-cd backend && pytest -q -m "not integration"
+cd backend && pytest                  # les tests d'integration sont exclus par defaut
+cd backend && pytest -m integration   # exige le tunnel de lecture ci-dessous
 cd backend && ruff check . && black --check .
 cd frontend && npm install
 cd frontend && npm run lint
 cd frontend && npm run build
 ```
+
+## Entrepot de donnees
+
+Les bases Postgres (source de demonstration et entrepot) tournent sur le serveur,
+sur le reseau Docker interne du cluster Airbyte. **Aucun port n'est publie** : elles
+sont injoignables depuis Internet, et c'est voulu.
+
+Pour que le backend local puisse lire l'entrepot, ouvrir un tunnel le temps du
+developpement :
+
+```bash
+ssh -N -L 55433:<ip de l entrepot>:5432 <serveur>
+```
+
+Une fois le backend deploye a cote de l'entrepot, le tunnel disparait : seules
+les variables `WAREHOUSE_LECTURE_*` changent.
 
 ## Structure
 

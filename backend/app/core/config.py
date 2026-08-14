@@ -35,13 +35,20 @@ class Settings(BaseSettings):
     airbyte_client_secret: str = ""
 
     # Entrepot partage : chaque organisation y a son propre schema (voir
-    # OrganizationService), pas sa propre base. Adresse jointe par Airbyte
-    # (reseau "kind" du cluster), pas par le backend lui-meme pour l'instant.
+    # OrganizationService), pas sa propre base.
+    #
+    # Deux adresses pour la meme base, parce que deux clients differents y
+    # accedent : Airbyte y ECRIT depuis le reseau Docker du cluster, le backend
+    # y LIT de l'exterieur (tunnel SSH en developpement, adresse interne une
+    # fois le backend deploye a cote). Les confondre casserait l'un ou l'autre.
     warehouse_postgres_host: str = ""
     warehouse_postgres_port: int = 5432
     warehouse_postgres_database: str = ""
     warehouse_postgres_username: str = ""
     warehouse_postgres_password: str = ""
+
+    warehouse_lecture_host: str = "127.0.0.1"
+    warehouse_lecture_port: int = 55433
 
     @property
     def cors_origins_list(self) -> list[str]:
