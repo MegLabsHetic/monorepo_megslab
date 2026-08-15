@@ -46,3 +46,34 @@ class SynchronisationReponse(BaseModel):
 class StatutSyncReponse(BaseModel):
     statut: str
     lignes_synchronisees: int | None = None
+
+
+class TableReponse(BaseModel):
+    nom: str
+    nb_lignes: int
+
+
+class ApercuReponse(BaseModel):
+    colonnes: list[str]
+    lignes: list[list]
+    tronque: bool
+
+
+class ProfilColonneReponse(BaseModel):
+    """Le profil d'une colonne, tel que le moteur l'a calcule.
+
+    Les champs numeriques sont optionnels : ils n'ont pas de sens sur une
+    colonne de texte, et on prefere ne rien afficher plutot qu'un zero invente.
+    """
+
+    colonne: str
+    type: str
+    nb_valeurs: int | None = None
+    pourcentage_nuls: float | None = None
+    # DuckDB compte les valeurs distinctes de facon approximative (HyperLogLog) :
+    # sur une petite table l'estimation peut depasser le nombre de lignes. Le nom
+    # dit l'approximation pour qu'aucune interface ne l'affiche comme un exact.
+    valeurs_distinctes_approx: int | None = None
+    minimum: str | None = None
+    maximum: str | None = None
+    moyenne: str | None = None

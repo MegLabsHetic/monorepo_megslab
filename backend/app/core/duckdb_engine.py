@@ -10,11 +10,14 @@ Trois barrieres, independantes les unes des autres :
    et la configuration verrouillee, donc meme une requete qui aurait echappe
    au garde-fou ne peut ni lire un fichier ni sortir sur le reseau.
 
-Chaque requete ouvre sa propre connexion en memoire et la referme : aucun etat
-ne survit d'une requete a l'autre.
+Chaque appel public ouvre **une** connexion en memoire et la referme : aucun
+etat ne survit d'un appel a l'autre, et ouvrir l'entrepot coute assez cher
+(quelques secondes) pour ne pas le faire trois fois dans la meme operation.
 """
 
 import logging
+from collections.abc import Iterator
+from contextlib import contextmanager
 from dataclasses import dataclass
 
 import duckdb
@@ -25,6 +28,10 @@ logger = logging.getLogger(__name__)
 
 NOM_ENTREPOT = "entrepot"
 LIGNES_MAX = 5_000
+
+# Colonnes de plomberie ajoutees par Airbyte dans chaque table synchronisee.
+# Ce ne sont pas les donnees de l'utilisateur : on ne les montre pas.
+PREFIXE_TECHNIQUE = "_airbyte_"
 
 
 @dataclass(frozen=True)
@@ -52,31 +59,90 @@ class DuckDBEngine:
     def __init__(self, schema_entrepot: str) -> None:
         self._schema = schema_entrepot
 
+    # --- Operations publiques ---------------------------------------------
+
     def executer(self, sql_valide: str, lignes_max: int = LIGNES_MAX) -> Resultat:
         """Execute une requete DEJA validee par `sql_guard`.
 
         Ne jamais appeler avec du SQL brut : cette methode ne valide rien, elle
         se contente de verrouiller le moteur autour de ce qu'on lui donne.
         """
-        connexion = self._connexion_verrouillee()
+        with self._session() as connexion:
+            return self._lire(connexion, sql_valide, lignes_max)
+
+    def lister_tables(self) -> list[str]:
+        """Les tables que cette organisation peut interroger."""
+        with self._session() as connexion:
+            return self._tables(connexion)
+
+    def compter_lignes(self, table: str) -> int:
+        with self._session() as connexion:
+            nom = self._table_connue(connexion, table)
+            resultat = self._lire(connexion, f'SELECT count(*) FROM {NOM_ENTREPOT}."{nom}"', 1)
+            return int(resultat.lignes[0][0])
+
+    def inventaire(self) -> list[tuple[str, int]]:
+        """Chaque table avec son nombre de lignes, en une seule ouverture."""
+        with self._session() as connexion:
+            tables = self._tables(connexion)
+            return [
+                (
+                    table,
+                    int(
+                        self._lire(
+                            connexion, f'SELECT count(*) FROM {NOM_ENTREPOT}."{table}"', 1
+                        ).lignes[0][0]
+                    ),
+                )
+                for table in tables
+            ]
+
+    def apercu(self, table: str, limite: int = 50) -> Resultat:
+        """Les premieres lignes reelles d'une table, colonnes techniques exclues."""
+        with self._session() as connexion:
+            nom = self._table_connue(connexion, table)
+            colonnes = self._colonnes_visibles(connexion, nom)
+            if not colonnes:
+                return Resultat(colonnes=[], lignes=[], tronque=False)
+
+            projection = ", ".join(f'"{colonne}"' for colonne in colonnes)
+            return self._lire(
+                connexion,
+                f'SELECT {projection} FROM {NOM_ENTREPOT}."{nom}" LIMIT {int(limite)}',
+                limite,
+            )
+
+    def profiler(self, table: str) -> list[dict]:
+        """Un profil par colonne : type, valeurs manquantes, distinctes, bornes.
+
+        `SUMMARIZE` fait ce calcul dans le moteur plutot que de rapatrier la
+        table pour la profiler en Python.
+        """
+        with self._session() as connexion:
+            nom = self._table_connue(connexion, table)
+            visibles = set(self._colonnes_visibles(connexion, nom))
+            resultat = self._lire(connexion, f'SUMMARIZE {NOM_ENTREPOT}."{nom}"', LIGNES_MAX)
+
+        profils = [dict(zip(resultat.colonnes, ligne)) for ligne in resultat.lignes]
+        return [profil for profil in profils if profil.get("column_name") in visibles]
+
+    # --- Interieur ---------------------------------------------------------
+
+    def _lire(self, connexion: duckdb.DuckDBPyConnection, sql: str, lignes_max: int) -> Resultat:
         try:
-            curseur = connexion.execute(sql_valide)
+            curseur = connexion.execute(sql)
             colonnes = [description[0] for description in curseur.description or []]
             lignes = curseur.fetchmany(lignes_max + 1)
         except duckdb.Error as erreur:
             logger.exception("Echec d'execution DuckDB sur le schema %s", self._schema)
             raise ErreurRequete(self._message_lisible(erreur)) from erreur
-        finally:
-            connexion.close()
 
         tronque = len(lignes) > lignes_max
         return Resultat(colonnes=colonnes, lignes=lignes[:lignes_max], tronque=tronque)
 
-    def lister_tables(self) -> list[str]:
-        """Les tables que cette organisation peut interroger."""
-        connexion = self._connexion_verrouillee()
+    def _tables(self, connexion: duckdb.DuckDBPyConnection) -> list[str]:
         try:
-            resultat = connexion.execute(
+            lignes = connexion.execute(
                 "select table_name from duckdb_tables() "
                 "where database_name = ? order by table_name",
                 [NOM_ENTREPOT],
@@ -84,11 +150,37 @@ class DuckDBEngine:
         except duckdb.Error as erreur:
             logger.exception("Echec de listage des tables du schema %s", self._schema)
             raise ErreurRequete(self._message_lisible(erreur)) from erreur
-        finally:
-            connexion.close()
-        return [ligne[0] for ligne in resultat]
+        return [nom for (nom,) in lignes]
+
+    def _colonnes_visibles(self, connexion: duckdb.DuckDBPyConnection, table: str) -> list[str]:
+        try:
+            lignes = connexion.execute(
+                "select column_name from duckdb_columns() "
+                "where database_name = ? and table_name = ? order by column_index",
+                [NOM_ENTREPOT, table],
+            ).fetchall()
+        except duckdb.Error as erreur:
+            logger.exception("Echec de lecture des colonnes de %s", table)
+            raise ErreurRequete(self._message_lisible(erreur)) from erreur
+        return [nom for (nom,) in lignes if not nom.startswith(PREFIXE_TECHNIQUE)]
+
+    def _table_connue(self, connexion: duckdb.DuckDBPyConnection, table: str) -> str:
+        """Le nom de table vient de l'utilisateur : il ne sert a construire une
+        requete qu'apres avoir ete retrouve dans le catalogue de l'organisation.
+        Aucun echappement a inventer, et rien hors de son schema n'est nommable."""
+        if table in self._tables(connexion):
+            return table
+        raise ErreurRequete(f"La table « {table} » n'existe pas dans vos donnees.")
 
     # --- Verrouillage du moteur ------------------------------------------
+
+    @contextmanager
+    def _session(self) -> Iterator[duckdb.DuckDBPyConnection]:
+        connexion = self._connexion_verrouillee()
+        try:
+            yield connexion
+        finally:
+            connexion.close()
 
     def _connexion_verrouillee(self) -> duckdb.DuckDBPyConnection:
         connexion = duckdb.connect(":memory:")

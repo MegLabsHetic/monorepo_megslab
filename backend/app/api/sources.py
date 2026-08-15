@@ -10,14 +10,18 @@ from app.core.errors import ErreurUtilisateur
 from app.models.data_source import DataSource
 from app.models.organization import Organization
 from app.schemas.source import (
+    ApercuReponse,
     ConnexionPostgresDemande,
     FluxReponse,
+    ProfilColonneReponse,
     SourceReponse,
     StatutSyncReponse,
     SynchronisationDemande,
     SynchronisationReponse,
+    TableReponse,
 )
 from app.services.source_service import SourceService
+from app.services.warehouse_service import WarehouseService
 
 router = APIRouter(prefix="/sources", tags=["sources"])
 
@@ -109,6 +113,81 @@ async def statut_synchronisation(
     return StatutSyncReponse(
         statut=job.get("status", "inconnu"), lignes_synchronisees=job.get("rowsSynced")
     )
+
+
+@router.get("/{source_id}/tables", response_model=list[TableReponse])
+async def lister_tables(
+    source_id: str,
+    organisation: Organization = Depends(organisation_courante),
+    db: AsyncSession = Depends(get_db),
+):
+    source = await _charger_source(db, source_id, organisation)
+    tables = await WarehouseService(source).lister_tables()
+    return [TableReponse(nom=nom, nb_lignes=lignes) for nom, lignes in tables]
+
+
+@router.get("/{source_id}/tables/{table}/apercu", response_model=ApercuReponse)
+async def apercu_table(
+    source_id: str,
+    table: str,
+    limite: int = 50,
+    organisation: Organization = Depends(organisation_courante),
+    db: AsyncSession = Depends(get_db),
+):
+    source = await _charger_source(db, source_id, organisation)
+    resultat = await WarehouseService(source).apercu(table, min(limite, 200))
+    return ApercuReponse(
+        colonnes=resultat.colonnes,
+        lignes=[[_affichable(valeur) for valeur in ligne] for ligne in resultat.lignes],
+        tronque=resultat.tronque,
+    )
+
+
+@router.get("/{source_id}/tables/{table}/profil", response_model=list[ProfilColonneReponse])
+async def profil_table(
+    source_id: str,
+    table: str,
+    organisation: Organization = Depends(organisation_courante),
+    db: AsyncSession = Depends(get_db),
+):
+    source = await _charger_source(db, source_id, organisation)
+    profils = await WarehouseService(source).profiler(table)
+    return [
+        ProfilColonneReponse(
+            colonne=profil["column_name"],
+            type=profil["column_type"],
+            nb_valeurs=_entier(profil.get("count")),
+            pourcentage_nuls=_reel(profil.get("null_percentage")),
+            valeurs_distinctes_approx=_entier(profil.get("approx_unique")),
+            minimum=_texte(profil.get("min")),
+            maximum=_texte(profil.get("max")),
+            moyenne=_texte(profil.get("avg")),
+        )
+        for profil in profils
+    ]
+
+
+def _affichable(valeur: object) -> object:
+    """JSON ne connait ni Decimal, ni date, ni UUID : on les rend en texte.
+
+    Les types simples passent tels quels pour que le frontend puisse encore
+    aligner des nombres a droite et compter des booleens.
+    """
+    if valeur is None or isinstance(valeur, (bool, int, float, str)):
+        return valeur
+    return str(valeur)
+
+
+def _entier(valeur: object) -> int | None:
+    return None if valeur is None else int(valeur)
+
+
+def _reel(valeur: object) -> float | None:
+    return None if valeur is None else float(valeur)
+
+
+def _texte(valeur: object) -> str | None:
+    return None if valeur is None else str(valeur)
 
 
 async def _charger_source(
