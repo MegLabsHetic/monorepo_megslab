@@ -137,15 +137,26 @@ class AirbyteClient:
 
     # --- Connexions et synchronisation ----------------------------------------
 
-    async def creer_connexion(self, source_id: str, destination_id: str, nom: str) -> str:
+    async def creer_connexion(
+        self, source_id: str, destination_id: str, nom: str, prefixe: str = ""
+    ) -> str:
         """Cree la connexion sans flux selectionne : `selectionner_streams` les
         active ensuite. Deux appels separes parce que c'est la sequence
         reellement validee contre l'API (une tentative d'envoyer les flux des
-        la creation n'a pas ete confirmee)."""
+        la creation n'a pas ete confirmee).
+
+        `prefixe` est ajoute par Airbyte devant chaque table ecrite dans
+        l'entrepot : c'est ce qui evite que deux sources se marchent dessus.
+        """
         corps = await self._appeler(
             "POST",
             "/api/public/v1/connections",
-            json={"sourceId": source_id, "destinationId": destination_id, "name": nom},
+            json={
+                "sourceId": source_id,
+                "destinationId": destination_id,
+                "name": nom,
+                "prefix": prefixe,
+            },
         )
         return corps["connectionId"]
 
@@ -172,6 +183,21 @@ class AirbyteClient:
 
     async def obtenir_job(self, job_id: int) -> dict:
         return await self._appeler("GET", f"/api/public/v1/jobs/{job_id}")
+
+    async def job_en_cours(self, connection_id: str) -> int | None:
+        """L'id du job de synchronisation non termine sur cette connexion, s'il y en a un.
+
+        Airbyte declenche parfois une synchronisation de lui-meme (a la
+        selection des flux, notamment) et refuse alors d'en lancer une seconde.
+        Savoir laquelle tourne vaut mieux que de rendre une erreur.
+        """
+        corps = await self._appeler(
+            "GET", "/api/public/v1/jobs", params={"connectionId": connection_id, "limit": 10}
+        )
+        for job in corps.get("data", []):
+            if job.get("status") in ("pending", "running", "incomplete"):
+                return job.get("jobId")
+        return None
 
     # --- Authentification -----------------------------------------------
 

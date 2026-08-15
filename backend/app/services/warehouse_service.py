@@ -20,27 +20,32 @@ class WarehouseService:
     async def lister_tables(self) -> list[tuple[str, int]]:
         """Les tables de cette source, avec leur nombre de lignes reel.
 
-        Toutes les sources d'une organisation partagent son schema d'entrepot :
-        on filtre donc sur les flux que CETTE source a synchronises. Deux
-        sources qui exposeraient une table du meme nom se marcheraient dessus —
-        connu, a regler par un prefixe de connexion cote Airbyte.
+        Toutes les sources d'une organisation partagent son schema d'entrepot,
+        ou leurs tables cohabitent sous des prefixes differents : on ne rend
+        donc que celles de CETTE source, sous leur nom logique.
         """
-        inventaire = await self._dans_un_thread(self._moteur.inventaire)
-        selectionnes = set(self._source.flux_selectionnes or [])
+        selectionnes = self._source.flux_selectionnes or []
         if not selectionnes:
             return []
-        return [(nom, lignes) for nom, lignes in inventaire if nom in selectionnes]
+
+        inventaire = dict(await self._dans_un_thread(self._moteur.inventaire))
+        return [
+            (flux, inventaire[self._source.table_entrepot(flux)])
+            for flux in selectionnes
+            if self._source.table_entrepot(flux) in inventaire
+        ]
 
     async def apercu(self, table: str, limite: int = 50) -> Resultat:
-        self._verifier_appartenance(table)
-        return await self._dans_un_thread(self._moteur.apercu, table, limite)
+        return await self._dans_un_thread(
+            self._moteur.apercu, self._table_de_cette_source(table), limite
+        )
 
     async def profiler(self, table: str) -> list[dict]:
-        self._verifier_appartenance(table)
-        return await self._dans_un_thread(self._moteur.profiler, table)
+        return await self._dans_un_thread(self._moteur.profiler, self._table_de_cette_source(table))
 
-    def _verifier_appartenance(self, table: str) -> None:
-        """Une source ne donne acces qu'a ce qu'elle a elle-meme synchronise.
+    def _table_de_cette_source(self, table: str) -> str:
+        """Traduit un nom de flux en nom de table d'entrepot, en refusant ce qui
+        n'appartient pas a cette source.
 
         Le moteur verifie deja que la table existe dans le schema de
         l'organisation ; ce controle-ci est plus etroit : la bonne organisation,
@@ -50,6 +55,7 @@ class WarehouseService:
             raise ErreurUtilisateur(
                 f"La table « {table} » ne fait pas partie de cette source.", code_http=404
             )
+        return self._source.table_entrepot(table)
 
     @staticmethod
     async def _dans_un_thread(operation, *arguments):

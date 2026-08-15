@@ -59,6 +59,9 @@ class SourceService:
             nom=nom,
             airbyte_source_id=source_id,
             schema_entrepot=f"org_{organisation.id}",
+            # Court, stable, et derive de l'id Airbyte : deux sources d'une meme
+            # organisation ne peuvent pas produire le meme prefixe.
+            prefixe_entrepot=f"s{source_id.replace('-', '')[:8]}_",
             flux_decouverts=[
                 {"nom": f.nom, "namespace": f.namespace, "colonnes": f.colonnes} for f in flux
             ],
@@ -77,15 +80,11 @@ class SourceService:
         (`statut_sync`), pour ne jamais faire attendre une requete HTTP le
         temps complet d'une synchronisation.
         """
+        await self._garantir_connexion(source, organisation)
+
         try:
-            if source.airbyte_connection_id is None:
-                source.airbyte_connection_id = await self._airbyte_client.creer_connexion(
-                    source.airbyte_source_id,
-                    organisation.airbyte_destination_id,
-                    f"{source.nom} -> entrepot",
-                )
             await self._airbyte_client.selectionner_streams(source.airbyte_connection_id, noms_flux)
-            job_id = await self._airbyte_client.declencher_sync(source.airbyte_connection_id)
+            job_id = await self._declencher_ou_recuperer(source.airbyte_connection_id)
         except httpx.HTTPError as erreur:
             logger.exception("Echec de synchronisation Airbyte pour la source %s", source.id)
             raise ErreurUtilisateur(_ERREUR_AIRBYTE_INJOIGNABLE, code_http=503) from erreur
@@ -94,6 +93,49 @@ class SourceService:
         source.flux_selectionnes = noms_flux
         await self._db.commit()
         return job_id
+
+    async def _garantir_connexion(self, source: DataSource, organisation: Organization) -> None:
+        """Cree la connexion si elle manque, et l'enregistre aussitot.
+
+        Le commit immediat n'est pas cosmetique : si le declenchement echoue
+        juste apres, la connexion existe deja cote Airbyte. Sans cet
+        enregistrement, chaque nouvelle tentative en creerait une autre,
+        orpheline, que plus personne ne pourrait retrouver.
+        """
+        if source.airbyte_connection_id is not None:
+            return
+
+        try:
+            source.airbyte_connection_id = await self._airbyte_client.creer_connexion(
+                source.airbyte_source_id,
+                organisation.airbyte_destination_id,
+                f"{source.nom} -> entrepot",
+                prefixe=source.prefixe_entrepot,
+            )
+        except httpx.HTTPError as erreur:
+            logger.exception("Echec de creation de la connexion pour la source %s", source.id)
+            raise ErreurUtilisateur(_ERREUR_AIRBYTE_INJOIGNABLE, code_http=503) from erreur
+
+        await self._db.commit()
+
+    async def _declencher_ou_recuperer(self, connection_id: str) -> int:
+        """Lance une synchronisation, ou rend celle qui tourne deja.
+
+        Airbyte repond 409 quand une synchronisation est en cours sur la
+        connexion — ce qui arrive notamment parce qu'il en declenche une
+        lui-meme a la selection des flux. Ce n'est pas une panne : l'utilisateur
+        veut suivre la synchronisation, peu importe qui l'a lancee.
+        """
+        try:
+            return await self._airbyte_client.declencher_sync(connection_id)
+        except httpx.HTTPStatusError as erreur:
+            if erreur.response.status_code != 409:
+                raise
+            job_id = await self._airbyte_client.job_en_cours(connection_id)
+            if job_id is None:
+                raise
+            logger.info("Synchronisation deja en cours (job %s), on la suit", job_id)
+            return job_id
 
     async def lister(self, organisation: Organization) -> list[DataSource]:
         """Les sources connectees par une organisation, la plus recente d'abord."""

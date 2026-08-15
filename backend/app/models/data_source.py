@@ -39,6 +39,12 @@ class DataSource(HorodatageMixin, Base):
     airbyte_connection_id: Mapped[str | None] = mapped_column(String(64), default=None)
     schema_entrepot: Mapped[str] = mapped_column(String(64))
 
+    # Toutes les sources d'une organisation ecrivent dans le meme schema (pour
+    # que l'analyse puisse joindre leurs tables). Ce prefixe evite que deux
+    # sources ayant une table du meme nom s'ecrasent. Vide pour les sources
+    # creees avant son introduction : leurs tables restent sans prefixe.
+    prefixe_entrepot: Mapped[str] = mapped_column(String(32), default="")
+
     # Le schema decouvert, garde tel quel : sans ca, les tables d'une source ne
     # seraient consultables qu'une seule fois, juste apres sa connexion.
     # Forme : [{"nom": ..., "namespace": ..., "colonnes": [...]}]
@@ -47,6 +53,10 @@ class DataSource(HorodatageMixin, Base):
     flux_selectionnes: Mapped[list] = mapped_column(JSON, default=list)
 
     organization: Mapped["Organization"] = relationship()
+
+    def table_entrepot(self, nom_flux: str) -> str:
+        """Le nom que porte ce flux une fois copie dans l'entrepot."""
+        return f"{self.prefixe_entrepot}{nom_flux}"
 
     @property
     def nb_tables(self) -> int:
