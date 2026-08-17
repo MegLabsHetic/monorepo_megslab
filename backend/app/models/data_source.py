@@ -18,6 +18,13 @@ if TYPE_CHECKING:
     from app.models.organization import Organization
 
 
+class TypeSource(str, enum.Enum):
+    """Comment les donnees entrent : par un connecteur, ou par un fichier depose."""
+
+    POSTGRES = "postgres"
+    FICHIER = "fichier"
+
+
 class StatutSource(str, enum.Enum):
     CONNECTEE = "connectee"  # source+destination crees cote Airbyte, pas encore synchronisee
     SYNCHRONISATION = "synchronisation"
@@ -35,7 +42,9 @@ class DataSource(HorodatageMixin, Base):
         Enum(StatutSource, native_enum=False, length=20), default=StatutSource.CONNECTEE
     )
 
-    airbyte_source_id: Mapped[str] = mapped_column(String(64))
+    # Nul pour une source fichier : un CSV depose n'a pas d'equivalent Airbyte,
+    # il est importe directement dans l'entrepot.
+    airbyte_source_id: Mapped[str | None] = mapped_column(String(64), default=None)
     airbyte_connection_id: Mapped[str | None] = mapped_column(String(64), default=None)
     schema_entrepot: Mapped[str] = mapped_column(String(64))
 

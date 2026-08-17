@@ -1,6 +1,6 @@
 """Routes de connexion et de synchronisation des sources de donnees."""
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, File, UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import organisation_courante
@@ -20,6 +20,7 @@ from app.schemas.source import (
     SynchronisationReponse,
     TableReponse,
 )
+from app.services.file_source_service import FileSourceService
 from app.services.source_service import SourceService
 from app.services.warehouse_service import WarehouseService
 
@@ -113,6 +114,17 @@ async def statut_synchronisation(
     return StatutSyncReponse(
         statut=job.get("status", "inconnu"), lignes_synchronisees=job.get("rowsSynced")
     )
+
+
+@router.post("/fichier", response_model=SourceReponse, status_code=201)
+async def importer_fichier(
+    fichier: UploadFile = File(...),
+    organisation: Organization = Depends(organisation_courante),
+    db: AsyncSession = Depends(get_db),
+):
+    """Depose un CSV ou un XLSX directement dans l'entrepot, sans passer par Airbyte."""
+    source = await FileSourceService(db).importer_fichier(organisation, fichier)
+    return _en_reponse(source)
 
 
 @router.get("/{source_id}/tables", response_model=list[TableReponse])
