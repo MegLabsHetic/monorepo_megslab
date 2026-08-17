@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 
 import { BlocAVenir } from "@/components/donnees/blocAVenir";
+import { ExplorateurDonnees } from "@/components/donnees/explorateurDonnees";
 import { ExplorateurSchema } from "@/components/donnees/explorateurSchema";
 import { PanneauSynchronisation } from "@/components/donnees/panneauSynchronisation";
 import { PastilleStatut } from "@/components/donnees/pastilleStatut";
@@ -162,22 +163,31 @@ export default function PageFicheSource() {
         </div>
       </section>
 
+      <section aria-labelledby="titre-donnees" className="space-y-4">
+        <div>
+          <h2 id="titre-donnees" className="font-display text-lg font-semibold text-text">
+            Donnees dans l&apos;entrepot
+          </h2>
+          <p className="mt-1 text-sm text-muted">
+            Les tables copiees dans l&apos;entrepot, telles qu&apos;elles y sont vraiment : nombre
+            de lignes, echantillon, et profil de chaque colonne.
+          </p>
+        </div>
+        <ExplorateurDonnees sourceId={source.id} />
+      </section>
+
       <section aria-labelledby="titre-avenir" className="space-y-4">
         <h2 id="titre-avenir" className="font-display text-lg font-semibold text-muted">
           Pas encore disponible
         </h2>
-        <div className="grid gap-4 lg:grid-cols-3">
-          <BlocAVenir
-            titre="Apercu des lignes"
-            description="Voir un echantillon des donnees d'une table. L'API n'expose aucun acces au contenu de l'entrepot pour l'instant."
-          />
-          <BlocAVenir
-            titre="Qualite et types"
-            description="Types de colonnes, valeurs manquantes, doublons. Rien de tout cela n'est calcule aujourd'hui."
-          />
+        <div className="grid gap-4 lg:grid-cols-2">
           <BlocAVenir
             titre="Historique des synchronisations"
             description="Seul le job de synchronisation en cours peut etre interroge : les executions passees ne sont pas conservees."
+          />
+          <BlocAVenir
+            titre="Interroger en langage naturel"
+            description="Poser une question et obtenir une reponse verifiee sur ces tables. Cette partie n'est pas encore branchee."
           />
         </div>
       </section>

@@ -9,6 +9,7 @@ const URL_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 const DELAI_DEFAUT = 30_000;
 const DELAI_CONNEXION_SOURCE = 120_000;
 const DELAI_SYNCHRONISATION = 60_000;
+const DELAI_ENTREPOT = 90_000;
 
 /** `statut` vaut 0 quand la requete n'a jamais abouti (reseau coupe, delai depasse). */
 export class ErreurApi extends Error {
@@ -57,6 +58,29 @@ export interface ConnexionPostgres {
 export interface StatutSynchronisation {
   statut: string;
   lignes_synchronisees: number | null;
+}
+
+export interface TableEntrepot {
+  nom: string;
+  nb_lignes: number;
+}
+
+export interface Apercu {
+  colonnes: string[];
+  lignes: (string | number | boolean | null)[][];
+  tronque: boolean;
+}
+
+export interface ProfilColonne {
+  colonne: string;
+  type: string;
+  nb_valeurs: number | null;
+  pourcentage_nuls: number | null;
+  /** Estimation (HyperLogLog) : peut depasser le nombre de lignes sur une petite table. */
+  valeurs_distinctes_approx: number | null;
+  minimum: string | null;
+  maximum: string | null;
+  moyenne: string | null;
 }
 
 interface Options extends RequestInit {
@@ -129,5 +153,25 @@ export const api = {
   statutSynchronisation: (jeton: string, id: string, jobId: number) =>
     requete<StatutSynchronisation>(`/sources/${id}/synchronisation/${jobId}`, {
       headers: entete(jeton),
+    }),
+
+  // Ces trois appels lisent l'entrepot : ils ouvrent une connexion analytique
+  // et prennent plusieurs secondes, d'ou le delai plus large.
+  tablesEntrepot: (jeton: string, id: string) =>
+    requete<TableEntrepot[]>(`/sources/${id}/tables`, {
+      headers: entete(jeton),
+      delaiMax: DELAI_ENTREPOT,
+    }),
+
+  apercuTable: (jeton: string, id: string, table: string, limite = 50) =>
+    requete<Apercu>(
+      `/sources/${id}/tables/${encodeURIComponent(table)}/apercu?limite=${limite}`,
+      { headers: entete(jeton), delaiMax: DELAI_ENTREPOT }
+    ),
+
+  profilTable: (jeton: string, id: string, table: string) =>
+    requete<ProfilColonne[]>(`/sources/${id}/tables/${encodeURIComponent(table)}/profil`, {
+      headers: entete(jeton),
+      delaiMax: DELAI_ENTREPOT,
     }),
 };
