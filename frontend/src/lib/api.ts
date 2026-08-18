@@ -10,6 +10,9 @@ const DELAI_DEFAUT = 30_000;
 const DELAI_CONNEXION_SOURCE = 120_000;
 const DELAI_SYNCHRONISATION = 60_000;
 const DELAI_ENTREPOT = 90_000;
+// Un fichier de plusieurs centaines de Mo met plusieurs minutes a etre lu,
+// transfere et ecrit dans l'entrepot.
+const DELAI_IMPORT_FICHIER = 900_000;
 
 /** `statut` vaut 0 quand la requete n'a jamais abouti (reseau coupe, delai depasse). */
 export class ErreurApi extends Error {
@@ -85,10 +88,12 @@ export interface ProfilColonne {
 
 interface Options extends RequestInit {
   delaiMax?: number;
+  /** Pour un envoi multipart : le navigateur doit poser le Content-Type. */
+  sansTypeJson?: boolean;
 }
 
 async function requete<T>(chemin: string, options: Options = {}): Promise<T> {
-  const { delaiMax = DELAI_DEFAUT, ...reste } = options;
+  const { delaiMax = DELAI_DEFAUT, sansTypeJson = false, ...reste } = options;
   const controleur = new AbortController();
   const minuterie = setTimeout(() => controleur.abort(), delaiMax);
 
@@ -97,7 +102,9 @@ async function requete<T>(chemin: string, options: Options = {}): Promise<T> {
     reponse = await fetch(`${URL_BASE}${chemin}`, {
       ...reste,
       signal: controleur.signal,
-      headers: { "Content-Type": "application/json", ...reste.headers },
+      headers: sansTypeJson
+        ? { ...reste.headers }
+        : { "Content-Type": "application/json", ...reste.headers },
     });
   } catch {
     throw new ErreurApi("Le serveur est injoignable. Verifiez qu'il est bien demarre.");
@@ -154,6 +161,20 @@ export const api = {
     requete<StatutSynchronisation>(`/sources/${id}/synchronisation/${jobId}`, {
       headers: entete(jeton),
     }),
+
+  importerFichier: async (jeton: string, fichier: File) => {
+    // multipart/form-data : on laisse le navigateur poser lui-meme le
+    // Content-Type, il doit y ajouter la frontiere qu'il a generee.
+    const corps = new FormData();
+    corps.append("fichier", fichier);
+    return requete<Source>("/sources/fichier", {
+      method: "POST",
+      headers: entete(jeton),
+      body: corps,
+      delaiMax: DELAI_IMPORT_FICHIER,
+      sansTypeJson: true,
+    });
+  },
 
   // Ces trois appels lisent l'entrepot : ils ouvrent une connexion analytique
   // et prennent plusieurs secondes, d'ou le delai plus large.
