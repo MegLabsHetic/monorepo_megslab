@@ -32,7 +32,7 @@ export function SelecteurFlux({ flux, selection, onChanger, desactive = false }:
             type="button"
             disabled={desactive || selection.length === flux.length}
             onClick={() => onChanger(flux.map((table) => table.nom))}
-            className="rounded-md px-2 py-1 text-xs text-muted transition-colors duration-140 hover:text-accent disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+            className="rounded-md px-2 py-1 text-xs text-muted transition-colors duration-140 hover:text-marque disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-marque"
           >
             Tout selectionner
           </button>
@@ -40,7 +40,7 @@ export function SelecteurFlux({ flux, selection, onChanger, desactive = false }:
             type="button"
             disabled={desactive || selection.length === 0}
             onClick={() => onChanger([])}
-            className="rounded-md px-2 py-1 text-xs text-muted transition-colors duration-140 hover:text-accent disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+            className="rounded-md px-2 py-1 text-xs text-muted transition-colors duration-140 hover:text-marque disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-marque"
           >
             Tout deselectionner
           </button>

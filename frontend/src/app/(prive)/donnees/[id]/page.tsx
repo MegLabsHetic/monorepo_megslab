@@ -78,13 +78,13 @@ export default function PageFicheSource() {
       <header className="space-y-4">
         <Link
           href="/donnees"
-          className="font-mono text-xs text-muted transition-colors duration-140 hover:text-accent"
+          className="font-mono text-xs text-muted transition-colors duration-140 hover:text-marque"
         >
           &lt; Catalogue
         </Link>
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="flex items-start gap-4">
-            <span className="mt-1 shrink-0 text-accent">
+            <span className="mt-1 shrink-0 text-marque">
               <LogoConnecteur type={source.type_source} className="h-9 w-9" />
             </span>
             <div>

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { DecouverteEnCours } from "@/components/donnees/decouverteEnCours";
 import { FormulaireConnexionPostgres } from "@/components/donnees/formulaireConnexionPostgres";
@@ -30,6 +30,14 @@ export default function PageNouvelleSource() {
   const [mode, setMode] = useState<Mode>("choix");
   const [etape, setEtape] = useState<Etape>({ nom: "identifiants" });
   const [erreur, setErreur] = useState<string | null>(null);
+  const [lienAirbyte, setLienAirbyte] = useState<string | null>(null);
+
+  useEffect(() => {
+    api
+      .organisation(jeton)
+      .then((organisation) => setLienAirbyte(organisation.lien_airbyte))
+      .catch(() => setLienAirbyte(null));
+  }, [jeton]);
 
   const connecter = async (identifiants: ConnexionPostgres) => {
     setErreur(null);
@@ -54,7 +62,7 @@ export default function PageNouvelleSource() {
       <header>
         <Link
           href="/donnees"
-          className="font-mono text-xs text-muted transition-colors duration-140 hover:text-accent"
+          className="font-mono text-xs text-muted transition-colors duration-140 hover:text-marque"
         >
           &lt; Catalogue
         </Link>
@@ -101,7 +109,7 @@ export default function PageNouvelleSource() {
                 className={cn(
                   "rounded-full border px-3 py-1 font-mono text-xs transition-colors duration-140",
                   index === indexEtape
-                    ? "border-accent/40 bg-surface-2 text-accent"
+                    ? "border-marque/40 bg-surface-2 text-marque"
                     : index < indexEtape
                       ? "border-line text-text"
                       : "border-line text-muted"
@@ -158,11 +166,35 @@ export default function PageNouvelleSource() {
         </p>
       )}
 
+      {lienAirbyte && (
+        <div className="rounded-2xl border border-dashed border-line p-5">
+          <h2 className="font-display text-base font-semibold text-text">
+            Un connecteur qui n&apos;est pas dans la liste ?
+          </h2>
+          <p className="mt-2 text-sm text-text-doux">
+            MegLabs s&apos;appuie sur Airbyte, qui en propose plusieurs centaines. Vous pouvez en
+            configurer un directement dans votre espace Airbyte.{" "}
+            <span className="text-muted">
+              A savoir : une source creee la-bas reste geree la-bas — cette page ne liste que les
+              sources creees depuis MegLabs.
+            </span>
+          </p>
+          <a
+            href={lienAirbyte}
+            target="_blank"
+            rel="noreferrer"
+            className={classesBouton("contour", "mt-4 w-auto")}
+          >
+            Ouvrir Airbyte
+          </a>
+        </div>
+      )}
+
       {mode !== "choix" && etape.nom === "identifiants" && (
         <button
           type="button"
           onClick={() => setMode("choix")}
-          className="font-mono text-xs text-muted transition-colors duration-140 hover:text-accent"
+          className="font-mono text-xs text-muted transition-colors duration-140 hover:text-marque"
         >
           &lt; Choisir un autre type de source
         </button>
@@ -186,8 +218,8 @@ function ChoixSource({
       onClick={onClick}
       className={cn(
         "rounded-xl border border-line bg-surface p-6 text-left transition-colors duration-140",
-        "hover:border-accent/40 hover:bg-surface-2",
-        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+        "hover:border-marque/40 hover:bg-surface-2",
+        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-marque"
       )}
     >
       <span className="block font-display text-base font-semibold text-text">{titre}</span>

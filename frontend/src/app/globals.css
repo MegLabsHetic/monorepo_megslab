@@ -2,22 +2,86 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+ * Deux themes, une seule serie de variables. Le clair est le defaut : c'est
+ * celui qu'on montre. Le sombre reste disponible via [data-theme="sombre"].
+ *
+ * La couleur porte du sens plutot que de la decoration : une teinte de marque
+ * pour les actions, une couleur propre a chaque technologie connectee, et des
+ * couleurs semantiques pour les etats. Rien n'est colore "pour faire joli".
+ */
 :root {
-  --bg: #07100f;
-  --surface: #0b1715;
-  --surface-2: #0f1f1c;
-  --accent: #3fbfae;
-  --text: #e8f1ef;
-  --muted: #7d9691;
-  --line: rgba(63, 191, 174, 0.16);
+  --bg: #f6f7fb;
+  --surface: #ffffff;
+  --surface-2: #eef1f8;
+  --line: #dfe4ef;
+  --line-forte: #c7cfe0;
 
-  --background: var(--bg);
-  --foreground: var(--text);
+  --text: #101728;
+  --text-doux: #3d4761;
+  --muted: #6b7691;
+
+  --marque: #4f46e5;
+  --marque-forte: #4338ca;
+  --marque-douce: #eef0ff;
+  --marque-contraste: #ffffff;
+
+  --accent: #0d9488;
+  --accent-doux: #e6f5f3;
+
+  --succes: #047857;
+  --succes-doux: #e7f6ef;
+  --attention: #b45309;
+  --attention-doux: #fdf3e3;
+  --danger: #be123c;
+  --danger-doux: #fdeaef;
+
+  --ombre-carte: 0 1px 2px rgba(16, 23, 40, 0.04), 0 4px 16px rgba(16, 23, 40, 0.05);
+  --ombre-relief: 0 8px 30px rgba(79, 70, 229, 0.14);
+}
+
+[data-theme="sombre"] {
+  --bg: #0a0f1d;
+  --surface: #121a2e;
+  --surface-2: #1a2440;
+  --line: #26314f;
+  --line-forte: #35436a;
+
+  --text: #eaeff9;
+  --text-doux: #c2cce0;
+  --muted: #8494b3;
+
+  --marque: #818cf8;
+  --marque-forte: #a5b4fc;
+  --marque-douce: #1e2246;
+  --marque-contraste: #0a0f1d;
+
+  --accent: #2dd4bf;
+  --accent-doux: #10322f;
+
+  --succes: #34d399;
+  --succes-doux: #0d2e24;
+  --attention: #fbbf24;
+  --attention-doux: #34260a;
+  --danger: #fb7185;
+  --danger-doux: #3a121f;
+
+  --ombre-carte: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 24px rgba(0, 0, 0, 0.32);
+  --ombre-relief: 0 8px 30px rgba(129, 140, 248, 0.18);
+}
+
+/* Couleurs propres a chaque technologie : elles ne changent pas avec le theme,
+   ce sont les couleurs par lesquelles ces produits sont reconnus. */
+:root {
+  --tech-postgres: #336791;
+  --tech-mysql: #e48e00;
+  --tech-mssql: #c62828;
+  --tech-fichier: #0d9488;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
+  background: var(--bg);
+  color: var(--text);
   font-family: var(--font-body), system-ui, sans-serif;
 }
 
@@ -31,4 +95,12 @@ h3,
 code,
 .font-mono {
   font-family: var(--font-mono), ui-monospace, monospace;
+}
+
+/* Le fond de la page d'accueil : une lueur de marque, discrete, qui evite
+   l'aplat uniforme sans tomber dans le degrade tape-a-l'oeil. */
+.fond-lueur {
+  background:
+    radial-gradient(60rem 30rem at 15% -10%, var(--marque-douce), transparent 60%),
+    radial-gradient(45rem 25rem at 95% 0%, var(--accent-doux), transparent 55%);
 }

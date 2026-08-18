@@ -1,6 +1,8 @@
 import type { Config } from "tailwindcss";
 
 const config: Config = {
+  // Pas de darkMode Tailwind : le theme bascule via les variables CSS posees
+  // sur [data-theme="sombre"], donc aucune variante dark: n'est necessaire.
   content: ["./src/**/*.{js,ts,jsx,tsx,mdx}"],
   theme: {
     extend: {
@@ -8,10 +10,38 @@ const config: Config = {
         bg: "var(--bg)",
         surface: "var(--surface)",
         "surface-2": "var(--surface-2)",
-        accent: "var(--accent)",
-        text: "var(--text)",
-        muted: "var(--muted)",
         line: "var(--line)",
+        "line-forte": "var(--line-forte)",
+
+        text: "var(--text)",
+        "text-doux": "var(--text-doux)",
+        muted: "var(--muted)",
+
+        marque: "var(--marque)",
+        "marque-forte": "var(--marque-forte)",
+        "marque-douce": "var(--marque-douce)",
+        "marque-contraste": "var(--marque-contraste)",
+
+        accent: "var(--accent)",
+        "accent-doux": "var(--accent-doux)",
+
+        succes: "var(--succes)",
+        "succes-doux": "var(--succes-doux)",
+        attention: "var(--attention)",
+        "attention-doux": "var(--attention-doux)",
+        danger: "var(--danger)",
+        "danger-doux": "var(--danger-doux)",
+
+        tech: {
+          postgres: "var(--tech-postgres)",
+          mysql: "var(--tech-mysql)",
+          mssql: "var(--tech-mssql)",
+          fichier: "var(--tech-fichier)",
+        },
+      },
+      boxShadow: {
+        carte: "var(--ombre-carte)",
+        relief: "var(--ombre-relief)",
       },
       fontFamily: {
         sans: ["var(--font-body)", "system-ui", "sans-serif"],
@@ -26,7 +56,7 @@ const config: Config = {
       },
       keyframes: {
         apparition: {
-          from: { opacity: "0", transform: "translateY(4px)" },
+          from: { opacity: "0", transform: "translateY(6px)" },
           to: { opacity: "1", transform: "translateY(0)" },
         },
         balayage: {

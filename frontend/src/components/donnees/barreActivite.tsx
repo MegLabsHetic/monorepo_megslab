@@ -10,7 +10,7 @@ export function BarreActivite({ className }: { className?: string }) {
       aria-hidden="true"
       className={cn("h-0.5 w-full overflow-hidden rounded-full bg-surface-2", className)}
     >
-      <div className="h-full w-1/3 animate-balayage bg-accent" />
+      <div className="h-full w-1/3 animate-balayage bg-marque" />
     </div>
   );
 }

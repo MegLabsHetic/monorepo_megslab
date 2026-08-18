@@ -7,7 +7,7 @@ export function Alert({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
     <div
       role="alert"
       className={cn(
-        "rounded-md border border-red-900/40 bg-red-950/40 px-3 py-2 text-sm text-red-300",
+        "flex items-start gap-2 rounded-lg border border-danger/25 bg-danger-doux px-3 py-2.5 text-sm text-danger",
         className
       )}
       {...props}

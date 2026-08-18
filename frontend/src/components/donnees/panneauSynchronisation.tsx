@@ -171,11 +171,11 @@ function SuiviJob({
       <dl className="grid gap-4 sm:grid-cols-2">
         <div className="rounded-lg border border-line bg-surface-2 p-4">
           <dt className="text-xs uppercase tracking-wide text-muted">tables demandees</dt>
-          <dd className="mt-1 font-mono text-lg text-accent">{formaterNombre(nbTables)}</dd>
+          <dd className="mt-1 font-mono text-lg text-marque">{formaterNombre(nbTables)}</dd>
         </div>
         <div className="rounded-lg border border-line bg-surface-2 p-4">
           <dt className="text-xs uppercase tracking-wide text-muted">lignes synchronisees</dt>
-          <dd className="mt-1 font-mono text-lg text-accent">
+          <dd className="mt-1 font-mono text-lg text-marque">
             {statut?.lignes_synchronisees != null
               ? formaterNombre(statut.lignes_synchronisees)
               : "—"}

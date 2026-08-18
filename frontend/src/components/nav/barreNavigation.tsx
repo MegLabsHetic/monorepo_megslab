@@ -7,6 +7,8 @@ import { useEffect, useState } from "react";
 import { PaletteCommandes } from "@/components/nav/paletteCommandes";
 import { useSession } from "@/components/session/contexteSession";
 import { Button } from "@/components/ui/button";
+import { Logo } from "@/components/marque/logo";
+import { SelecteurTheme } from "@/components/marque/selecteurTheme";
 import { cn } from "@/lib/utils";
 
 const LIENS = [
@@ -39,7 +41,7 @@ export function BarreNavigation() {
         aria-current={actif ? "page" : undefined}
         className={cn(
           "rounded-md px-3 py-1.5 text-sm transition-colors duration-140",
-          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent",
+          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-marque",
           actif ? "bg-surface-2 text-text" : "text-muted hover:text-text"
         )}
       >
@@ -53,19 +55,22 @@ export function BarreNavigation() {
       <div className="mx-auto flex max-w-6xl items-center gap-4 px-6 py-3">
         <Link
           href="/dashboard"
-          className="font-display text-base font-semibold tracking-tight text-text"
+          aria-label="MegLabs, tableau de bord"
+          className="rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-marque"
         >
-          MegLabs
+          <Logo className="hidden h-8 sm:block" />
+          <Logo className="h-8 sm:hidden" monogramme />
         </Link>
         <nav aria-label="Navigation principale" className="hidden gap-1 md:flex">
           {liens}
         </nav>
 
         <div className="ml-auto flex items-center gap-2">
+          <SelecteurTheme />
           <button
             type="button"
             onClick={() => setPaletteOuverte(true)}
-            className="hidden items-center gap-2 rounded-md border border-line bg-surface-2 px-2.5 py-1.5 font-mono text-xs text-muted transition-colors duration-140 hover:text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent lg:inline-flex"
+            className="hidden items-center gap-2 rounded-md border border-line bg-surface-2 px-2.5 py-1.5 font-mono text-xs text-muted transition-colors duration-140 hover:text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-marque lg:inline-flex"
           >
             Rechercher
             <span className="rounded border border-line px-1">Ctrl K</span>

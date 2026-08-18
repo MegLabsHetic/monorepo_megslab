@@ -82,15 +82,15 @@ export function FormulaireConnexionPostgres({ onSoumettre, erreur }: Props) {
                 onClick={() => choisirType(connecteur)}
                 className={cn(
                   "flex items-center gap-3 rounded-md border px-3 py-2.5 text-left transition-colors duration-140",
-                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent",
+                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-marque",
                   type === connecteur.cle
-                    ? "border-accent bg-surface-2 text-text"
+                    ? "border-marque bg-surface-2 text-text"
                     : "border-line bg-surface text-muted hover:bg-surface-2"
                 )}
               >
                 <LogoConnecteur
                   type={connecteur.cle}
-                  className={cn("h-6 w-6", type === connecteur.cle && "text-accent")}
+                  className={cn("h-6 w-6", type === connecteur.cle && "text-marque")}
                 />
                 <span className="text-sm">{connecteur.libelle}</span>
               </button>
@@ -138,7 +138,7 @@ export function FormulaireConnexionPostgres({ onSoumettre, erreur }: Props) {
               type="button"
               onClick={() => setMotDePasseVisible((visible) => !visible)}
               aria-pressed={motDePasseVisible}
-              className="absolute right-2 top-1/2 -translate-y-1/2 rounded px-2 py-1 text-xs text-muted transition-colors duration-140 hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+              className="absolute right-2 top-1/2 -translate-y-1/2 rounded px-2 py-1 text-xs text-muted transition-colors duration-140 hover:text-marque focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-marque"
             >
               {motDePasseVisible ? "Masquer" : "Afficher"}
             </button>

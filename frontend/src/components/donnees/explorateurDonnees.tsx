@@ -107,9 +107,9 @@ export function ExplorateurDonnees({ sourceId }: Props) {
             onClick={() => setTable(disponible.nom)}
             className={cn(
               "rounded-md border px-3 py-2 text-left transition-colors duration-140",
-              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent",
+              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-marque",
               disponible.nom === table
-                ? "border-accent bg-surface-2"
+                ? "border-marque bg-surface-2"
                 : "border-line bg-surface hover:bg-surface-2"
             )}
           >
@@ -160,7 +160,7 @@ function OngletBouton({
       onClick={onClick}
       className={cn(
         "rounded-md px-3 py-1.5 text-sm transition-colors duration-140",
-        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent",
+        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-marque",
         actif ? "bg-surface-2 text-text" : "text-muted hover:text-text"
       )}
     >

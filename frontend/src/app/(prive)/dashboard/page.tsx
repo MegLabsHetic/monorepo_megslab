@@ -86,7 +86,7 @@ export default function PageTableauDeBord() {
             </h2>
             <Link
               href="/donnees"
-              className="text-sm text-accent underline-offset-4 transition-colors duration-140 hover:underline"
+              className="text-sm text-marque underline-offset-4 transition-colors duration-140 hover:underline"
             >
               Voir le catalogue
             </Link>
@@ -113,7 +113,7 @@ export default function PageTableauDeBord() {
                   <li key={source.id}>
                     <Link
                       href={`/donnees/${source.id}`}
-                      className="flex flex-wrap items-center gap-4 px-5 py-4 transition-colors duration-140 hover:bg-surface-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent"
+                      className="flex flex-wrap items-center gap-4 px-5 py-4 transition-colors duration-140 hover:bg-surface-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-marque"
                     >
                       <span className="min-w-0 flex-1">
                         <span className="block truncate text-sm text-text">{source.nom}</span>

@@ -2,8 +2,8 @@ import { type TonStatut } from "@/lib/sources";
 import { cn } from "@/lib/utils";
 
 const classesParTon: Record<TonStatut, string> = {
-  actif: "bg-accent",
-  encours: "bg-accent animate-pulse",
+  actif: "bg-marque",
+  encours: "bg-marque animate-pulse",
   neutre: "bg-muted",
   erreur: "bg-red-400",
 };

@@ -39,6 +39,14 @@ export function DataCore() {
 
     const reduireMouvement = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
+    // Le losange etait dessine pour un fond noir : sur fond clair, un trait
+    // clair serait invisible. On lit donc la couleur dans le theme courant.
+    const styles = getComputedStyle(document.documentElement);
+    const lire = (variable: string, secours: string) =>
+      new THREE.Color(styles.getPropertyValue(variable).trim() || secours);
+    const couleurTrait = lire("--marque", "#4f46e5");
+    const couleurNoeud = lire("--accent", "#0d9488");
+
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 100);
     camera.position.z = 6;
@@ -54,7 +62,7 @@ export function DataCore() {
     const geometrieLosange = new THREE.OctahedronGeometry(2, 0);
     const filaire = new THREE.LineSegments(
       new THREE.EdgesGeometry(geometrieLosange),
-      new THREE.LineBasicMaterial({ color: 0x3fbfae, transparent: true, opacity: 0.8 })
+      new THREE.LineBasicMaterial({ color: couleurTrait, transparent: true, opacity: 0.85 })
     );
     groupe.add(filaire);
 
@@ -73,7 +81,12 @@ export function DataCore() {
     geometriePoints.setAttribute("position", new THREE.BufferAttribute(positions, 3));
     const points = new THREE.Points(
       geometriePoints,
-      new THREE.PointsMaterial({ color: 0x3fbfae, size: 0.035, transparent: true, opacity: 0.5 })
+      new THREE.PointsMaterial({
+        color: couleurTrait,
+        size: 0.035,
+        transparent: true,
+        opacity: 0.55,
+      })
     );
     groupe.add(points);
 
@@ -95,7 +108,7 @@ export function DataCore() {
       const halo = new THREE.Sprite(
         new THREE.SpriteMaterial({
           map: texture,
-          color: 0x5fe0c8,
+          color: couleurNoeud,
           transparent: true,
           opacity: 0.85,
           blending: THREE.AdditiveBlending,

@@ -63,7 +63,7 @@ export function ExplorateurSchema({ flux, synchronises }: Props) {
                   onClick={() => basculer(table.nom)}
                   aria-expanded={ouverte}
                   aria-controls={identifiantPanneau}
-                  className="flex w-full items-center gap-3 px-4 py-3 text-left transition-colors duration-140 hover:bg-surface-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent"
+                  className="flex w-full items-center gap-3 px-4 py-3 text-left transition-colors duration-140 hover:bg-surface-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-marque"
                 >
                   <span
                     aria-hidden="true"
@@ -82,7 +82,7 @@ export function ExplorateurSchema({ flux, synchronises }: Props) {
                   <span
                     className={cn(
                       "hidden rounded-full border px-2 py-0.5 font-mono text-[0.65rem] sm:inline",
-                      synchronisee ? "border-accent/40 text-accent" : "border-line text-muted"
+                      synchronisee ? "border-marque/40 text-marque" : "border-line text-muted"
                     )}
                   >
                     {synchronisee ? "synchronisee" : "disponible"}

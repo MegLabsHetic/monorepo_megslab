@@ -11,11 +11,11 @@ export function CarteSource({ source }: { source: Source }) {
   return (
     <Link
       href={`/donnees/${source.id}`}
-      className="flex flex-col rounded-xl border border-line bg-surface p-5 transition-colors duration-140 hover:border-accent/40 hover:bg-surface-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
+      className="flex flex-col rounded-xl border border-line bg-surface p-5 transition-colors duration-140 hover:border-marque/40 hover:bg-surface-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-marque focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
     >
       <div className="flex items-start justify-between gap-3">
         <div className="flex min-w-0 items-start gap-3">
-          <span className="mt-0.5 shrink-0 text-accent">
+          <span className="mt-0.5 shrink-0 text-marque">
             <LogoConnecteur type={source.type_source} className="h-7 w-7" />
           </span>
           <div className="min-w-0">
@@ -31,11 +31,11 @@ export function CarteSource({ source }: { source: Source }) {
       <dl className="mt-5 grid grid-cols-2 gap-3 border-t border-line pt-4">
         <div>
           <dt className="text-xs uppercase tracking-wide text-muted">tables</dt>
-          <dd className="font-mono text-lg text-accent">{formaterNombre(source.nb_tables)}</dd>
+          <dd className="font-mono text-lg text-marque">{formaterNombre(source.nb_tables)}</dd>
         </div>
         <div>
           <dt className="text-xs uppercase tracking-wide text-muted">colonnes</dt>
-          <dd className="font-mono text-lg text-accent">{formaterNombre(source.nb_colonnes)}</dd>
+          <dd className="font-mono text-lg text-marque">{formaterNombre(source.nb_colonnes)}</dd>
         </div>
       </dl>
 

@@ -33,7 +33,7 @@ export function DecouverteEnCours({ nom, hote }: Props) {
     <div role="status" aria-live="polite" className="space-y-5">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <h2 className="font-display text-lg font-semibold text-text">
-          Connexion a <span className="font-mono text-accent">{nom}</span>
+          Connexion a <span className="font-mono text-marque">{nom}</span>
         </h2>
         <span className="font-mono text-xs text-muted">{formaterDuree(secondes)}</span>
       </div>

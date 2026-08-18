@@ -86,7 +86,7 @@ export default function PageCatalogue() {
           <ol className="mx-auto mt-8 max-w-md space-y-3 text-left">
             {ETAPES.map((etape, index) => (
               <li key={etape} className="flex gap-3 text-sm text-muted">
-                <span className="font-mono text-xs text-accent">0{index + 1}</span>
+                <span className="font-mono text-xs text-marque">0{index + 1}</span>
                 {etape}
               </li>
             ))}

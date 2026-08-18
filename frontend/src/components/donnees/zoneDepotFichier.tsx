@@ -71,14 +71,14 @@ export function ZoneDepotFichier({ onImporte }: Props) {
         }}
         className={cn(
           "rounded-xl border border-dashed p-10 text-center transition-colors duration-140",
-          survol ? "border-accent bg-surface-2" : "border-line bg-surface"
+          survol ? "border-marque bg-surface-2" : "border-line bg-surface"
         )}
       >
         {enCours ? (
           <div role="status" className="space-y-3">
             <p className="text-sm text-text">Import de {fichierEnCours?.name} en cours…</p>
             <div className="mx-auto h-1 w-56 overflow-hidden rounded-full bg-surface-2">
-              <div className="h-full w-1/3 animate-balayage rounded-full bg-accent" />
+              <div className="h-full w-1/3 animate-balayage rounded-full bg-marque" />
             </div>
             <p className="text-xs text-muted">
               {tailleMo > SEUIL_AVERTISSEMENT_MO

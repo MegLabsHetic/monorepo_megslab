@@ -51,6 +51,12 @@ export interface Source {
   lien_airbyte: string | null;
 }
 
+export interface Organisation {
+  id: string;
+  nom: string;
+  lien_airbyte: string | null;
+}
+
 export interface TypeConnecteur {
   cle: string;
   libelle: string;
@@ -144,6 +150,9 @@ export const api = {
     }),
 
   profil: (jeton: string) => requete<Utilisateur>("/auth/moi", { headers: entete(jeton) }),
+
+  organisation: (jeton: string) =>
+    requete<Organisation>("/organisation", { headers: entete(jeton) }),
 
   listerConnecteurs: (jeton: string) =>
     requete<TypeConnecteur[]>("/sources/connecteurs", { headers: entete(jeton) }),
