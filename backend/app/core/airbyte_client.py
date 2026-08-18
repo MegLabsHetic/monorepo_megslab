@@ -54,38 +54,16 @@ class AirbyteClient:
 
     # --- Sources -------------------------------------------------------------
 
-    async def creer_source_postgres(
-        self,
-        workspace_id: str,
-        nom: str,
-        host: str,
-        port: int,
-        database: str,
-        username: str,
-        password: str,
-        schemas: list[str] | None = None,
-    ) -> str:
-        """Cree une source PostgreSQL. Airbyte verifie la connexion a la creation :
-        une reponse 200 signifie que la base a reellement ete jointe."""
+    async def creer_source(self, workspace_id: str, nom: str, configuration: dict) -> str:
+        """Cree une source a partir d'une configuration deja formee.
+
+        La forme exacte depend du type de base : c'est `app.core.connecteurs`
+        qui la construit, pas ce client, dont le role s'arrete au transport.
+        """
         corps = await self._appeler(
             "POST",
             "/api/public/v1/sources",
-            json={
-                "name": nom,
-                "workspaceId": workspace_id,
-                "configuration": {
-                    "sourceType": "postgres",
-                    "host": host,
-                    "port": port,
-                    "database": database,
-                    "username": username,
-                    "password": password,
-                    "schemas": schemas or ["public"],
-                    "ssl_mode": {"mode": "disable"},
-                    "tunnel_method": {"tunnel_method": "NO_TUNNEL"},
-                    "replication_method": {"method": "Standard"},
-                },
-            },
+            json={"name": nom, "workspaceId": workspace_id, "configuration": configuration},
         )
         return corps["sourceId"]
 

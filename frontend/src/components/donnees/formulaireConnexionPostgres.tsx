@@ -1,15 +1,18 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
+import { useSession } from "@/components/session/contexteSession";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { type ConnexionPostgres } from "@/lib/api";
+import { LogoConnecteur } from "@/components/donnees/logoConnecteur";
+import { type ConnexionPostgres, type TypeConnecteur, api } from "@/lib/api";
+import { cn } from "@/lib/utils";
 
 const schema = z.object({
   nom: z.string().min(1, "Donnez un nom a cette source."),
@@ -33,22 +36,69 @@ interface Props {
 }
 
 export function FormulaireConnexionPostgres({ onSoumettre, erreur }: Props) {
+  const { jeton } = useSession();
   const [motDePasseVisible, setMotDePasseVisible] = useState(false);
+  const [connecteurs, setConnecteurs] = useState<TypeConnecteur[]>([]);
+  const [type, setType] = useState("postgres");
   const {
     register,
     handleSubmit,
+    setValue,
     formState: { errors },
   } = useForm<Champs>({
     resolver: zodResolver(schema),
     defaultValues: { port: "5432" },
   });
 
+  // La liste vient du backend : c'est lui qui sait quels connecteurs il sait
+  // reellement configurer, plutot qu'une liste dupliquee ici qui divergerait.
+  useEffect(() => {
+    api
+      .listerConnecteurs(jeton)
+      .then(setConnecteurs)
+      .catch(() => setConnecteurs([]));
+  }, [jeton]);
+
+  const choisirType = (connecteur: TypeConnecteur) => {
+    setType(connecteur.cle);
+    setValue("port", String(connecteur.port_defaut));
+  };
+
   const soumettre = handleSubmit((champs) =>
-    onSoumettre({ ...champs, port: Number(champs.port) })
+    onSoumettre({ ...champs, type_source: type, port: Number(champs.port) })
   );
 
   return (
     <form noValidate onSubmit={soumettre} className="flex flex-col gap-4">
+      {connecteurs.length > 0 && (
+        <fieldset>
+          <legend className="mb-1.5 block text-sm font-medium text-text">Type de base</legend>
+          <div className="grid gap-2 sm:grid-cols-3">
+            {connecteurs.map((connecteur) => (
+              <button
+                key={connecteur.cle}
+                type="button"
+                aria-pressed={type === connecteur.cle}
+                onClick={() => choisirType(connecteur)}
+                className={cn(
+                  "flex items-center gap-3 rounded-md border px-3 py-2.5 text-left transition-colors duration-140",
+                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent",
+                  type === connecteur.cle
+                    ? "border-accent bg-surface-2 text-text"
+                    : "border-line bg-surface text-muted hover:bg-surface-2"
+                )}
+              >
+                <LogoConnecteur
+                  type={connecteur.cle}
+                  className={cn("h-6 w-6", type === connecteur.cle && "text-accent")}
+                />
+                <span className="text-sm">{connecteur.libelle}</span>
+              </button>
+            ))}
+          </div>
+        </fieldset>
+      )}
+
       <Champ id="nom" libelle="Nom de la source" erreur={errors.nom?.message}>
         <Input id="nom" placeholder="Base de production" {...register("nom")} />
       </Champ>
@@ -63,17 +113,17 @@ export function FormulaireConnexionPostgres({ onSoumettre, erreur }: Props) {
       </div>
 
       <Champ id="database" libelle="Base de donnees" erreur={errors.database?.message}>
-        <Input id="database" className="font-mono" placeholder="source_demo" {...register("database")} />
+        <Input
+          id="database"
+          className="font-mono"
+          placeholder="source_demo"
+          {...register("database")}
+        />
       </Champ>
 
       <div className="grid gap-4 sm:grid-cols-2">
         <Champ id="username" libelle="Utilisateur" erreur={errors.username?.message}>
-          <Input
-            id="username"
-            className="font-mono"
-            autoComplete="off"
-            {...register("username")}
-          />
+          <Input id="username" className="font-mono" autoComplete="off" {...register("username")} />
         </Champ>
         <Champ id="mot_de_passe" libelle="Mot de passe" erreur={errors.mot_de_passe?.message}>
           <div className="relative">

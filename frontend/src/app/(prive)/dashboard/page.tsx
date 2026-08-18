@@ -56,7 +56,10 @@ export default function PageTableauDeBord() {
 
       {totaux && (
         <section aria-labelledby="titre-chiffres" className="space-y-4">
-          <h2 id="titre-chiffres" className="font-display text-sm uppercase tracking-widest text-muted">
+          <h2
+            id="titre-chiffres"
+            className="font-display text-sm uppercase tracking-widest text-muted"
+          >
             Votre espace
           </h2>
           <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">

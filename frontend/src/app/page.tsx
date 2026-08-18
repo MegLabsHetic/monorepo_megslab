@@ -43,8 +43,8 @@ export default function Accueil() {
             COMPRISES.
           </h1>
           <p className="mt-6 max-w-md text-base text-muted">
-            Posez une question. MegLabs transforme vos donnees en decisions verifiables — sans
-            ligne de SQL.
+            Posez une question. MegLabs transforme vos donnees en decisions verifiables — sans ligne
+            de SQL.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
             <Link href="/register" className={classesBouton("primaire", "w-auto px-6")}>
@@ -63,7 +63,9 @@ export default function Accueil() {
               </div>
             ))}
           </dl>
-          <p className="mt-3 text-xs text-muted">Exemple d&apos;analyse type, a titre illustratif.</p>
+          <p className="mt-3 text-xs text-muted">
+            Exemple d&apos;analyse type, a titre illustratif.
+          </p>
         </div>
 
         <div className="h-80 lg:h-[28rem]">
@@ -78,7 +80,10 @@ export default function Accueil() {
           </h2>
           <div className="mt-8 grid gap-px overflow-hidden rounded-xl border border-line bg-line sm:grid-cols-3 lg:grid-cols-6">
             {ETAPES_PIPELINE.map((etape) => (
-              <div key={etape.titre} className="bg-surface p-5 transition-colors hover:bg-surface-2">
+              <div
+                key={etape.titre}
+                className="bg-surface p-5 transition-colors hover:bg-surface-2"
+              >
                 <p className="font-mono text-xs text-accent">{etape.titre}</p>
                 <p className="mt-2 text-sm text-muted">{etape.description}</p>
               </div>

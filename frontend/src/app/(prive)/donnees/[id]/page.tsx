@@ -7,6 +7,7 @@ import { useCallback, useEffect, useState } from "react";
 import { BlocAVenir } from "@/components/donnees/blocAVenir";
 import { ExplorateurDonnees } from "@/components/donnees/explorateurDonnees";
 import { ExplorateurSchema } from "@/components/donnees/explorateurSchema";
+import { LogoConnecteur } from "@/components/donnees/logoConnecteur";
 import { PanneauSynchronisation } from "@/components/donnees/panneauSynchronisation";
 import { PastilleStatut } from "@/components/donnees/pastilleStatut";
 import { useSession, useTraduireErreur } from "@/components/session/contexteSession";
@@ -82,11 +83,16 @@ export default function PageFicheSource() {
           &lt; Catalogue
         </Link>
         <div className="flex flex-wrap items-start justify-between gap-4">
-          <div>
-            <h1 className="font-display text-2xl font-semibold tracking-tight text-text lg:text-3xl">
-              {source.nom}
-            </h1>
-            <p className="mt-2 text-sm text-muted">{statut.explication}</p>
+          <div className="flex items-start gap-4">
+            <span className="mt-1 shrink-0 text-accent">
+              <LogoConnecteur type={source.type_source} className="h-9 w-9" />
+            </span>
+            <div>
+              <h1 className="font-display text-2xl font-semibold tracking-tight text-text lg:text-3xl">
+                {source.nom}
+              </h1>
+              <p className="mt-2 text-sm text-muted">{statut.explication}</p>
+            </div>
           </div>
           <div className="flex items-center gap-3">
             <PastilleStatut ton={statut.ton} libelle={statut.libelle} />
@@ -112,7 +118,11 @@ export default function PageFicheSource() {
           />
           <Metadonnee libelle="schema d'entrepot" valeur={source.schema_entrepot} />
           <Metadonnee libelle="connectee le" valeur={formaterDateHeure(source.cree_le)} />
-          <Metadonnee libelle="identifiant" valeur={source.id} className="sm:col-span-2 lg:col-span-3" />
+          <Metadonnee
+            libelle="identifiant"
+            valeur={source.id}
+            className="sm:col-span-2 lg:col-span-3"
+          />
         </dl>
       </section>
 
@@ -175,6 +185,32 @@ export default function PageFicheSource() {
         </div>
         <ExplorateurDonnees sourceId={source.id} />
       </section>
+
+      {source.lien_airbyte && (
+        <section aria-labelledby="titre-avance" className="space-y-3">
+          <h2
+            id="titre-avance"
+            className="font-display text-sm uppercase tracking-widest text-muted"
+          >
+            Configuration avancee
+          </h2>
+          <div className="rounded-xl border border-line bg-surface p-5">
+            <p className="text-sm text-muted">
+              MegLabs couvre la connexion, la decouverte et la synchronisation. Pour le reste —
+              frequence de synchronisation, mode incremental, reglages fins du connecteur — la
+              source s&apos;ouvre directement dans Airbyte, le moteur d&apos;ingestion utilise.
+            </p>
+            <a
+              href={source.lien_airbyte}
+              target="_blank"
+              rel="noreferrer"
+              className={classesBouton("contour", "mt-4 w-auto px-5")}
+            >
+              Ouvrir dans Airbyte
+            </a>
+          </div>
+        </section>
+      )}
 
       <section aria-labelledby="titre-avenir" className="space-y-4">
         <h2 id="titre-avenir" className="font-display text-lg font-semibold text-muted">

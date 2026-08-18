@@ -82,9 +82,7 @@ export function ExplorateurSchema({ flux, synchronises }: Props) {
                   <span
                     className={cn(
                       "hidden rounded-full border px-2 py-0.5 font-mono text-[0.65rem] sm:inline",
-                      synchronisee
-                        ? "border-accent/40 text-accent"
-                        : "border-line text-muted"
+                      synchronisee ? "border-accent/40 text-accent" : "border-line text-muted"
                     )}
                   >
                     {synchronisee ? "synchronisee" : "disponible"}

@@ -31,6 +31,9 @@ class Settings(BaseSettings):
     groq_api_key: str = ""
 
     airbyte_base_url: str = ""
+    # L'URL que le navigateur de l'utilisateur peut atteindre. Elle differe
+    # de airbyte_base_url des que le backend passe par un reseau interne.
+    airbyte_url_publique: str = ""
     airbyte_client_id: str = ""
     airbyte_client_secret: str = ""
 

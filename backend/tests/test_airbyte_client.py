@@ -68,7 +68,7 @@ async def test_reauthentifie_une_fois_le_jeton_expire() -> None:
     assert len(_appels_authentification(appels)) == 2
 
 
-async def test_creer_source_postgres_renvoie_son_id() -> None:
+async def test_creer_source_transmet_la_configuration_telle_quelle() -> None:
     client, appels = _client_factice(
         [
             httpx.Response(200, json={"access_token": "jeton-1", "expires_in": 3600}),
@@ -76,13 +76,12 @@ async def test_creer_source_postgres_renvoie_son_id() -> None:
         ]
     )
 
-    source_id = await client.creer_source_postgres(
-        "workspace-1", "Ma source", "hote", 5432, "base", "user", "mdp"
+    source_id = await client.creer_source(
+        "workspace-1", "Ma source", {"sourceType": "mysql", "host": "hote"}
     )
 
     assert source_id == "source-1"
-    corps = appels[1].content
-    assert b'"sourceType":"postgres"' in corps
+    assert b'"sourceType":"mysql"' in appels[1].content
 
 
 async def test_lister_streams_extrait_noms_namespace_et_colonnes() -> None:

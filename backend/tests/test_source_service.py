@@ -8,6 +8,7 @@ from app.core.airbyte_client import AirbyteClient
 from app.core.errors import ErreurUtilisateur
 from app.models.data_source import StatutSource
 from app.models.organization import Organization
+from app.services import source_service
 from app.services.source_service import SourceService
 
 
@@ -28,8 +29,8 @@ async def test_connecter_postgres_enregistre_la_source_et_renvoie_les_flux(
     organisation = await _organisation(db)
     service = SourceService(db, airbyte_client_factice)
 
-    source, flux = await service.connecter_postgres(
-        organisation, "Ma base", "hote", 5432, "base", "user", "mdp"
+    source, flux = await service.connecter_base(
+        organisation, "postgres", "Ma base", "hote", 5432, "base", "user", "mdp"
     )
 
     assert source.airbyte_source_id == "source-test"
@@ -43,8 +44,8 @@ async def test_synchroniser_cree_la_connexion_une_seule_fois(
 ) -> None:
     organisation = await _organisation(db)
     service = SourceService(db, airbyte_client_factice)
-    source, _ = await service.connecter_postgres(
-        organisation, "Ma base", "hote", 5432, "base", "user", "mdp"
+    source, _ = await service.connecter_base(
+        organisation, "postgres", "Ma base", "hote", 5432, "base", "user", "mdp"
     )
 
     job_id = await service.synchroniser(source, organisation, ["customers"])
@@ -65,8 +66,8 @@ async def test_une_synchronisation_deja_en_cours_est_suivie_au_lieu_d_echouer(
     """Airbyte repond 409 quand il a deja lance une synchronisation lui-meme :
     on doit rendre le job en cours, pas une erreur."""
     organisation = await _organisation(db)
-    source, _ = await SourceService(db, airbyte_client_factice).connecter_postgres(
-        organisation, "Ma base", "hote", 5432, "base", "user", "mdp"
+    source, _ = await SourceService(db, airbyte_client_factice).connecter_base(
+        organisation, "postgres", "Ma base", "hote", 5432, "base", "user", "mdp"
     )
 
     def gestionnaire(requete: httpx.Request) -> httpx.Response:
@@ -88,13 +89,48 @@ async def test_une_synchronisation_deja_en_cours_est_suivie_au_lieu_d_echouer(
     assert source.statut == StatutSource.SYNCHRONISATION
 
 
+async def test_un_409_transitoire_est_reessaye(
+    db: AsyncSession, airbyte_client_factice: AirbyteClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Airbyte verrouille brievement la connexion apres la selection des flux :
+    il repond alors 409 avec une liste de jobs vide. Constate en reel."""
+    monkeypatch.setattr(source_service, "DELAI_ENTRE_TENTATIVES_SECONDES", 0)
+    organisation = await _organisation(db)
+    source, _ = await SourceService(db, airbyte_client_factice).connecter_base(
+        organisation, "postgres", "Ma base", "hote", 5432, "base", "user", "mdp"
+    )
+
+    tentatives = {"n": 0}
+
+    def gestionnaire(requete: httpx.Request) -> httpx.Response:
+        chemin = requete.url.path
+        if chemin.endswith("/applications/token"):
+            return httpx.Response(200, json={"access_token": "j", "expires_in": 3600})
+        if "/connections" in chemin:
+            return httpx.Response(200, json={"connectionId": "connexion-test"})
+        if chemin.endswith("/jobs") and requete.method == "POST":
+            tentatives["n"] += 1
+            if tentatives["n"] == 1:
+                return httpx.Response(409, json={"message": "verrou"})
+            return httpx.Response(200, json={"jobId": 12, "status": "pending"})
+        if chemin.endswith("/jobs"):
+            return httpx.Response(200, json={"data": []})
+        return httpx.Response(200, json={})
+
+    service = SourceService(db, _client_airbyte(gestionnaire))
+    job_id = await service.synchroniser(source, organisation, ["customers"])
+
+    assert job_id == 12
+    assert tentatives["n"] == 2
+
+
 async def test_la_connexion_est_enregistree_meme_si_le_declenchement_echoue(
     db: AsyncSession, airbyte_client_factice: AirbyteClient
 ) -> None:
     """Sinon chaque nouvelle tentative creerait une connexion Airbyte orpheline."""
     organisation = await _organisation(db)
-    source, _ = await SourceService(db, airbyte_client_factice).connecter_postgres(
-        organisation, "Ma base", "hote", 5432, "base", "user", "mdp"
+    source, _ = await SourceService(db, airbyte_client_factice).connecter_base(
+        organisation, "postgres", "Ma base", "hote", 5432, "base", "user", "mdp"
     )
 
     def gestionnaire(requete: httpx.Request) -> httpx.Response:
@@ -117,8 +153,8 @@ async def test_statut_sync_marque_la_source_prete_quand_le_job_reussit(
 ) -> None:
     organisation = await _organisation(db)
     service = SourceService(db, airbyte_client_factice)
-    source, _ = await service.connecter_postgres(
-        organisation, "Ma base", "hote", 5432, "base", "user", "mdp"
+    source, _ = await service.connecter_base(
+        organisation, "postgres", "Ma base", "hote", 5432, "base", "user", "mdp"
     )
     await service.synchroniser(source, organisation, ["customers"])
 

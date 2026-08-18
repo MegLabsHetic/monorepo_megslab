@@ -94,7 +94,11 @@ export function PanneauSynchronisation({ source, onTerminee }: Props) {
   if (jobId === null) {
     return (
       <div className="space-y-4">
-        <SelecteurFlux flux={source.flux_disponibles} selection={selection} onChanger={setSelection} />
+        <SelecteurFlux
+          flux={source.flux_disponibles}
+          selection={selection}
+          onChanger={setSelection}
+        />
         {erreur && <Alert>{erreur}</Alert>}
         <div className="flex flex-wrap items-center gap-3">
           <Button

@@ -47,9 +47,18 @@ export interface Source {
   flux_disponibles: Flux[];
   flux_selectionnes: string[];
   cree_le: string;
+  /** Nul pour un fichier depose, ou si l'URL publique d'Airbyte n'est pas configuree. */
+  lien_airbyte: string | null;
+}
+
+export interface TypeConnecteur {
+  cle: string;
+  libelle: string;
+  port_defaut: number;
 }
 
 export interface ConnexionPostgres {
+  type_source: string;
   nom: string;
   host: string;
   port: number;
@@ -136,6 +145,9 @@ export const api = {
 
   profil: (jeton: string) => requete<Utilisateur>("/auth/moi", { headers: entete(jeton) }),
 
+  listerConnecteurs: (jeton: string) =>
+    requete<TypeConnecteur[]>("/sources/connecteurs", { headers: entete(jeton) }),
+
   listerSources: (jeton: string) => requete<Source[]>("/sources", { headers: entete(jeton) }),
 
   detailSource: (jeton: string, id: string) =>
@@ -185,10 +197,10 @@ export const api = {
     }),
 
   apercuTable: (jeton: string, id: string, table: string, limite = 50) =>
-    requete<Apercu>(
-      `/sources/${id}/tables/${encodeURIComponent(table)}/apercu?limite=${limite}`,
-      { headers: entete(jeton), delaiMax: DELAI_ENTREPOT }
-    ),
+    requete<Apercu>(`/sources/${id}/tables/${encodeURIComponent(table)}/apercu?limite=${limite}`, {
+      headers: entete(jeton),
+      delaiMax: DELAI_ENTREPOT,
+    }),
 
   profilTable: (jeton: string, id: string, table: string) =>
     requete<ProfilColonne[]>(`/sources/${id}/tables/${encodeURIComponent(table)}/profil`, {

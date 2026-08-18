@@ -1,5 +1,6 @@
 """Connexion d'une source de donnees et declenchement de sa synchronisation."""
 
+import asyncio
 import logging
 
 import httpx
@@ -7,11 +8,17 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.airbyte_client import AirbyteClient, StreamDecouvert
+from app.core.connecteurs import connecteur
 from app.core.errors import ErreurUtilisateur
 from app.models.data_source import DataSource, StatutSource
 from app.models.organization import Organization
 
 logger = logging.getLogger(__name__)
+
+# Airbyte garde brievement un verrou sur la connexion apres la selection des
+# flux : deux secondes suffisent en pratique a le voir se relacher.
+TENTATIVES_DECLENCHEMENT = 3
+DELAI_ENTRE_TENTATIVES_SECONDES = 2
 
 _ERREUR_AIRBYTE_INJOIGNABLE = (
     "Le service de connexion aux sources de donnees est momentanement indisponible."
@@ -23,9 +30,10 @@ class SourceService:
         self._db = db
         self._airbyte_client = airbyte_client
 
-    async def connecter_postgres(
+    async def connecter_base(
         self,
         organisation: Organization,
+        type_source: str,
         nom: str,
         host: str,
         port: int,
@@ -35,19 +43,20 @@ class SourceService:
     ) -> tuple[DataSource, list[StreamDecouvert]]:
         """Cree la source cote Airbyte, decouvre ses tables, et l'enregistre.
 
+        `type_source` choisit le connecteur (PostgreSQL, MySQL, SQL Server) :
+        seule la configuration envoyee a Airbyte change, le reste du parcours
+        est identique.
+
         La connexion (qui relie cette source a l'entrepot) n'est creee qu'a
         `synchroniser` : entre les deux, l'utilisateur choisit quelles tables
         l'interessent.
         """
         try:
-            source_id = await self._airbyte_client.creer_source_postgres(
-                workspace_id=organisation.airbyte_workspace_id,
-                nom=nom,
-                host=host,
-                port=port,
-                database=database,
-                username=username,
-                password=password,
+            configuration = connecteur(type_source).configuration(
+                host, port, database, username, password
+            )
+            source_id = await self._airbyte_client.creer_source(
+                organisation.airbyte_workspace_id, nom, configuration
             )
             flux = await self._airbyte_client.lister_streams(source_id)
         except httpx.HTTPError as erreur:
@@ -57,6 +66,7 @@ class SourceService:
         source = DataSource(
             organization_id=organisation.id,
             nom=nom,
+            type_source=type_source,
             airbyte_source_id=source_id,
             schema_entrepot=f"org_{organisation.id}",
             # Court, stable, et derive de l'id Airbyte : deux sources d'une meme
@@ -119,23 +129,35 @@ class SourceService:
         await self._db.commit()
 
     async def _declencher_ou_recuperer(self, connection_id: str) -> int:
-        """Lance une synchronisation, ou rend celle qui tourne deja.
+        """Lance une synchronisation, en absorbant les deux causes de 409.
 
-        Airbyte repond 409 quand une synchronisation est en cours sur la
-        connexion — ce qui arrive notamment parce qu'il en declenche une
-        lui-meme a la selection des flux. Ce n'est pas une panne : l'utilisateur
-        veut suivre la synchronisation, peu importe qui l'a lancee.
+        Airbyte repond 409 dans deux situations differentes, constatees en
+        pratique :
+
+        - une synchronisation tourne vraiment (il en declenche parfois une
+          lui-meme a la selection des flux) : la suivre vaut mieux qu'echouer ;
+        - le verrou pose sur la connexion juste apres la selection des flux
+          n'est pas encore relache. C'est transitoire, et la liste des jobs est
+          alors vide — d'ou une nouvelle tentative apres une courte pause.
         """
-        try:
-            return await self._airbyte_client.declencher_sync(connection_id)
-        except httpx.HTTPStatusError as erreur:
-            if erreur.response.status_code != 409:
-                raise
-            job_id = await self._airbyte_client.job_en_cours(connection_id)
-            if job_id is None:
-                raise
-            logger.info("Synchronisation deja en cours (job %s), on la suit", job_id)
-            return job_id
+        for tentative in range(TENTATIVES_DECLENCHEMENT):
+            try:
+                return await self._airbyte_client.declencher_sync(connection_id)
+            except httpx.HTTPStatusError as erreur:
+                if erreur.response.status_code != 409:
+                    raise
+
+                job_id = await self._airbyte_client.job_en_cours(connection_id)
+                if job_id is not None:
+                    logger.info("Synchronisation deja en cours (job %s), on la suit", job_id)
+                    return job_id
+
+                if tentative == TENTATIVES_DECLENCHEMENT - 1:
+                    raise
+                logger.info("Connexion encore verrouillee, nouvelle tentative")
+                await asyncio.sleep(DELAI_ENTRE_TENTATIVES_SECONDES)
+
+        raise RuntimeError("boucle de declenchement terminee sans resultat")
 
     async def lister(self, organisation: Organization) -> list[DataSource]:
         """Les sources connectees par une organisation, la plus recente d'abord."""

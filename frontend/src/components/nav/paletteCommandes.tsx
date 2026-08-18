@@ -16,7 +16,12 @@ interface Commande {
 
 const COMMANDES_FIXES: Commande[] = [
   { id: "dashboard", libelle: "Tableau de bord", detail: "Vue d'ensemble", href: "/dashboard" },
-  { id: "donnees", libelle: "Catalogue de donnees", detail: "Toutes les sources", href: "/donnees" },
+  {
+    id: "donnees",
+    libelle: "Catalogue de donnees",
+    detail: "Toutes les sources",
+    href: "/donnees",
+  },
   {
     id: "nouvelle",
     libelle: "Connecter une source",

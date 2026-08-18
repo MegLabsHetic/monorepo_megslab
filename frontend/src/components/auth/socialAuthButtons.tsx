@@ -26,7 +26,9 @@ export function SocialAuthButtons() {
           Microsoft
         </button>
       </div>
-      <p className="text-center text-xs text-muted">Connexion Google/Microsoft bientot disponible</p>
+      <p className="text-center text-xs text-muted">
+        Connexion Google/Microsoft bientot disponible
+      </p>
 
       <div className="my-2 flex items-center gap-3">
         <span className="h-px flex-1 bg-line" />

@@ -5,7 +5,16 @@ from datetime import datetime
 from pydantic import BaseModel, Field
 
 
-class ConnexionPostgresDemande(BaseModel):
+class TypeConnecteurReponse(BaseModel):
+    cle: str
+    libelle: str
+    port_defaut: int
+
+
+class ConnexionBaseDemande(BaseModel):
+    # Le port par defaut depend du type ; l'interface le pre-remplit depuis
+    # GET /sources/connecteurs.
+    type_source: str = "postgres"
     nom: str = Field(min_length=1)
     host: str = Field(min_length=1)
     port: int = 5432
@@ -33,6 +42,9 @@ class SourceReponse(BaseModel):
     flux_disponibles: list[FluxReponse]
     flux_selectionnes: list[str]
     cree_le: datetime
+    # Nul pour une source fichier (aucun objet Airbyte) ou si l'URL publique
+    # d'Airbyte n'est pas configuree.
+    lien_airbyte: str | None = None
 
 
 class SynchronisationDemande(BaseModel):

@@ -90,8 +90,8 @@ export function ZoneDepotFichier({ onImporte }: Props) {
           <>
             <p className="text-sm text-text">Glissez un fichier ici</p>
             <p className="mt-2 text-xs text-muted">
-              CSV ou Excel, {TAILLE_MAX_MO} Mo maximum. La premiere ligne doit contenir les
-              en-tetes de colonnes.
+              CSV ou Excel, {TAILLE_MAX_MO} Mo maximum. La premiere ligne doit contenir les en-tetes
+              de colonnes.
             </p>
             <Button
               variante="contour"

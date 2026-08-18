@@ -8,10 +8,7 @@ import { DecouverteEnCours } from "@/components/donnees/decouverteEnCours";
 import { FormulaireConnexionPostgres } from "@/components/donnees/formulaireConnexionPostgres";
 import { PanneauSynchronisation } from "@/components/donnees/panneauSynchronisation";
 import { ZoneDepotFichier } from "@/components/donnees/zoneDepotFichier";
-import {
-  useSession,
-  useTraduireErreur,
-} from "@/components/session/contexteSession";
+import { useSession, useTraduireErreur } from "@/components/session/contexteSession";
 import { classesBouton } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { type ConnexionPostgres, type Source, api } from "@/lib/api";
@@ -50,8 +47,7 @@ export default function PageNouvelleSource() {
     }
   };
 
-  const indexEtape =
-    etape.nom === "identifiants" ? 0 : etape.nom === "decouverte" ? 1 : 2;
+  const indexEtape = etape.nom === "identifiants" ? 0 : etape.nom === "decouverte" ? 1 : 2;
 
   return (
     <div className="mx-auto max-w-3xl space-y-8">
@@ -91,9 +87,7 @@ export default function PageNouvelleSource() {
 
       {mode === "fichier" && (
         <Card className="p-6 sm:p-8">
-          <ZoneDepotFichier
-            onImporte={(source) => routeur.push(`/donnees/${source.id}`)}
-          />
+          <ZoneDepotFichier onImporte={(source) => routeur.push(`/donnees/${source.id}`)} />
         </Card>
       )}
 
@@ -110,7 +104,7 @@ export default function PageNouvelleSource() {
                     ? "border-accent/40 bg-surface-2 text-accent"
                     : index < indexEtape
                       ? "border-line text-text"
-                      : "border-line text-muted",
+                      : "border-line text-muted"
                 )}
               >
                 {index + 1}. {libelle}
@@ -120,10 +114,7 @@ export default function PageNouvelleSource() {
 
           <Card className="p-6 sm:p-8">
             {etape.nom === "identifiants" && (
-              <FormulaireConnexionPostgres
-                onSoumettre={connecter}
-                erreur={erreur}
-              />
+              <FormulaireConnexionPostgres onSoumettre={connecter} erreur={erreur} />
             )}
 
             {etape.nom === "decouverte" && (
@@ -138,11 +129,8 @@ export default function PageNouvelleSource() {
                   </h2>
                   <p className="mt-2 text-sm text-muted">
                     Choisissez celles a copier dans le schema{" "}
-                    <span className="font-mono text-text">
-                      {etape.source.schema_entrepot}
-                    </span>
-                    . Les autres restent disponibles et pourront etre
-                    synchronisees plus tard.
+                    <span className="font-mono text-text">{etape.source.schema_entrepot}</span>. Les
+                    autres restent disponibles et pourront etre synchronisees plus tard.
                   </p>
                 </div>
                 <PanneauSynchronisation source={etape.source} />
@@ -153,10 +141,7 @@ export default function PageNouvelleSource() {
                   >
                     Voir la fiche de la source
                   </Link>
-                  <Link
-                    href="/donnees"
-                    className={classesBouton("discret", "w-auto px-5")}
-                  >
+                  <Link href="/donnees" className={classesBouton("discret", "w-auto px-5")}>
                     Retour au catalogue
                   </Link>
                 </div>
@@ -168,8 +153,8 @@ export default function PageNouvelleSource() {
 
       {mode === "postgres" && etape.nom === "flux" && (
         <p className="text-xs text-muted">
-          La source est deja enregistree : vous pouvez quitter cette page et
-          lancer la synchronisation plus tard depuis sa fiche.
+          La source est deja enregistree : vous pouvez quitter cette page et lancer la
+          synchronisation plus tard depuis sa fiche.
         </p>
       )}
 
@@ -202,12 +187,10 @@ function ChoixSource({
       className={cn(
         "rounded-xl border border-line bg-surface p-6 text-left transition-colors duration-140",
         "hover:border-accent/40 hover:bg-surface-2",
-        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent",
+        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
       )}
     >
-      <span className="block font-display text-base font-semibold text-text">
-        {titre}
-      </span>
+      <span className="block font-display text-base font-semibold text-text">{titre}</span>
       <span className="mt-2 block text-sm text-muted">{description}</span>
     </button>
   );

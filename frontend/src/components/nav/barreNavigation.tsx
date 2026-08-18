@@ -79,7 +79,10 @@ export function BarreNavigation() {
         </div>
       </div>
 
-      <nav aria-label="Navigation compacte" className="mx-auto flex max-w-6xl gap-1 px-4 pb-2 md:hidden">
+      <nav
+        aria-label="Navigation compacte"
+        className="mx-auto flex max-w-6xl gap-1 px-4 pb-2 md:hidden"
+      >
         {liens}
       </nav>
 

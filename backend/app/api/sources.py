@@ -5,13 +5,15 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import organisation_courante
 from app.core.airbyte_client import AirbyteClient, get_airbyte_client
+from app.core.config import get_settings
+from app.core.connecteurs import CONNECTEURS
 from app.core.database import get_db
 from app.core.errors import ErreurUtilisateur
 from app.models.data_source import DataSource
 from app.models.organization import Organization
 from app.schemas.source import (
     ApercuReponse,
-    ConnexionPostgresDemande,
+    ConnexionBaseDemande,
     FluxReponse,
     ProfilColonneReponse,
     SourceReponse,
@@ -19,6 +21,7 @@ from app.schemas.source import (
     SynchronisationDemande,
     SynchronisationReponse,
     TableReponse,
+    TypeConnecteurReponse,
 )
 from app.services.file_source_service import FileSourceService
 from app.services.source_service import SourceService
@@ -44,7 +47,31 @@ def _en_reponse(source: DataSource) -> SourceReponse:
         ],
         flux_selectionnes=source.flux_selectionnes or [],
         cree_le=source.cree_le,
+        lien_airbyte=_lien_airbyte(source),
     )
+
+
+def _lien_airbyte(source: DataSource) -> str | None:
+    """Le lien vers la source dans Airbyte, pour la configuration avancee.
+
+    Reserve aux sources qui en ont une : un fichier depose n'existe pas
+    cote Airbyte. Nul aussi tant que l'URL publique n'est pas renseignee,
+    plutot que de fabriquer un lien qui ne menerait nulle part.
+    """
+    base = get_settings().airbyte_url_publique.rstrip("/")
+    if not base or source.airbyte_source_id is None:
+        return None
+    espace = source.organization.airbyte_workspace_id
+    return f"{base}/workspaces/{espace}/source/{source.airbyte_source_id}"
+
+
+@router.get("/connecteurs", response_model=list[TypeConnecteurReponse])
+async def lister_connecteurs():
+    """Les types de bases que l'interface peut proposer."""
+    return [
+        TypeConnecteurReponse(cle=c.cle, libelle=c.libelle, port_defaut=c.port_defaut)
+        for c in CONNECTEURS.values()
+    ]
 
 
 @router.get("", response_model=list[SourceReponse])
@@ -59,14 +86,15 @@ async def lister(
 
 @router.post("", response_model=SourceReponse, status_code=201)
 async def connecter(
-    demande: ConnexionPostgresDemande,
+    demande: ConnexionBaseDemande,
     organisation: Organization = Depends(organisation_courante),
     db: AsyncSession = Depends(get_db),
     airbyte_client: AirbyteClient = Depends(get_airbyte_client),
 ):
     service = SourceService(db, airbyte_client)
-    source, _ = await service.connecter_postgres(
+    source, _ = await service.connecter_base(
         organisation,
+        demande.type_source,
         demande.nom,
         demande.host,
         demande.port,

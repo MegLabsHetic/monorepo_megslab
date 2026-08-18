@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { LogoConnecteur } from "@/components/donnees/logoConnecteur";
 import { PastilleStatut } from "@/components/donnees/pastilleStatut";
 import { type Source } from "@/lib/api";
 import { decrireStatutSource, formaterDate, formaterNombre } from "@/lib/sources";
@@ -13,9 +14,16 @@ export function CarteSource({ source }: { source: Source }) {
       className="flex flex-col rounded-xl border border-line bg-surface p-5 transition-colors duration-140 hover:border-accent/40 hover:bg-surface-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
     >
       <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <h3 className="truncate font-display text-base font-semibold text-text">{source.nom}</h3>
-          <p className="mt-1 font-mono text-xs text-muted">{source.type_source}</p>
+        <div className="flex min-w-0 items-start gap-3">
+          <span className="mt-0.5 shrink-0 text-accent">
+            <LogoConnecteur type={source.type_source} className="h-7 w-7" />
+          </span>
+          <div className="min-w-0">
+            <h3 className="truncate font-display text-base font-semibold text-text">
+              {source.nom}
+            </h3>
+            <p className="mt-1 font-mono text-xs text-muted">{source.type_source}</p>
+          </div>
         </div>
         <PastilleStatut ton={statut.ton} libelle={statut.libelle} titre={statut.explication} />
       </div>

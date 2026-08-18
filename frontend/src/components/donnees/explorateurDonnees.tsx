@@ -238,15 +238,17 @@ function TableauProfil({ profil }: { profil: ProfilColonne[] | null }) {
       <table className="w-full border-collapse text-left">
         <thead>
           <tr className="border-b border-line">
-            {["colonne", "type", "valeurs", "vides", "distinctes (≈)", "min", "max"].map((titre) => (
-              <th
-                key={titre}
-                scope="col"
-                className="whitespace-nowrap px-4 py-3 font-mono text-xs uppercase tracking-wide text-muted"
-              >
-                {titre}
-              </th>
-            ))}
+            {["colonne", "type", "valeurs", "vides", "distinctes (≈)", "min", "max"].map(
+              (titre) => (
+                <th
+                  key={titre}
+                  scope="col"
+                  className="whitespace-nowrap px-4 py-3 font-mono text-xs uppercase tracking-wide text-muted"
+                >
+                  {titre}
+                </th>
+              )
+            )}
           </tr>
         </thead>
         <tbody>
@@ -258,11 +260,11 @@ function TableauProfil({ profil }: { profil: ProfilColonne[] | null }) {
               <td className="whitespace-nowrap px-4 py-2.5 font-mono text-xs text-muted">
                 {colonne.type}
               </td>
-              <Cellule valeur={colonne.nb_valeurs === null ? null : formaterNombre(colonne.nb_valeurs)} />
               <Cellule
-                valeur={
-                  colonne.pourcentage_nuls === null ? null : `${colonne.pourcentage_nuls} %`
-                }
+                valeur={colonne.nb_valeurs === null ? null : formaterNombre(colonne.nb_valeurs)}
+              />
+              <Cellule
+                valeur={colonne.pourcentage_nuls === null ? null : `${colonne.pourcentage_nuls} %`}
               />
               <Cellule
                 valeur={
