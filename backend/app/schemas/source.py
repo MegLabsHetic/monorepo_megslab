@@ -11,6 +11,14 @@ class TypeConnecteurReponse(BaseModel):
     port_defaut: int
 
 
+class SourceImportableReponse(BaseModel):
+    """Une source presente dans Airbyte mais pas encore referencee par MegLabs."""
+
+    id: str
+    nom: str
+    type_source: str
+
+
 class ConnexionBaseDemande(BaseModel):
     # Le port par defaut depend du type ; l'interface le pre-remplit depuis
     # GET /sources/connecteurs.

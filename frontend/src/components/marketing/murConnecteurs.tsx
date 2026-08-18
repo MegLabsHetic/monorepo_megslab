@@ -71,15 +71,15 @@ export function MurConnecteurs() {
           Connectez ce que vous avez deja
         </h2>
         <p className="font-mono text-sm text-muted">
-          <span className="text-marque">{DISPONIBLES.length}</span> disponibles · {A_VENIR.length} a
-          venir
+          <span className="text-marque">{DISPONIBLES.length}</span> en un formulaire ·{" "}
+          {A_VENIR.length} via Airbyte
         </p>
       </div>
 
       <p className="mt-3 max-w-2xl text-text-doux">
-        MegLabs s&apos;appuie sur les connecteurs Airbyte. Quatre sont branches et testes
-        aujourd&apos;hui ; les autres sont a portee du meme mecanisme, mais ne sont pas encore
-        actives — ils apparaissent en gris.
+        Quatre sources se branchent directement depuis MegLabs, en remplissant un formulaire. Les
+        autres se configurent dans Airbyte — sur lequel MegLabs s&apos;appuie — puis
+        s&apos;importent en un clic : elles se gerent ensuite exactement comme les premieres.
       </p>
 
       <ul className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
@@ -90,7 +90,9 @@ export function MurConnecteurs() {
 
       <div className="mt-10 flex items-center gap-3">
         <span className="h-px flex-1 bg-line" />
-        <span className="text-xs uppercase tracking-widest text-muted">Pas encore actives</span>
+        <span className="text-xs uppercase tracking-widest text-muted">
+          A configurer dans Airbyte, puis a importer
+        </span>
         <span className="h-px flex-1 bg-line" />
       </div>
 
@@ -118,7 +120,11 @@ function Tuile({
           ? "border-line bg-surface shadow-carte"
           : "border-dashed border-line bg-transparent"
       )}
-      title={disponible ? `${connecteur.nom} — disponible` : `${connecteur.nom} — pas encore actif`}
+      title={
+        disponible
+          ? `${connecteur.nom} — formulaire integre`
+          : `${connecteur.nom} — a configurer dans Airbyte, puis a importer`
+      }
     >
       <Image
         src={`/connecteurs/${connecteur.fichier}.svg`}

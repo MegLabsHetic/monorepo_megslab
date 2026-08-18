@@ -7,7 +7,7 @@ import httpx
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.airbyte_client import AirbyteClient, StreamDecouvert
+from app.core.airbyte_client import AirbyteClient, SourceAirbyte, StreamDecouvert
 from app.core.connecteurs import connecteur
 from app.core.errors import ErreurUtilisateur
 from app.models.data_source import DataSource, StatutSource
@@ -80,6 +80,60 @@ class SourceService:
         await self._db.commit()
         await self._db.refresh(source)
         return source, flux
+
+    async def sources_airbyte_importables(self, organisation: Organization) -> list[SourceAirbyte]:
+        """Les sources presentes dans le workspace Airbyte mais inconnues de MegLabs.
+
+        Typiquement : celles configurees directement dans Airbyte, pour un
+        connecteur que notre formulaire ne propose pas.
+        """
+        try:
+            toutes = await self._airbyte_client.lister_sources(organisation.airbyte_workspace_id)
+        except httpx.HTTPError as erreur:
+            logger.exception("Echec de listage des sources Airbyte de %s", organisation.id)
+            raise ErreurUtilisateur(_ERREUR_AIRBYTE_INJOIGNABLE, code_http=503) from erreur
+
+        connues = {source.airbyte_source_id for source in await self.lister(organisation)}
+        return [source for source in toutes if source.id not in connues]
+
+    async def importer_depuis_airbyte(
+        self, organisation: Organization, airbyte_source_id: str
+    ) -> DataSource:
+        """Adopte une source existante d'Airbyte : MegLabs la reference et la gere ensuite.
+
+        Aucun identifiant n'est demande : ils sont deja chez Airbyte, chiffres.
+        On ne fait que decouvrir son schema et l'enregistrer.
+        """
+        importables = await self.sources_airbyte_importables(organisation)
+        correspondance = next((s for s in importables if s.id == airbyte_source_id), None)
+        if correspondance is None:
+            raise ErreurUtilisateur(
+                "Cette source n'existe pas dans votre espace, ou est deja importee.",
+                code_http=404,
+            )
+
+        try:
+            flux = await self._airbyte_client.lister_streams(airbyte_source_id)
+        except httpx.HTTPError as erreur:
+            logger.exception("Echec de decouverte de la source adoptee %s", airbyte_source_id)
+            raise ErreurUtilisateur(_ERREUR_AIRBYTE_INJOIGNABLE, code_http=503) from erreur
+
+        source = DataSource(
+            organization_id=organisation.id,
+            nom=correspondance.nom,
+            type_source=correspondance.type_source,
+            airbyte_source_id=correspondance.id,
+            schema_entrepot=f"org_{organisation.id}",
+            prefixe_entrepot=f"s{correspondance.id.replace('-', '')[:8]}_",
+            flux_decouverts=[
+                {"nom": f.nom, "namespace": f.namespace, "colonnes": f.colonnes} for f in flux
+            ],
+        )
+        self._db.add(source)
+        await self._db.commit()
+        await self._db.refresh(source)
+        logger.info("Source Airbyte %s adoptee par %s", airbyte_source_id, organisation.id)
+        return source
 
     async def synchroniser(
         self, source: DataSource, organisation: Organization, noms_flux: list[str]

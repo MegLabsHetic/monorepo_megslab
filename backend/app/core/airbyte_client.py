@@ -22,6 +22,15 @@ DELAI_APPEL_SECONDES = 120
 
 
 @dataclass(frozen=True)
+class SourceAirbyte:
+    """Une source telle qu'Airbyte la connait, qu'elle vienne de MegLabs ou non."""
+
+    id: str
+    nom: str
+    type_source: str
+
+
+@dataclass(frozen=True)
 class StreamDecouvert:
     """Une table trouvee par Airbyte lors de la decouverte du schema d'une source."""
 
@@ -66,6 +75,25 @@ class AirbyteClient:
             json={"name": nom, "workspaceId": workspace_id, "configuration": configuration},
         )
         return corps["sourceId"]
+
+    async def lister_sources(self, workspace_id: str) -> list[SourceAirbyte]:
+        """Toutes les sources d'un workspace, y compris celles creees hors MegLabs.
+
+        C'est ce qui permet d'adopter une source configuree directement dans
+        Airbyte — et donc d'atteindre n'importe lequel de ses connecteurs, meme
+        ceux que notre formulaire ne sait pas remplir.
+        """
+        corps = await self._appeler(
+            "GET", "/api/public/v1/sources", params={"workspaceIds": workspace_id}
+        )
+        return [
+            SourceAirbyte(
+                id=source["sourceId"],
+                nom=source.get("name", "Source sans nom"),
+                type_source=source.get("sourceType", "inconnu"),
+            )
+            for source in corps.get("data", [])
+        ]
 
     async def lister_streams(self, source_id: str) -> list[StreamDecouvert]:
         """Decouvre les tables et colonnes visibles par une source deja creee."""

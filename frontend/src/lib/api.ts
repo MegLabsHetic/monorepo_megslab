@@ -57,6 +57,13 @@ export interface Organisation {
   lien_airbyte: string | null;
 }
 
+/** Une source presente dans l'espace Airbyte, que MegLabs ne reference pas encore. */
+export interface SourceImportable {
+  id: string;
+  nom: string;
+  type_source: string;
+}
+
 export interface TypeConnecteur {
   cle: string;
   libelle: string;
@@ -153,6 +160,21 @@ export const api = {
 
   organisation: (jeton: string) =>
     requete<Organisation>("/organisation", { headers: entete(jeton) }),
+
+  // Ces deux appels interrogent Airbyte : lister ses sources et decouvrir le
+  // schema de celle qu'on adopte prennent le meme temps qu'une connexion.
+  sourcesImportables: (jeton: string) =>
+    requete<SourceImportable[]>("/sources/airbyte", {
+      headers: entete(jeton),
+      delaiMax: DELAI_CONNEXION_SOURCE,
+    }),
+
+  importerSourceAirbyte: (jeton: string, id: string) =>
+    requete<Source>(`/sources/airbyte/${id}/importer`, {
+      method: "POST",
+      headers: entete(jeton),
+      delaiMax: DELAI_CONNEXION_SOURCE,
+    }),
 
   listerConnecteurs: (jeton: string) =>
     requete<TypeConnecteur[]>("/sources/connecteurs", { headers: entete(jeton) }),

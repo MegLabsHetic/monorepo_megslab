@@ -16,6 +16,7 @@ from app.schemas.source import (
     ConnexionBaseDemande,
     FluxReponse,
     ProfilColonneReponse,
+    SourceImportableReponse,
     SourceReponse,
     StatutSyncReponse,
     SynchronisationDemande,
@@ -72,6 +73,30 @@ async def lister_connecteurs():
         TypeConnecteurReponse(cle=c.cle, libelle=c.libelle, port_defaut=c.port_defaut)
         for c in CONNECTEURS.values()
     ]
+
+
+@router.get("/airbyte", response_model=list[SourceImportableReponse])
+async def lister_importables(
+    organisation: Organization = Depends(organisation_courante),
+    db: AsyncSession = Depends(get_db),
+    airbyte_client: AirbyteClient = Depends(get_airbyte_client),
+):
+    """Les sources de l'espace Airbyte que MegLabs ne reference pas encore."""
+    service = SourceService(db, airbyte_client)
+    sources = await service.sources_airbyte_importables(organisation)
+    return [SourceImportableReponse(id=s.id, nom=s.nom, type_source=s.type_source) for s in sources]
+
+
+@router.post("/airbyte/{airbyte_source_id}/importer", response_model=SourceReponse, status_code=201)
+async def importer_depuis_airbyte(
+    airbyte_source_id: str,
+    organisation: Organization = Depends(organisation_courante),
+    db: AsyncSession = Depends(get_db),
+    airbyte_client: AirbyteClient = Depends(get_airbyte_client),
+):
+    service = SourceService(db, airbyte_client)
+    source = await service.importer_depuis_airbyte(organisation, airbyte_source_id)
+    return _en_reponse(source)
 
 
 @router.get("", response_model=list[SourceReponse])

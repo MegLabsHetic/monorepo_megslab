@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 
 import { DecouverteEnCours } from "@/components/donnees/decouverteEnCours";
 import { FormulaireConnexionPostgres } from "@/components/donnees/formulaireConnexionPostgres";
+import { ImportAirbyte } from "@/components/donnees/importAirbyte";
 import { PanneauSynchronisation } from "@/components/donnees/panneauSynchronisation";
 import { ZoneDepotFichier } from "@/components/donnees/zoneDepotFichier";
 import { useSession, useTraduireErreur } from "@/components/session/contexteSession";
@@ -14,7 +15,7 @@ import { Card } from "@/components/ui/card";
 import { type ConnexionPostgres, type Source, api } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
-type Mode = "choix" | "postgres" | "fichier";
+type Mode = "choix" | "postgres" | "fichier" | "airbyte";
 
 type Etape =
   | { nom: "identifiants" }
@@ -67,22 +68,28 @@ export default function PageNouvelleSource() {
           &lt; Catalogue
         </Link>
         <h1 className="mt-3 font-display text-2xl font-semibold tracking-tight text-text lg:text-3xl">
-          {mode === "fichier" ? "Deposer un fichier" : "Ajouter des donnees"}
+          {mode === "fichier"
+            ? "Deposer un fichier"
+            : mode === "airbyte"
+              ? "Importer depuis Airbyte"
+              : "Ajouter des donnees"}
         </h1>
         <p className="mt-2 text-sm text-muted">
           {mode === "postgres"
             ? "MegLabs teste la connexion, lit le schema de votre base, puis copie les tables que vous choisissez dans votre entrepot."
             : mode === "fichier"
               ? "Le fichier est lu, type, et ecrit directement dans votre entrepot. Aucun connecteur n'est necessaire."
-              : "Deux facons d'alimenter votre entrepot : brancher une base existante, ou deposer un fichier."}
+              : mode === "airbyte"
+                ? "Reprenez une source configuree dans votre espace Airbyte : MegLabs la reference et la gere ensuite comme les autres."
+                : "Trois facons d'alimenter votre entrepot."}
         </p>
       </header>
 
       {mode === "choix" && (
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid gap-4 lg:grid-cols-3">
           <ChoixSource
             titre="Connecter une base"
-            description="PostgreSQL. MegLabs lit son schema et copie les tables choisies, avec des synchronisations repetables."
+            description="PostgreSQL, MySQL ou SQL Server. MegLabs lit le schema et copie les tables choisies."
             onClick={() => setMode("postgres")}
           />
           <ChoixSource
@@ -90,7 +97,21 @@ export default function PageNouvelleSource() {
             description="CSV ou Excel, jusqu'a 500 Mo. Import immediat, sans configuration."
             onClick={() => setMode("fichier")}
           />
+          <ChoixSource
+            titre="Importer depuis Airbyte"
+            description="Pour tout autre connecteur : configurez-le dans Airbyte, puis reprenez-le ici."
+            onClick={() => setMode("airbyte")}
+          />
         </div>
+      )}
+
+      {mode === "airbyte" && (
+        <Card className="p-6 sm:p-8">
+          <ImportAirbyte
+            lienAirbyte={lienAirbyte}
+            onImportee={(source) => routeur.push(`/donnees/${source.id}`)}
+          />
+        </Card>
       )}
 
       {mode === "fichier" && (
@@ -166,27 +187,32 @@ export default function PageNouvelleSource() {
         </p>
       )}
 
-      {lienAirbyte && (
+      {lienAirbyte && mode !== "airbyte" && (
         <div className="rounded-2xl border border-dashed border-line p-5">
           <h2 className="font-display text-base font-semibold text-text">
             Un connecteur qui n&apos;est pas dans la liste ?
           </h2>
           <p className="mt-2 text-sm text-text-doux">
-            MegLabs s&apos;appuie sur Airbyte, qui en propose plusieurs centaines. Vous pouvez en
-            configurer un directement dans votre espace Airbyte.{" "}
-            <span className="text-muted">
-              A savoir : une source creee la-bas reste geree la-bas — cette page ne liste que les
-              sources creees depuis MegLabs.
-            </span>
+            MegLabs s&apos;appuie sur Airbyte, qui en propose plusieurs centaines. Configurez-y la
+            source, puis reprenez-la ici : elle se gerera ensuite comme les autres.
           </p>
-          <a
-            href={lienAirbyte}
-            target="_blank"
-            rel="noreferrer"
-            className={classesBouton("contour", "mt-4 w-auto")}
-          >
-            Ouvrir Airbyte
-          </a>
+          <div className="mt-4 flex flex-wrap gap-3">
+            <a
+              href={lienAirbyte}
+              target="_blank"
+              rel="noreferrer"
+              className={classesBouton("contour", "w-auto")}
+            >
+              Ouvrir Airbyte
+            </a>
+            <button
+              type="button"
+              onClick={() => setMode("airbyte")}
+              className={classesBouton("discret", "w-auto")}
+            >
+              Importer une source existante
+            </button>
+          </div>
         </div>
       )}
 

@@ -162,3 +162,89 @@ async def test_statut_sync_marque_la_source_prete_quand_le_job_reussit(
 
     assert job["status"] == "succeeded"
     assert source.statut == StatutSource.PRETE
+
+
+async def test_seules_les_sources_inconnues_sont_proposees_a_l_import(
+    db: AsyncSession, airbyte_client_factice: AirbyteClient
+) -> None:
+    """Une source deja referencee par MegLabs ne doit pas etre proposee deux fois."""
+    organisation = await _organisation(db)
+    service = SourceService(db, airbyte_client_factice)
+    await service.connecter_base(
+        organisation, "postgres", "Deja connue", "hote", 5432, "base", "user", "mdp"
+    )
+
+    def gestionnaire(requete: httpx.Request) -> httpx.Response:
+        if requete.url.path.endswith("/applications/token"):
+            return httpx.Response(200, json={"access_token": "j", "expires_in": 3600})
+        return httpx.Response(
+            200,
+            json={
+                "data": [
+                    {"sourceId": "source-test", "name": "Deja connue", "sourceType": "postgres"},
+                    {"sourceId": "orpheline", "name": "Creee dans Airbyte", "sourceType": "stripe"},
+                ]
+            },
+        )
+
+    importables = await SourceService(
+        db, _client_airbyte(gestionnaire)
+    ).sources_airbyte_importables(organisation)
+
+    assert [s.id for s in importables] == ["orpheline"]
+
+
+async def test_importer_une_source_airbyte_la_reference_avec_son_schema(
+    db: AsyncSession,
+) -> None:
+    """Adopter une source ne demande aucun identifiant : ils restent chez Airbyte."""
+    organisation = await _organisation(db)
+
+    def gestionnaire(requete: httpx.Request) -> httpx.Response:
+        chemin = requete.url.path
+        if chemin.endswith("/applications/token"):
+            return httpx.Response(200, json={"access_token": "j", "expires_in": 3600})
+        if chemin.endswith("/streams"):
+            return httpx.Response(
+                200,
+                json=[
+                    {
+                        "streamName": "charges",
+                        "streamnamespace": "stripe",
+                        "propertyFields": [["id"], ["amount"]],
+                    }
+                ],
+            )
+        return httpx.Response(
+            200,
+            json={
+                "data": [
+                    {"sourceId": "orpheline", "name": "Stripe production", "sourceType": "stripe"}
+                ]
+            },
+        )
+
+    source = await SourceService(db, _client_airbyte(gestionnaire)).importer_depuis_airbyte(
+        organisation, "orpheline"
+    )
+
+    assert source.nom == "Stripe production"
+    assert source.type_source == "stripe"
+    assert source.airbyte_source_id == "orpheline"
+    assert [flux["nom"] for flux in source.flux_decouverts] == ["charges"]
+
+
+async def test_importer_une_source_deja_connue_est_refuse(
+    db: AsyncSession, airbyte_client_factice: AirbyteClient
+) -> None:
+    organisation = await _organisation(db)
+
+    def gestionnaire(requete: httpx.Request) -> httpx.Response:
+        if requete.url.path.endswith("/applications/token"):
+            return httpx.Response(200, json={"access_token": "j", "expires_in": 3600})
+        return httpx.Response(200, json={"data": []})
+
+    with pytest.raises(ErreurUtilisateur):
+        await SourceService(db, _client_airbyte(gestionnaire)).importer_depuis_airbyte(
+            organisation, "inexistante"
+        )
