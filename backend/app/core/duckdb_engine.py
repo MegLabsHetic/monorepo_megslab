@@ -16,6 +16,7 @@ etat ne survit d'un appel a l'autre, et ouvrir l'entrepot coute assez cher
 """
 
 import logging
+import re
 from collections.abc import Iterator
 from contextlib import contextmanager
 from dataclasses import dataclass
@@ -47,12 +48,26 @@ class Resultat:
         return len(self.lignes)
 
 
-class ErreurRequete(Exception):
-    """La requete n'a pas pu etre executee. `raison` est affichable."""
+_MOT_DE_PASSE_DSN = re.compile(r"password=\S+")
 
-    def __init__(self, raison: str) -> None:
+
+def _sans_secret(message: str) -> str:
+    """Un message d'erreur qui cite le DSN cite aussi le mot de passe."""
+    return _MOT_DE_PASSE_DSN.sub("password=***", message)
+
+
+class ErreurRequete(Exception):
+    """La requete n'a pas pu etre executee.
+
+    `raison` est affichable a l'utilisateur. `detail` est le message brut du
+    moteur : il ne s'affiche pas, mais l'Analyste en a besoin pour corriger sa
+    requete — « n'a pas pu etre executee » ne dit pas quoi changer.
+    """
+
+    def __init__(self, raison: str, detail: str = "") -> None:
         super().__init__(raison)
         self.raison = raison
+        self.detail = detail
 
 
 class DuckDBEngine:
@@ -97,6 +112,20 @@ class DuckDBEngine:
                 for table in tables
             ]
 
+    def schema(self) -> list[tuple[str, list[tuple[str, str]]]]:
+        """Chaque table avec ses colonnes visibles et leur type, en une seule ouverture.
+
+        C'est ce qui part au modele pour qu'il ecrive du SQL : des noms et des
+        types, jamais de donnees. Le type compte autant que le nom : une date
+        que la synchronisation a deposee en VARCHAR ne se soustrait pas sans
+        conversion, et le modele ne peut le savoir que si on le lui dit.
+        """
+        with self._session() as connexion:
+            return [
+                (table, self._colonnes_typees(connexion, table))
+                for table in self._tables(connexion)
+            ]
+
     def apercu(self, table: str, limite: int = 50) -> Resultat:
         """Les premieres lignes reelles d'une table, colonnes techniques exclues."""
         with self._session() as connexion:
@@ -135,7 +164,9 @@ class DuckDBEngine:
             lignes = curseur.fetchmany(lignes_max + 1)
         except duckdb.Error as erreur:
             logger.exception("Echec d'execution DuckDB sur le schema %s", self._schema)
-            raise ErreurRequete(self._message_lisible(erreur)) from erreur
+            raise ErreurRequete(
+                self._message_lisible(erreur), detail=_sans_secret(str(erreur))
+            ) from erreur
 
         tronque = len(lignes) > lignes_max
         return Resultat(colonnes=colonnes, lignes=lignes[:lignes_max], tronque=tronque)
@@ -153,16 +184,21 @@ class DuckDBEngine:
         return [nom for (nom,) in lignes]
 
     def _colonnes_visibles(self, connexion: duckdb.DuckDBPyConnection, table: str) -> list[str]:
+        return [nom for nom, _ in self._colonnes_typees(connexion, table)]
+
+    def _colonnes_typees(
+        self, connexion: duckdb.DuckDBPyConnection, table: str
+    ) -> list[tuple[str, str]]:
         try:
             lignes = connexion.execute(
-                "select column_name from duckdb_columns() "
+                "select column_name, data_type from duckdb_columns() "
                 "where database_name = ? and table_name = ? order by column_index",
                 [NOM_ENTREPOT, table],
             ).fetchall()
         except duckdb.Error as erreur:
             logger.exception("Echec de lecture des colonnes de %s", table)
             raise ErreurRequete(self._message_lisible(erreur)) from erreur
-        return [nom for (nom,) in lignes if not nom.startswith(PREFIXE_TECHNIQUE)]
+        return [(nom, type_) for nom, type_ in lignes if not nom.startswith(PREFIXE_TECHNIQUE)]
 
     def _table_connue(self, connexion: duckdb.DuckDBPyConnection, table: str) -> str:
         """Le nom de table vient de l'utilisateur : il ne sert a construire une
@@ -196,10 +232,17 @@ class DuckDBEngine:
             connexion.execute("SET lock_configuration=true")
         except duckdb.Error as erreur:
             connexion.close()
-            logger.exception("Echec d'ouverture de l'entrepot pour le schema %s", self._schema)
+            # Pas de logger.exception ici : le message de DuckDB reprend le DSN
+            # complet, mot de passe compris. On le masque, et on coupe le
+            # chainage pour qu'aucune trace en amont ne le reimprime.
+            logger.error(
+                "Echec d'ouverture de l'entrepot pour le schema %s : %s",
+                self._schema,
+                _sans_secret(str(erreur)),
+            )
             raise ErreurRequete(
                 "L'entrepot de donnees n'est pas joignable pour le moment."
-            ) from erreur
+            ) from None
         return connexion
 
     def _dsn(self) -> str:
