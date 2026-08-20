@@ -137,10 +137,26 @@ export default function PageTableauDeBord() {
           La suite
         </h2>
         <div className="grid gap-4 lg:grid-cols-2">
-          <BlocAVenir
-            titre="Interroger vos donnees en langage naturel"
-            description="Poser une question et obtenir une reponse verifiee sur les tables synchronisees. Cette partie n'est pas encore branchee."
-          />
+          <Link
+            href="/assistant"
+            className="group rounded-xl border border-line bg-surface p-5 shadow-carte transition-colors duration-140 hover:border-marque focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-marque"
+          >
+            <div className="flex flex-wrap items-center gap-2">
+              <h3 className="font-display text-sm font-semibold text-text">
+                Interroger vos donnees en langage naturel
+              </h3>
+              <span className="rounded-full bg-marque-douce px-2 py-0.5 font-mono text-[0.65rem] uppercase tracking-wide text-marque">
+                disponible
+              </span>
+            </div>
+            <p className="mt-2 max-w-prose text-sm text-muted">
+              Une question en francais, une requete SQL verifiee, une reponse redigee. Le SQL, le
+              resultat brut et le cout de chaque reponse restent consultables.
+            </p>
+            <span className="mt-4 inline-block text-sm text-marque underline-offset-4 group-hover:underline">
+              Ouvrir l&apos;assistant
+            </span>
+          </Link>
           <BlocAVenir
             titre="Rapports et exports"
             description="Rapports partageables et notebooks exportables a partir de vos analyses. Rien n'est genere aujourd'hui."

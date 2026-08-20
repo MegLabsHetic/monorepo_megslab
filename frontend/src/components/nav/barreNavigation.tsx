@@ -14,6 +14,7 @@ import { cn } from "@/lib/utils";
 const LIENS = [
   { href: "/dashboard", libelle: "Tableau de bord" },
   { href: "/donnees", libelle: "Donnees" },
+  { href: "/assistant", libelle: "Assistant" },
 ];
 
 export function BarreNavigation() {

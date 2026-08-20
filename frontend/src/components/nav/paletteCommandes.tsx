@@ -28,6 +28,7 @@ const COMMANDES_FIXES: Commande[] = [
     detail: "PostgreSQL",
     href: "/donnees/nouvelle",
   },
+  { id: "assistant", libelle: "Assistant", detail: "Poser une question", href: "/assistant" },
 ];
 
 interface Props {

@@ -57,6 +57,32 @@ export interface Organisation {
   lien_airbyte: string | null;
 }
 
+export interface EtapeAgent {
+  agent: string;
+  statut: "terminee" | "refusee" | "ignoree" | string;
+  duree_ms: number;
+  detail: string;
+}
+
+export interface QuestionAssistant {
+  id: string;
+  texte: string;
+  reponse: string;
+  sql: string | null;
+  resultat: Apercu | null;
+  etapes: EtapeAgent[];
+  cout_dollars: number;
+  jetons: number;
+  duree_ms: number;
+  cree_le: string;
+}
+
+/** Ce que le modele recoit reellement : lu dans l'entrepot, jamais simule. */
+export interface ContexteAssistant {
+  schema: string;
+  instructions: string;
+}
+
 /** Une source presente dans l'espace Airbyte, que MegLabs ne reference pas encore. */
 export interface SourceImportable {
   id: string;
@@ -235,6 +261,25 @@ export const api = {
 
   profilTable: (jeton: string, id: string, table: string) =>
     requete<ProfilColonne[]>(`/sources/${id}/tables/${encodeURIComponent(table)}/profil`, {
+      headers: entete(jeton),
+      delaiMax: DELAI_ENTREPOT,
+    }),
+
+  // Une question traverse deux appels au modele et une lecture de l'entrepot :
+  // comptez dix a quinze secondes en pratique.
+  poserQuestion: (jeton: string, texte: string) =>
+    requete<QuestionAssistant>("/questions", {
+      method: "POST",
+      headers: entete(jeton),
+      body: JSON.stringify({ texte }),
+      delaiMax: DELAI_CONNEXION_SOURCE,
+    }),
+
+  historiqueQuestions: (jeton: string) =>
+    requete<QuestionAssistant[]>("/questions", { headers: entete(jeton) }),
+
+  contexteAssistant: (jeton: string) =>
+    requete<ContexteAssistant>("/questions/contexte", {
       headers: entete(jeton),
       delaiMax: DELAI_ENTREPOT,
     }),
