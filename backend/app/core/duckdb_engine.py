@@ -70,9 +70,37 @@ class ErreurRequete(Exception):
         self.detail = detail
 
 
+@dataclass(frozen=True)
+class ColonneProfil:
+    nom: str
+    type: str
+    pourcentage_nuls: float
+    distinctes_approx: int
+    # Les valeurs exactes quand la colonne est une categorie (peu de valeurs
+    # distinctes, courtes) ; None sinon.
+    modalites: tuple[str, ...] | None
+
+
+@dataclass(frozen=True)
+class TableProfil:
+    nom: str
+    nb_lignes: int
+    colonnes: tuple[ColonneProfil, ...]
+
+
+# Au-dela de ce nombre de valeurs distinctes, une colonne texte n'est plus une
+# categorie qu'on peut enumerer a un modele : c'est un identifiant ou du texte.
+MODALITES_MAX = 12
+LONGUEUR_MODALITE_MAX = 40
+
+
 class DuckDBEngine:
     def __init__(self, schema_entrepot: str) -> None:
         self._schema = schema_entrepot
+
+    @property
+    def schema_entrepot(self) -> str:
+        return self._schema
 
     # --- Operations publiques ---------------------------------------------
 
@@ -155,7 +183,60 @@ class DuckDBEngine:
         profils = [dict(zip(resultat.colonnes, ligne)) for ligne in resultat.lignes]
         return [profil for profil in profils if profil.get("column_name") in visibles]
 
+    def profil_complet(self) -> list[TableProfil]:
+        """Toutes les tables avec effectif, colonnes typees et modalites, en une ouverture.
+
+        C'est ce que l'agent Data transmet aux agents qui ecrivent du SQL. Une
+        seule session pour tout : ouvrir l'entrepot coute des secondes, et il y
+        a une requete de profil par table plus une par colonne categorielle.
+        """
+        with self._session() as connexion:
+            return [self._profil_table(connexion, table) for table in self._tables(connexion)]
+
     # --- Interieur ---------------------------------------------------------
+
+    def _profil_table(self, connexion: duckdb.DuckDBPyConnection, table: str) -> TableProfil:
+        resume = self._lire(connexion, f'SUMMARIZE {NOM_ENTREPOT}."{table}"', LIGNES_MAX)
+        lignes = [dict(zip(resume.colonnes, ligne)) for ligne in resume.lignes]
+        nb_lignes = int(lignes[0]["count"]) if lignes else 0
+        colonnes = [
+            self._profil_colonne(connexion, table, ligne)
+            for ligne in lignes
+            if not str(ligne["column_name"]).startswith(PREFIXE_TECHNIQUE)
+        ]
+        return TableProfil(nom=table, nb_lignes=nb_lignes, colonnes=tuple(colonnes))
+
+    def _profil_colonne(
+        self, connexion: duckdb.DuckDBPyConnection, table: str, ligne: dict
+    ) -> ColonneProfil:
+        nom, type_ = str(ligne["column_name"]), str(ligne["column_type"])
+        distinctes = int(ligne["approx_unique"] or 0)
+        modalites = None
+        if type_ == "VARCHAR" and 0 < distinctes <= MODALITES_MAX:
+            modalites = self._modalites(connexion, table, nom)
+        return ColonneProfil(
+            nom=nom,
+            type=type_,
+            pourcentage_nuls=float(ligne["null_percentage"] or 0),
+            distinctes_approx=distinctes,
+            modalites=modalites,
+        )
+
+    def _modalites(
+        self, connexion: duckdb.DuckDBPyConnection, table: str, colonne: str
+    ) -> tuple[str, ...] | None:
+        """`approx_unique` est une estimation : on relit les valeurs exactes et on
+        renonce si elles debordent ou si ce sont des textes longs."""
+        resultat = self._lire(
+            connexion,
+            f'SELECT DISTINCT "{colonne}" FROM {NOM_ENTREPOT}."{table}" '
+            f'WHERE "{colonne}" IS NOT NULL ORDER BY 1 LIMIT {MODALITES_MAX + 1}',
+            MODALITES_MAX + 1,
+        )
+        valeurs = [str(ligne[0]) for ligne in resultat.lignes]
+        if len(valeurs) > MODALITES_MAX or any(len(v) > LONGUEUR_MODALITE_MAX for v in valeurs):
+            return None
+        return tuple(valeurs)
 
     def _lire(self, connexion: duckdb.DuckDBPyConnection, sql: str, lignes_max: int) -> Resultat:
         try:
@@ -163,10 +244,17 @@ class DuckDBEngine:
             colonnes = [description[0] for description in curseur.description or []]
             lignes = curseur.fetchmany(lignes_max + 1)
         except duckdb.Error as erreur:
-            logger.exception("Echec d'execution DuckDB sur le schema %s", self._schema)
+            # Jamais logger.exception ici : une connexion perdue en cours de
+            # requete produit une IOException qui cite le DSN, mot de passe
+            # compris. Message masque, chainage coupe.
+            logger.error(
+                "Echec d'execution DuckDB sur le schema %s : %s",
+                self._schema,
+                _sans_secret(str(erreur)),
+            )
             raise ErreurRequete(
                 self._message_lisible(erreur), detail=_sans_secret(str(erreur))
-            ) from erreur
+            ) from None
 
         tronque = len(lignes) > lignes_max
         return Resultat(colonnes=colonnes, lignes=lignes[:lignes_max], tronque=tronque)
@@ -179,8 +267,12 @@ class DuckDBEngine:
                 [NOM_ENTREPOT],
             ).fetchall()
         except duckdb.Error as erreur:
-            logger.exception("Echec de listage des tables du schema %s", self._schema)
-            raise ErreurRequete(self._message_lisible(erreur)) from erreur
+            logger.error(
+                "Echec de listage des tables du schema %s : %s",
+                self._schema,
+                _sans_secret(str(erreur)),
+            )
+            raise ErreurRequete(self._message_lisible(erreur)) from None
         return [nom for (nom,) in lignes]
 
     def _colonnes_visibles(self, connexion: duckdb.DuckDBPyConnection, table: str) -> list[str]:
@@ -196,8 +288,10 @@ class DuckDBEngine:
                 [NOM_ENTREPOT, table],
             ).fetchall()
         except duckdb.Error as erreur:
-            logger.exception("Echec de lecture des colonnes de %s", table)
-            raise ErreurRequete(self._message_lisible(erreur)) from erreur
+            logger.error(
+                "Echec de lecture des colonnes de %s : %s", table, _sans_secret(str(erreur))
+            )
+            raise ErreurRequete(self._message_lisible(erreur)) from None
         return [(nom, type_) for nom, type_ in lignes if not nom.startswith(PREFIXE_TECHNIQUE)]
 
     def _table_connue(self, connexion: duckdb.DuckDBPyConnection, table: str) -> str:
