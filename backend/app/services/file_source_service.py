@@ -15,6 +15,7 @@ from pathlib import Path
 from fastapi import UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.agents.data import AgentData
 from app.core.entrepot_writer import (
     EXTENSIONS_ACCEPTEES,
     EntrepotWriter,
@@ -64,6 +65,8 @@ class FileSourceService:
         self._db.add(source)
         await self._db.commit()
         await self._db.refresh(source)
+        # Une table de plus dans l'entrepot : l'assistant doit le relire.
+        AgentData.oublier(schema)
 
         logger.info("Fichier %s importe : %s lignes dans %s", nom_fichier, lignes, schema)
         return source

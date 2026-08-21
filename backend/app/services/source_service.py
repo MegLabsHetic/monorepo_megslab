@@ -7,6 +7,7 @@ import httpx
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.agents.data import AgentData
 from app.core.airbyte_client import AirbyteClient, SourceAirbyte, StreamDecouvert
 from app.core.connecteurs import connecteur
 from app.core.errors import ErreurUtilisateur
@@ -233,6 +234,9 @@ class SourceService:
         if job.get("status") == "succeeded":
             source.statut = StatutSource.PRETE
             await self._db.commit()
+            # L'entrepot vient de changer : le contexte que l'assistant garde
+            # en memoire ne le decrit plus.
+            AgentData.oublier(source.schema_entrepot)
         elif job.get("status") in ("failed", "cancelled", "incomplete"):
             source.statut = StatutSource.ERREUR
             await self._db.commit()
