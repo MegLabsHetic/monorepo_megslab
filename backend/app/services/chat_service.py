@@ -1,8 +1,8 @@
 """Pose une question a l'assistant et conserve ce qu'elle a produit.
 
-Le schema envoye au modele est lu dans l'entrepot de l'organisation : rien de
-ce que le modele voit ne vient d'ailleurs, et l'interface peut le montrer tel
-quel.
+Le contexte envoye au modele est lu dans l'entrepot de l'organisation par
+l'agent Data : rien de ce que le modele voit ne vient d'ailleurs, et
+l'interface peut le montrer tel quel.
 """
 
 import asyncio
@@ -13,7 +13,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.agents.analyste import INSTRUCTIONS as INSTRUCTIONS_ANALYSTE
-from app.agents.analyste import decrire_schema
+from app.agents.data import AgentData, ContexteDonnees
 from app.agents.orchestrateur import Orchestrateur, ReponseComplete
 from app.core.duckdb_engine import DuckDBEngine, ErreurRequete
 from app.core.errors import ErreurUtilisateur
@@ -44,15 +44,7 @@ class ChatService:
 
     async def poser(self, organisation: Organization, utilisateur: User, texte: str) -> Question:
         moteur = self._fabrique_moteur(f"org_{organisation.id}")
-        schema = await self._schema(moteur)
-        if not schema.strip():
-            raise ErreurUtilisateur(
-                "Aucune table n'est encore dans votre entrepot. Connectez une source et "
-                "synchronisez-la avant de poser une question.",
-                code_http=409,
-            )
-
-        complete = await Orchestrateur(moteur, self._llm).repondre(texte, schema)
+        complete = await Orchestrateur(moteur, self._llm).repondre(texte)
         question = self._en_question(organisation, utilisateur, complete)
         self._db.add(question)
         await self._db.commit()
@@ -66,10 +58,14 @@ class ChatService:
         )
         return question
 
-    async def contexte(self, organisation: Organization) -> tuple[str, str]:
+    async def contexte(self, organisation: Organization) -> tuple[ContexteDonnees, str]:
         """Ce qui partirait au modele pour cette organisation, maintenant."""
         moteur = self._fabrique_moteur(f"org_{organisation.id}")
-        return await self._schema(moteur), INSTRUCTIONS_ANALYSTE
+        try:
+            contexte = await asyncio.to_thread(AgentData(moteur).decrire)
+        except ErreurRequete as erreur:
+            raise ErreurUtilisateur(erreur.raison, code_http=502) from erreur
+        return contexte, INSTRUCTIONS_ANALYSTE
 
     async def historique(self, organisation: Organization, limite: int = 50) -> list[Question]:
         resultat = await self._db.execute(
@@ -79,14 +75,6 @@ class ChatService:
             .limit(limite)
         )
         return list(resultat.scalars().all())
-
-    async def _schema(self, moteur: DuckDBEngine) -> str:
-        """Lecture synchrone de l'entrepot, renvoyee dans un thread comme ailleurs."""
-        try:
-            tables = await asyncio.to_thread(moteur.schema)
-        except ErreurRequete as erreur:
-            raise ErreurUtilisateur(erreur.raison, code_http=502) from erreur
-        return decrire_schema(tables)
 
     @staticmethod
     def _en_question(
@@ -100,6 +88,8 @@ class ChatService:
             sql=complete.sql,
             nb_lignes=complete.resultat.nb_lignes if complete.resultat else None,
             resultat=_extrait(complete.resultat) if complete.resultat else None,
+            analyse=complete.analyse.en_dict() if complete.analyse else None,
+            graphique=complete.graphique.model_dump() if complete.graphique else None,
             etapes=[
                 {"agent": e.agent, "statut": e.statut, "duree_ms": e.duree_ms, "detail": e.detail}
                 for e in complete.etapes

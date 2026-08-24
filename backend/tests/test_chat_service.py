@@ -11,7 +11,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.agents.analyste import PlanRequete
 from app.agents.redacteur import Redaction
-from app.core.duckdb_engine import ErreurRequete, Resultat
+from app.agents.viz import SpecGraphique
+from app.core.duckdb_engine import ColonneProfil, ErreurRequete, Resultat, TableProfil
 from app.core.errors import ErreurUtilisateur
 from app.core.llm_client import Consommation, Reponse
 from app.models.organization import Organization
@@ -36,6 +37,8 @@ class FauxLLM:
             contenu = PlanRequete(sql=self.sql, tables_utilisees=["ventes"], explication="compte")
         elif format_sortie is Redaction:
             contenu = Redaction(reponse="Il y a 3 ventes.")
+        elif format_sortie is SpecGraphique:
+            contenu = SpecGraphique(type="aucun", raison="test")
         else:
             raise AssertionError(f"format inattendu : {format_sortie}")
         return Reponse(contenu=contenu, consommation=CONSOMMATION)
@@ -44,10 +47,20 @@ class FauxLLM:
 class FauxMoteur:
     def __init__(self, schema: str) -> None:
         self.schema_demande = schema
+        self.schema_entrepot = schema
         self.sql_execute: str | None = None
 
-    def schema(self):
-        return [("ventes", [("id", "BIGINT"), ("montant", "DOUBLE")])]
+    def profil_complet(self):
+        return [
+            TableProfil(
+                nom="ventes",
+                nb_lignes=3,
+                colonnes=(
+                    ColonneProfil("id", "BIGINT", 0.0, 3, None),
+                    ColonneProfil("montant", "DOUBLE", 0.0, 3, None),
+                ),
+            )
+        ]
 
     def executer(self, sql: str, lignes_max: int = 5000) -> Resultat:
         self.sql_execute = sql
@@ -83,7 +96,16 @@ async def test_une_question_produit_une_reponse_du_sql_et_un_cout(db: AsyncSessi
     # Deux appels au modele, additionnes.
     assert question.jetons == 2 * CONSOMMATION.jetons_total
     assert question.cout_dollars == pytest.approx(2 * CONSOMMATION.cout_dollars)
-    assert [e["agent"] for e in question.etapes] == ["analyste", "redacteur"]
+    assert [e["agent"] for e in question.etapes] == ["data", "analyste", "ml", "redacteur", "viz"]
+    # Une seule ligne : ni serie a analyser, ni graphique a demander.
+    assert [e["statut"] for e in question.etapes] == [
+        "terminee",
+        "terminee",
+        "ignoree",
+        "terminee",
+        "ignoree",
+    ]
+    assert question.analyse is None and question.graphique is None
     # Le schema demande au moteur est bien celui de l'organisation.
     assert moteurs[0].schema_demande == f"org_{organisation.id}"
 
@@ -140,7 +162,7 @@ async def test_une_requete_rejetee_par_le_moteur_est_corrigee_une_fois(db: Async
     assert llm.appels == ["PlanRequete", "PlanRequete", "Redaction"]
     # La reprise a coute un appel de plus, et le compte-rendu le dit.
     assert question.jetons == 3 * CONSOMMATION.jetons_total
-    assert question.etapes[0]["detail"].endswith("apres une correction")
+    assert question.etapes[1]["detail"].endswith("apres une correction")
 
 
 async def test_une_deuxieme_erreur_du_moteur_est_rendue_sans_insister(db: AsyncSession) -> None:
@@ -182,7 +204,7 @@ async def test_sans_table_dans_l_entrepot_on_refuse_avant_d_appeler_le_modele(
     llm = FauxLLM()
 
     class MoteurVide(FauxMoteur):
-        def schema(self):
+        def profil_complet(self):
             return []
 
     with pytest.raises(ErreurUtilisateur) as capture:

@@ -31,6 +31,11 @@ class Question(HorodatageMixin, Base):
     # Un extrait borne du resultat, pour relire une reponse sans re-executer.
     # Forme : {"colonnes": [...], "lignes": [[...]], "tronque": bool}
     resultat: Mapped[dict | None] = mapped_column(JSON, default=None)
+    # Ce que l'agent ML a calcule sur le resultat (tendance, anomalies,
+    # projection), et le graphique choisi par l'agent Viz. Nuls quand le
+    # resultat ne s'y pretait pas.
+    analyse: Mapped[dict | None] = mapped_column(JSON, default=None)
+    graphique: Mapped[dict | None] = mapped_column(JSON, default=None)
 
     # Forme : [{"agent": ..., "statut": ..., "duree_ms": ..., "detail": ...}]
     etapes: Mapped[list] = mapped_column(JSON, default=list)

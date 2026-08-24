@@ -22,12 +22,49 @@ class ResultatReponse(BaseModel):
     tronque: bool
 
 
+class AnomalieReponse(BaseModel):
+    x: str
+    y: float
+    ecart: float
+
+
+class PrevisionReponse(BaseModel):
+    x: str
+    y: float
+    y_min: float
+    y_max: float
+
+
+class AnalyseReponse(BaseModel):
+    """Ce que l'agent ML a calcule : une droite, ses ecarts, sa projection."""
+
+    colonne_x: str
+    colonne_y: str
+    nb_points: int
+    pente: float
+    variation_pct: float | None
+    r2: float
+    tendance: str
+    anomalies: list[AnomalieReponse]
+    previsions: list[PrevisionReponse]
+
+
+class GraphiqueReponse(BaseModel):
+    type: str
+    axe_x: str
+    axes_y: list[str]
+    titre: str
+    raison: str = ""
+
+
 class QuestionReponse(BaseModel):
     id: str
     texte: str
     reponse: str
     sql: str | None
     resultat: ResultatReponse | None
+    analyse: AnalyseReponse | None = None
+    graphique: GraphiqueReponse | None = None
     etapes: list[EtapeReponse]
     cout_dollars: float
     jetons: int
@@ -36,10 +73,13 @@ class QuestionReponse(BaseModel):
 
 
 class ContexteReponse(BaseModel):
-    """Ce que le modele a reellement recu : le schema, et rien d'autre.
+    """Ce que le modele a reellement recu : le contexte de l'entrepot, et rien d'autre.
 
     Sert a l'interface pour montrer, sans le simuler, ce qui est parti au modele.
     """
 
     schema: str
     instructions: str
+    nb_tables: int
+    nb_colonnes: int
+    nb_lignes: int

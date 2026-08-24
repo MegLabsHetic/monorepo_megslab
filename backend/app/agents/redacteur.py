@@ -20,8 +20,12 @@ Regles :
 - N'utilise que les chiffres presents dans le resultat. N'en invente et n'en extrapole aucun.
 - Cite les chiffres importants avec leur unite ou leur contexte (commandes, euros, %).
 - Si le resultat est vide, dis-le simplement.
-- Si le resultat a ete tronque, precise que seules les premieres lignes sont montrees.
-- Ne mentionne pas le SQL ni le fait qu'une requete a ete executee : parle des donnees."""
+- Tu ne vois parfois que les premieres lignes d'un resultat plus long : appuie-toi sur
+  elles et sur l'analyse statistique, sans dire que des lignes manquent — l'utilisateur,
+  lui, voit tout le tableau.
+- Ne mentionne pas le SQL ni le fait qu'une requete a ete executee : parle des donnees.
+- Si une analyse statistique est fournie, reprends-en l'essentiel en une phrase, en
+  disant qu'il s'agit d'une projection lineaire. N'ajoute aucune analyse de ton cru."""
 
 # Ce qui part au modele est borne : quelques lignes, des cellules coupees. Le
 # Redacteur formule une reponse, il n'a pas besoin de la table entiere.
@@ -37,10 +41,12 @@ class Redacteur:
     def __init__(self, llm: LLMClient | None = None) -> None:
         self._llm = llm or LLMClient()
 
-    async def rediger(self, question: str, sql: str, resultat: Resultat) -> Reponse[Redaction]:
+    async def rediger(
+        self, question: str, sql: str, resultat: Resultat, analyse: str | None = None
+    ) -> Reponse[Redaction]:
         return await self._llm.repondre(
             instructions=INSTRUCTIONS,
-            question=_composer(question, sql, resultat),
+            question=_composer(question, sql, resultat, analyse),
             format_sortie=Redaction,
             # Formuler n'est pas raisonner : l'effort minimal suffit, et coute
             # moins cher.
@@ -48,21 +54,24 @@ class Redacteur:
         )
 
 
-def _composer(question: str, sql: str, resultat: Resultat) -> str:
+def _composer(question: str, sql: str, resultat: Resultat, analyse: str | None) -> str:
     lignes = resultat.lignes[:LIGNES_MAX_ENVOYEES]
     tableau = "\n".join(" | ".join(_cellule(valeur) for valeur in ligne) for ligne in lignes)
     entete = " | ".join(resultat.colonnes)
     precision = ""
-    if resultat.tronque or len(resultat.lignes) > LIGNES_MAX_ENVOYEES:
-        precision = (
-            f"\n(Resultat tronque : {len(resultat.lignes)} lignes obtenues, "
-            f"{len(lignes)} montrees ici.)"
-        )
+    if len(resultat.lignes) > LIGNES_MAX_ENVOYEES:
+        precision = f"\n(Tu vois les {len(lignes)} premieres lignes sur {len(resultat.lignes)}.)"
+    if resultat.tronque:
+        precision += "\n(La requete elle-meme a ete plafonnee : il existe d'autres lignes.)"
 
+    complement = (
+        f"\n\nAnalyse statistique (calculee, a citer telle quelle) :\n{analyse}" if analyse else ""
+    )
     return (
         f"Question : {question}\n\n"
         f"Requete executee :\n{sql}\n\n"
         f"Resultat ({len(resultat.lignes)} ligne(s)) :\n{entete}\n{tableau}{precision}"
+        f"{complement}"
     )
 
 
