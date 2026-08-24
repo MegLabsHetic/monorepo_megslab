@@ -64,12 +64,49 @@ export interface EtapeAgent {
   detail: string;
 }
 
+export interface Anomalie {
+  x: string;
+  y: number;
+  /** Ecart a la droite, en ecarts-types des residus. */
+  ecart: number;
+}
+
+export interface Prevision {
+  x: string;
+  y: number;
+  y_min: number;
+  y_max: number;
+}
+
+/** Ce que l'agent ML a calcule : une regression lineaire, ses ecarts, sa projection. */
+export interface AnalyseSerie {
+  colonne_x: string;
+  colonne_y: string;
+  nb_points: number;
+  pente: number;
+  variation_pct: number | null;
+  r2: number;
+  tendance: string;
+  anomalies: Anomalie[];
+  previsions: Prevision[];
+}
+
+export interface SpecGraphique {
+  type: "barres" | "lignes" | string;
+  axe_x: string;
+  axes_y: string[];
+  titre: string;
+  raison: string;
+}
+
 export interface QuestionAssistant {
   id: string;
   texte: string;
   reponse: string;
   sql: string | null;
   resultat: Apercu | null;
+  analyse: AnalyseSerie | null;
+  graphique: SpecGraphique | null;
   etapes: EtapeAgent[];
   cout_dollars: number;
   jetons: number;
@@ -81,6 +118,9 @@ export interface QuestionAssistant {
 export interface ContexteAssistant {
   schema: string;
   instructions: string;
+  nb_tables: number;
+  nb_colonnes: number;
+  nb_lignes: number;
 }
 
 /** Une source presente dans l'espace Airbyte, que MegLabs ne reference pas encore. */

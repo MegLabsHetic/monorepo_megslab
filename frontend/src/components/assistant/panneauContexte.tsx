@@ -54,7 +54,9 @@ export function PanneauContexte({ onFermer }: { onFermer: () => void }) {
               Ce que le modele voit
             </h2>
             <p className="mt-1 text-sm text-muted">
-              Lu a l&apos;instant dans votre entrepot. Des noms, des consignes — aucune donnee.
+              Lu a l&apos;instant dans votre entrepot par l&apos;agent Data : tables, colonnes,
+              types, effectifs, taux de vides, et les valeurs des colonnes a moins de douze
+              modalites. Aucune ligne de donnees.
             </p>
           </div>
           <Button variante="discret" className="w-auto" onClick={onFermer}>
@@ -69,7 +71,8 @@ export function PanneauContexte({ onFermer }: { onFermer: () => void }) {
             <>
               <section>
                 <h3 className="font-mono text-xs uppercase tracking-widest text-muted">
-                  Schema transmis
+                  Contexte transmis — {contexte.nb_tables} table(s), {contexte.nb_colonnes}{" "}
+                  colonne(s)
                 </h3>
                 <pre className="mt-2 overflow-x-auto rounded-lg bg-surface-2 p-4 font-mono text-xs leading-relaxed text-text">
                   {contexte.schema}
@@ -84,8 +87,9 @@ export function PanneauContexte({ onFermer }: { onFermer: () => void }) {
                 </pre>
               </section>
               <p className="text-xs text-muted">
-                Le Redacteur recoit ensuite la question, la requete et au plus vingt lignes du
-                resultat, chaque cellule coupee a quatre-vingts caracteres.
+                Le Redacteur recoit ensuite la question, la requete, au plus vingt lignes du
+                resultat (cellules coupees a quatre-vingts caracteres) et, s&apos;il y en a une,
+                l&apos;analyse calculee par l&apos;agent ML. Viz recoit les colonnes et six lignes.
               </p>
             </>
           )}
