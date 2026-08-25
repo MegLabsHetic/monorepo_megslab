@@ -56,6 +56,42 @@ def _sans_secret(message: str) -> str:
     return _MOT_DE_PASSE_DSN.sub("password=***", message)
 
 
+def _ident(nom: str) -> str:
+    """Un identifiant Postgres entre guillemets, guillemets internes doubles."""
+    return '"' + nom.replace('"', '""') + '"'
+
+
+ECHANTILLON_DISTINCT = 20_000
+
+
+def _mesures_colonne(index: int, nom: str, type_: str, cible: str) -> str:
+    """Valeurs presentes et, pour le texte seul, distinctes sur un echantillon.
+
+    Le distinct sert a reperer une colonne categorielle, pas a la mesurer :
+    sur vingt mille lignes, plus de douze valeurs suffisent a l'ecarter, et
+    `_modalites` verifie ensuite sur la table entiere. Un distinct exact sur
+    dix colonnes texte d'une grande table coutait a lui seul six secondes.
+    """
+    if type_ != "VARCHAR":
+        distinctes = "0"
+    else:
+        distinctes = (
+            f"(SELECT count(distinct {_ident(nom)}) FROM "
+            f"(SELECT {_ident(nom)} FROM {cible} LIMIT {ECHANTILLON_DISTINCT}) e{index})"
+        )
+    return f"count({_ident(nom)}) AS p{index}, {distinctes} AS d{index}"
+
+
+def _requete_postgres(sql: str) -> str:
+    """Enveloppe une requete a executer PAR Postgres, via la connexion attachee.
+
+    `postgres_query` est interdite au SQL du modele (voir `sql_guard`) ; ici
+    la requete est construite par le moteur a partir du catalogue, jamais
+    d'une saisie.
+    """
+    return f"SELECT * FROM postgres_query('{NOM_ENTREPOT}', '{sql.replace(chr(39), chr(39) * 2)}')"
+
+
 class ErreurRequete(Exception):
     """La requete n'a pas pu etre executee.
 
@@ -75,7 +111,7 @@ class ColonneProfil:
     nom: str
     type: str
     pourcentage_nuls: float
-    distinctes_approx: int
+    distinctes_echantillon: int
     # Les valeurs exactes quand la colonne est une categorie (peu de valeurs
     # distinctes, courtes) ; None sinon.
     modalites: tuple[str, ...] | None
@@ -196,47 +232,74 @@ class DuckDBEngine:
     # --- Interieur ---------------------------------------------------------
 
     def _profil_table(self, connexion: duckdb.DuckDBPyConnection, table: str) -> TableProfil:
-        resume = self._lire(connexion, f'SUMMARIZE {NOM_ENTREPOT}."{table}"', LIGNES_MAX)
-        lignes = [dict(zip(resume.colonnes, ligne)) for ligne in resume.lignes]
-        nb_lignes = int(lignes[0]["count"]) if lignes else 0
-        colonnes = [
-            self._profil_colonne(connexion, table, ligne)
-            for ligne in lignes
-            if not str(ligne["column_name"]).startswith(PREFIXE_TECHNIQUE)
+        colonnes = self._colonnes_typees(connexion, table)
+        if not colonnes:
+            return TableProfil(nom=table, nb_lignes=0, colonnes=())
+        ligne = self._lire(connexion, self._sql_profil(table, colonnes), 1).lignes[0]
+        nb_lignes = int(ligne[0])
+        profils = [
+            self._profil_colonne(
+                connexion,
+                table,
+                nom,
+                type_,
+                nb_lignes,
+                int(ligne[1 + 2 * i]),
+                int(ligne[2 + 2 * i]),
+            )
+            for i, (nom, type_) in enumerate(colonnes)
         ]
-        return TableProfil(nom=table, nb_lignes=nb_lignes, colonnes=tuple(colonnes))
+        return TableProfil(nom=table, nb_lignes=nb_lignes, colonnes=tuple(profils))
+
+    def _sql_profil(self, table: str, colonnes: list[tuple[str, str]]) -> str:
+        """L'agregat est calcule PAR Postgres, pas rapatrie.
+
+        Sur un million de lignes, `SUMMARIZE` a travers le reseau prend treize
+        secondes ; le meme comptage execute cote serveur, moins de trois.
+        """
+        cible = f"{_ident(self._schema)}.{_ident(table)}"
+        mesures = ", ".join(
+            _mesures_colonne(i, nom, type_, cible) for i, (nom, type_) in enumerate(colonnes)
+        )
+        return _requete_postgres(f"SELECT count(*) AS n, {mesures} FROM {cible}")
 
     def _profil_colonne(
-        self, connexion: duckdb.DuckDBPyConnection, table: str, ligne: dict
+        self,
+        connexion: duckdb.DuckDBPyConnection,
+        table: str,
+        nom: str,
+        type_: str,
+        nb_lignes: int,
+        presentes: int,
+        distinctes: int,
     ) -> ColonneProfil:
-        nom, type_ = str(ligne["column_name"]), str(ligne["column_type"])
-        distinctes = int(ligne["approx_unique"] or 0)
+        nuls = 100.0 * (nb_lignes - presentes) / nb_lignes if nb_lignes else 0.0
         modalites = None
         if type_ == "VARCHAR" and 0 < distinctes <= MODALITES_MAX:
             modalites = self._modalites(connexion, table, nom)
         return ColonneProfil(
             nom=nom,
             type=type_,
-            pourcentage_nuls=float(ligne["null_percentage"] or 0),
-            distinctes_approx=distinctes,
+            pourcentage_nuls=nuls,
+            distinctes_echantillon=distinctes,
             modalites=modalites,
         )
 
     def _modalites(
         self, connexion: duckdb.DuckDBPyConnection, table: str, colonne: str
     ) -> tuple[str, ...] | None:
-        """`approx_unique` est une estimation : on relit les valeurs exactes et on
-        renonce si elles debordent ou si ce sont des textes longs."""
-        resultat = self._lire(
-            connexion,
-            f'SELECT DISTINCT "{colonne}" FROM {NOM_ENTREPOT}."{table}" '
-            f'WHERE "{colonne}" IS NOT NULL ORDER BY 1 LIMIT {MODALITES_MAX + 1}',
-            MODALITES_MAX + 1,
+        """Les valeurs d'une colonne categorielle, lues cote Postgres sur la table
+        entiere ; None si elles debordent (l'echantillon avait sous-estime) ou si
+        ce sont des textes longs."""
+        interne = (
+            f"SELECT DISTINCT {_ident(colonne)} FROM {_ident(self._schema)}.{_ident(table)} "
+            f"WHERE {_ident(colonne)} IS NOT NULL ORDER BY 1 LIMIT {MODALITES_MAX + 1}"
         )
-        valeurs = [str(ligne[0]) for ligne in resultat.lignes]
+        resultat = self._lire(connexion, _requete_postgres(interne), MODALITES_MAX + 1)
+        valeurs = tuple(str(ligne[0]) for ligne in resultat.lignes)
         if len(valeurs) > MODALITES_MAX or any(len(v) > LONGUEUR_MODALITE_MAX for v in valeurs):
             return None
-        return tuple(valeurs)
+        return valeurs
 
     def _lire(self, connexion: duckdb.DuckDBPyConnection, sql: str, lignes_max: int) -> Resultat:
         try:
