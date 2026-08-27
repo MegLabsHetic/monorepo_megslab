@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 
-import { type EtapeAgent, type QuestionAssistant } from "@/lib/api";
+import { Graphique, formaterLibelles } from "@/components/assistant/graphique";
+import { type AnalyseSerie, type EtapeAgent, type QuestionAssistant } from "@/lib/api";
 import { formaterNombre } from "@/lib/sources";
 import { cn } from "@/lib/utils";
 
@@ -29,6 +30,18 @@ export function ReponseAssistant({ question }: { question: QuestionAssistant }) 
         </div>
 
         <p className="px-5 py-5 text-[15px] leading-relaxed text-text">{question.reponse}</p>
+
+        {question.graphique && question.resultat && (
+          <div className="border-t border-line px-5 py-5">
+            <Graphique
+              spec={question.graphique}
+              resultat={question.resultat}
+              analyse={question.analyse}
+            />
+          </div>
+        )}
+
+        {question.analyse && <BlocAnalyse analyse={question.analyse} />}
 
         {question.sql && (
           <Depliable
@@ -72,15 +85,19 @@ export function ReponseAssistant({ question }: { question: QuestionAssistant }) 
 }
 
 const LIBELLES: Record<string, string> = {
+  data: "Data",
   analyste: "Analyste",
+  ml: "ML",
   redacteur: "Redacteur",
+  viz: "Viz",
 };
 
 /**
  * Le passage de chaque agent, tel que le backend l'a mesure. Le garde-fou et
  * le moteur n'y figurent pas comme agents : ce sont des barrieres que
  * l'Analyste traverse, et son statut « terminee » signifie qu'elles ont ete
- * franchies.
+ * franchies. Data et ML n'appellent aucun modele : leur duree est celle de
+ * l'entrepot et du calcul.
  */
 function Pipeline({ etapes, enCours = false }: { etapes: EtapeAgent[]; enCours?: boolean }) {
   return (
@@ -151,15 +168,19 @@ export function PipelineEnCours() {
         <Pipeline
           enCours
           etapes={[
-            { agent: "analyste", statut: "en_cours", duree_ms: 0, detail: "" },
+            { agent: "data", statut: "en_cours", duree_ms: 0, detail: "" },
+            { agent: "analyste", statut: "ignoree", duree_ms: 0, detail: "en attente" },
+            { agent: "ml", statut: "ignoree", duree_ms: 0, detail: "en attente" },
             { agent: "redacteur", statut: "ignoree", duree_ms: 0, detail: "en attente" },
+            { agent: "viz", statut: "ignoree", duree_ms: 0, detail: "en attente" },
           ]}
         />
       </div>
       <div className="space-y-2.5 px-5 py-5" role="status">
         <p className="text-sm text-muted">
-          L&apos;Analyste ecrit la requete, le garde-fou la verifie, l&apos;entrepot l&apos;execute,
-          puis le Redacteur formule la reponse. Une dizaine de secondes.
+          Data decrit l&apos;entrepot, l&apos;Analyste ecrit la requete que le garde-fou verifie et
+          que l&apos;entrepot execute, ML lit le resultat, puis le Redacteur et Viz travaillent en
+          meme temps. Une quinzaine de secondes.
         </p>
         <div className="h-1 w-48 overflow-hidden rounded-full bg-surface-2">
           <div className="h-full w-1/3 animate-balayage rounded-full bg-marque" />
@@ -248,6 +269,48 @@ function TableauResultat({
           ))}
         </tbody>
       </table>
+    </div>
+  );
+}
+
+/**
+ * Ce que l'agent ML a calcule, avec ses limites ecrites a cote : une droite,
+ * ses ecarts, sa prolongation. Pas de prevision au sens fort.
+ */
+function BlocAnalyse({ analyse }: { analyse: AnalyseSerie }) {
+  const variation =
+    analyse.variation_pct === null
+      ? ""
+      : ` (${analyse.variation_pct > 0 ? "+" : ""}${Math.round(analyse.variation_pct)} % sur la droite ajustee)`;
+  return (
+    <div className="border-t border-line px-5 py-4">
+      <p className="font-mono text-[11px] uppercase tracking-widest text-muted">
+        Agent ML — regression lineaire sur {analyse.nb_points} points
+      </p>
+      <ul className="mt-2 flex flex-wrap gap-x-5 gap-y-1 text-sm text-text">
+        <li>
+          Tendance : <span className="font-medium">{analyse.tendance}</span>
+          {variation}
+        </li>
+        <li>R² {analyse.r2.toFixed(2)}</li>
+        <li>
+          {analyse.anomalies.length} ecart(s) notable(s)
+          {analyse.anomalies.length > 0 &&
+            ` : ${formaterLibelles(analyse.anomalies.map((a) => a.x)).join(", ")}`}
+        </li>
+        {analyse.previsions.length > 0 && (
+          <li>
+            Projection :{" "}
+            {analyse.previsions
+              .map((p) => `${p.x} ≈ ${formaterNombre(Math.round(p.y))}`)
+              .join(" · ")}
+          </li>
+        )}
+      </ul>
+      <p className="mt-2 text-xs text-muted">
+        Une droite des moindres carres et ses residus. La projection prolonge cette droite : un
+        ordre de grandeur, pas une prevision.
+      </p>
     </div>
   );
 }

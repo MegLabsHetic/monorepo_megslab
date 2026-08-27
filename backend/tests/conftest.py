@@ -6,11 +6,20 @@ import httpx
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
+from app.agents.data import AgentData
 from app.core.airbyte_client import AirbyteClient
 from app.core.database import Base
 
 # Import necessaire pour que Base.metadata connaisse les tables a creer.
 from app.models import data_source, membership, organization, question, user  # noqa: F401
+
+
+@pytest.fixture(autouse=True)
+def _contexte_donnees_oublie():
+    """Le cache de l'agent Data est global au processus : chaque test repart a vide."""
+    AgentData.oublier_tout()
+    yield
+    AgentData.oublier_tout()
 
 
 @pytest.fixture

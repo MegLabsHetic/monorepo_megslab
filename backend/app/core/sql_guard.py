@@ -45,6 +45,8 @@ FONCTIONS_INTERDITES = frozenset(
         "sniff_csv",
         "postgres_scan",
         "postgres_query",
+        "postgres_execute",
+        "postgres_attach",
         "sqlite_scan",
         "mysql_scan",
         "mysql_query",

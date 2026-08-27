@@ -56,6 +56,42 @@ def _sans_secret(message: str) -> str:
     return _MOT_DE_PASSE_DSN.sub("password=***", message)
 
 
+def _ident(nom: str) -> str:
+    """Un identifiant Postgres entre guillemets, guillemets internes doubles."""
+    return '"' + nom.replace('"', '""') + '"'
+
+
+ECHANTILLON_DISTINCT = 20_000
+
+
+def _mesures_colonne(index: int, nom: str, type_: str, cible: str) -> str:
+    """Valeurs presentes et, pour le texte seul, distinctes sur un echantillon.
+
+    Le distinct sert a reperer une colonne categorielle, pas a la mesurer :
+    sur vingt mille lignes, plus de douze valeurs suffisent a l'ecarter, et
+    `_modalites` verifie ensuite sur la table entiere. Un distinct exact sur
+    dix colonnes texte d'une grande table coutait a lui seul six secondes.
+    """
+    if type_ != "VARCHAR":
+        distinctes = "0"
+    else:
+        distinctes = (
+            f"(SELECT count(distinct {_ident(nom)}) FROM "
+            f"(SELECT {_ident(nom)} FROM {cible} LIMIT {ECHANTILLON_DISTINCT}) e{index})"
+        )
+    return f"count({_ident(nom)}) AS p{index}, {distinctes} AS d{index}"
+
+
+def _requete_postgres(sql: str) -> str:
+    """Enveloppe une requete a executer PAR Postgres, via la connexion attachee.
+
+    `postgres_query` est interdite au SQL du modele (voir `sql_guard`) ; ici
+    la requete est construite par le moteur a partir du catalogue, jamais
+    d'une saisie.
+    """
+    return f"SELECT * FROM postgres_query('{NOM_ENTREPOT}', '{sql.replace(chr(39), chr(39) * 2)}')"
+
+
 class ErreurRequete(Exception):
     """La requete n'a pas pu etre executee.
 
@@ -70,9 +106,37 @@ class ErreurRequete(Exception):
         self.detail = detail
 
 
+@dataclass(frozen=True)
+class ColonneProfil:
+    nom: str
+    type: str
+    pourcentage_nuls: float
+    distinctes_echantillon: int
+    # Les valeurs exactes quand la colonne est une categorie (peu de valeurs
+    # distinctes, courtes) ; None sinon.
+    modalites: tuple[str, ...] | None
+
+
+@dataclass(frozen=True)
+class TableProfil:
+    nom: str
+    nb_lignes: int
+    colonnes: tuple[ColonneProfil, ...]
+
+
+# Au-dela de ce nombre de valeurs distinctes, une colonne texte n'est plus une
+# categorie qu'on peut enumerer a un modele : c'est un identifiant ou du texte.
+MODALITES_MAX = 12
+LONGUEUR_MODALITE_MAX = 40
+
+
 class DuckDBEngine:
     def __init__(self, schema_entrepot: str) -> None:
         self._schema = schema_entrepot
+
+    @property
+    def schema_entrepot(self) -> str:
+        return self._schema
 
     # --- Operations publiques ---------------------------------------------
 
@@ -155,7 +219,87 @@ class DuckDBEngine:
         profils = [dict(zip(resultat.colonnes, ligne)) for ligne in resultat.lignes]
         return [profil for profil in profils if profil.get("column_name") in visibles]
 
+    def profil_complet(self) -> list[TableProfil]:
+        """Toutes les tables avec effectif, colonnes typees et modalites, en une ouverture.
+
+        C'est ce que l'agent Data transmet aux agents qui ecrivent du SQL. Une
+        seule session pour tout : ouvrir l'entrepot coute des secondes, et il y
+        a une requete de profil par table plus une par colonne categorielle.
+        """
+        with self._session() as connexion:
+            return [self._profil_table(connexion, table) for table in self._tables(connexion)]
+
     # --- Interieur ---------------------------------------------------------
+
+    def _profil_table(self, connexion: duckdb.DuckDBPyConnection, table: str) -> TableProfil:
+        colonnes = self._colonnes_typees(connexion, table)
+        if not colonnes:
+            return TableProfil(nom=table, nb_lignes=0, colonnes=())
+        ligne = self._lire(connexion, self._sql_profil(table, colonnes), 1).lignes[0]
+        nb_lignes = int(ligne[0])
+        profils = [
+            self._profil_colonne(
+                connexion,
+                table,
+                nom,
+                type_,
+                nb_lignes,
+                int(ligne[1 + 2 * i]),
+                int(ligne[2 + 2 * i]),
+            )
+            for i, (nom, type_) in enumerate(colonnes)
+        ]
+        return TableProfil(nom=table, nb_lignes=nb_lignes, colonnes=tuple(profils))
+
+    def _sql_profil(self, table: str, colonnes: list[tuple[str, str]]) -> str:
+        """L'agregat est calcule PAR Postgres, pas rapatrie.
+
+        Sur un million de lignes, `SUMMARIZE` a travers le reseau prend treize
+        secondes ; le meme comptage execute cote serveur, moins de trois.
+        """
+        cible = f"{_ident(self._schema)}.{_ident(table)}"
+        mesures = ", ".join(
+            _mesures_colonne(i, nom, type_, cible) for i, (nom, type_) in enumerate(colonnes)
+        )
+        return _requete_postgres(f"SELECT count(*) AS n, {mesures} FROM {cible}")
+
+    def _profil_colonne(
+        self,
+        connexion: duckdb.DuckDBPyConnection,
+        table: str,
+        nom: str,
+        type_: str,
+        nb_lignes: int,
+        presentes: int,
+        distinctes: int,
+    ) -> ColonneProfil:
+        nuls = 100.0 * (nb_lignes - presentes) / nb_lignes if nb_lignes else 0.0
+        modalites = None
+        if type_ == "VARCHAR" and 0 < distinctes <= MODALITES_MAX:
+            modalites = self._modalites(connexion, table, nom)
+        return ColonneProfil(
+            nom=nom,
+            type=type_,
+            pourcentage_nuls=nuls,
+            distinctes_echantillon=distinctes,
+            modalites=modalites,
+        )
+
+    def _modalites(
+        self, connexion: duckdb.DuckDBPyConnection, table: str, colonne: str
+    ) -> tuple[str, ...] | None:
+        """Les valeurs d'une colonne categorielle, lues cote Postgres sur la table
+        entiere ; None si elles debordent (l'echantillon avait sous-estime) ou si
+        ce sont des textes longs."""
+        interne = (
+            f"SELECT DISTINCT {_ident(colonne)} FROM {_ident(self._schema)}.{_ident(table)} "
+            f"WHERE {_ident(colonne)} IS NOT NULL ORDER BY 1 LIMIT {MODALITES_MAX + 1}"
+        )
+        resultat = self._lire(connexion, _requete_postgres(interne), MODALITES_MAX + 1)
+        valeurs = tuple(str(ligne[0]) for ligne in resultat.lignes)
+        if len(valeurs) > MODALITES_MAX or any(len(v) > LONGUEUR_MODALITE_MAX for v in valeurs):
+            return None
+        return valeurs
 
     def _lire(self, connexion: duckdb.DuckDBPyConnection, sql: str, lignes_max: int) -> Resultat:
         try:
@@ -163,10 +307,17 @@ class DuckDBEngine:
             colonnes = [description[0] for description in curseur.description or []]
             lignes = curseur.fetchmany(lignes_max + 1)
         except duckdb.Error as erreur:
-            logger.exception("Echec d'execution DuckDB sur le schema %s", self._schema)
+            # Jamais logger.exception ici : une connexion perdue en cours de
+            # requete produit une IOException qui cite le DSN, mot de passe
+            # compris. Message masque, chainage coupe.
+            logger.error(
+                "Echec d'execution DuckDB sur le schema %s : %s",
+                self._schema,
+                _sans_secret(str(erreur)),
+            )
             raise ErreurRequete(
                 self._message_lisible(erreur), detail=_sans_secret(str(erreur))
-            ) from erreur
+            ) from None
 
         tronque = len(lignes) > lignes_max
         return Resultat(colonnes=colonnes, lignes=lignes[:lignes_max], tronque=tronque)
@@ -179,8 +330,12 @@ class DuckDBEngine:
                 [NOM_ENTREPOT],
             ).fetchall()
         except duckdb.Error as erreur:
-            logger.exception("Echec de listage des tables du schema %s", self._schema)
-            raise ErreurRequete(self._message_lisible(erreur)) from erreur
+            logger.error(
+                "Echec de listage des tables du schema %s : %s",
+                self._schema,
+                _sans_secret(str(erreur)),
+            )
+            raise ErreurRequete(self._message_lisible(erreur)) from None
         return [nom for (nom,) in lignes]
 
     def _colonnes_visibles(self, connexion: duckdb.DuckDBPyConnection, table: str) -> list[str]:
@@ -196,8 +351,10 @@ class DuckDBEngine:
                 [NOM_ENTREPOT, table],
             ).fetchall()
         except duckdb.Error as erreur:
-            logger.exception("Echec de lecture des colonnes de %s", table)
-            raise ErreurRequete(self._message_lisible(erreur)) from erreur
+            logger.error(
+                "Echec de lecture des colonnes de %s : %s", table, _sans_secret(str(erreur))
+            )
+            raise ErreurRequete(self._message_lisible(erreur)) from None
         return [(nom, type_) for nom, type_ in lignes if not nom.startswith(PREFIXE_TECHNIQUE)]
 
     def _table_connue(self, connexion: duckdb.DuckDBPyConnection, table: str) -> str:

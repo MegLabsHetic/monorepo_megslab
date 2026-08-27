@@ -9,7 +9,7 @@ import { useSession, useTraduireErreur } from "@/components/session/contexteSess
 import { Alert } from "@/components/ui/alert";
 import { Button, classesBouton } from "@/components/ui/button";
 import { Squelette } from "@/components/ui/skeleton";
-import { type QuestionAssistant, ErreurApi, api } from "@/lib/api";
+import { type ContexteAssistant, type QuestionAssistant, ErreurApi, api } from "@/lib/api";
 import { formaterNombre } from "@/lib/sources";
 
 /**
@@ -33,6 +33,7 @@ export default function PageAssistant() {
   const [erreur, setErreur] = useState<string | null>(null);
   const [entrepotVide, setEntrepotVide] = useState(false);
   const [contexteOuvert, setContexteOuvert] = useState(false);
+  const [entrepot, setEntrepot] = useState<ContexteAssistant | null>(null);
   const bas = useRef<HTMLDivElement>(null);
   const champ = useRef<HTMLTextAreaElement>(null);
 
@@ -43,6 +44,16 @@ export default function PageAssistant() {
       .then((questions) => setHistorique([...questions].reverse()))
       .catch((probleme) => setErreur(traduireErreur(probleme)));
   }, [jeton, traduireErreur]);
+
+  useEffect(() => {
+    // Lire le contexte des l'arrivee sert deux fois : afficher ce que
+    // l'assistant peut interroger, et chauffer le profil que l'agent Data
+    // garde en memoire — la premiere question n'attend pas l'entrepot.
+    api
+      .contexteAssistant(jeton)
+      .then(setEntrepot)
+      .catch(() => setEntrepot(null));
+  }, [jeton]);
 
   useEffect(() => {
     bas.current?.scrollIntoView({ behavior: "smooth", block: "end" });
@@ -91,10 +102,19 @@ export default function PageAssistant() {
             Assistant
           </h1>
           <p className="mt-2 max-w-xl text-sm text-muted">
-            Posez une question en francais. L&apos;Analyste ecrit une requete, un garde-fou la
-            verifie, l&apos;entrepot l&apos;execute, le Redacteur repond. Chaque etape reste
-            visible.
+            Posez une question en francais. Cinq agents se relaient : Data decrit l&apos;entrepot,
+            l&apos;Analyste ecrit la requete, ML lit le resultat, le Redacteur repond, Viz le
+            dessine. Chaque etape reste visible.
           </p>
+          {entrepot && entrepot.nb_tables > 0 && (
+            <p className="mt-2 font-mono text-xs text-muted">
+              <span className="text-text">{formaterNombre(entrepot.nb_tables)}</span> table
+              {entrepot.nb_tables > 1 ? "s" : ""} ·{" "}
+              <span className="text-text">{formaterNombre(entrepot.nb_colonnes)}</span> colonnes ·{" "}
+              <span className="text-text">{formaterNombre(entrepot.nb_lignes)}</span> lignes
+              interrogeables
+            </p>
+          )}
         </div>
         <div className="flex items-center gap-3">
           {total && total.questions > 0 && (

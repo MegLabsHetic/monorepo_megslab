@@ -10,8 +10,10 @@ from app.models.organization import Organization
 from app.models.question import Question
 from app.models.user import User
 from app.schemas.question import (
+    AnalyseReponse,
     ContexteReponse,
     EtapeReponse,
+    GraphiqueReponse,
     QuestionDemande,
     QuestionReponse,
     ResultatReponse,
@@ -48,8 +50,14 @@ async def contexte(
     db: AsyncSession = Depends(get_db),
 ):
     """Ce que le modele recoit reellement. Lu dans l'entrepot, pas simule."""
-    schema, instructions = await ChatService(db).contexte(organisation)
-    return ContexteReponse(schema=schema, instructions=instructions)
+    contexte, instructions = await ChatService(db).contexte(organisation)
+    return ContexteReponse(
+        schema=contexte.texte(),
+        instructions=instructions,
+        nb_tables=contexte.nb_tables,
+        nb_colonnes=contexte.nb_colonnes,
+        nb_lignes=contexte.nb_lignes,
+    )
 
 
 def _en_reponse(question: Question) -> QuestionReponse:
@@ -60,6 +68,8 @@ def _en_reponse(question: Question) -> QuestionReponse:
         reponse=question.reponse,
         sql=question.sql,
         resultat=ResultatReponse(**resultat) if resultat else None,
+        analyse=AnalyseReponse(**question.analyse) if question.analyse else None,
+        graphique=GraphiqueReponse(**question.graphique) if question.graphique else None,
         etapes=[EtapeReponse(**etape) for etape in question.etapes or []],
         cout_dollars=question.cout_dollars,
         jetons=question.jetons,

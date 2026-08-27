@@ -10,7 +10,7 @@ import { TuileKpi } from "@/components/donnees/tuileKpi";
 import { useSession, useTraduireErreur } from "@/components/session/contexteSession";
 import { Alert } from "@/components/ui/alert";
 import { Button, classesBouton } from "@/components/ui/button";
-import { type Source, api } from "@/lib/api";
+import { type QuestionAssistant, type Source, api } from "@/lib/api";
 import { calculerTotaux, decrireStatutSource, formaterDate, formaterNombre } from "@/lib/sources";
 
 const NOMBRE_SOURCES_RECENTES = 3;
@@ -19,6 +19,7 @@ export default function PageTableauDeBord() {
   const { utilisateur, jeton } = useSession();
   const traduireErreur = useTraduireErreur();
   const [sources, setSources] = useState<Source[] | null>(null);
+  const [questions, setQuestions] = useState<QuestionAssistant[] | null>(null);
   const [erreur, setErreur] = useState<string | null>(null);
 
   const charger = useCallback(() => {
@@ -27,11 +28,16 @@ export default function PageTableauDeBord() {
       .listerSources(jeton)
       .then(setSources)
       .catch((probleme) => setErreur(traduireErreur(probleme)));
+    api
+      .historiqueQuestions(jeton)
+      .then(setQuestions)
+      .catch(() => setQuestions(null));
   }, [jeton, traduireErreur]);
 
   useEffect(charger, [charger]);
 
   const totaux = sources ? calculerTotaux(sources) : null;
+  const usage = questions ? resumerUsage(questions) : null;
   const prenom = utilisateur.nom_complet.split(" ")[0];
 
   return (
@@ -132,6 +138,43 @@ export default function PageTableauDeBord() {
         </section>
       )}
 
+      {usage && (
+        <section aria-labelledby="titre-assistant" className="space-y-4">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <h2
+              id="titre-assistant"
+              className="font-display text-sm uppercase tracking-widest text-muted"
+            >
+              Assistant
+            </h2>
+            <Link
+              href="/assistant"
+              className="text-sm text-marque underline-offset-4 transition-colors duration-140 hover:underline"
+            >
+              Poser une question
+            </Link>
+          </div>
+          <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+            <TuileKpi libelle="questions posees" valeur={formaterNombre(usage.questions)} />
+            <TuileKpi
+              libelle="cout cumule"
+              valeur={`$${usage.dollars.toFixed(2)}`}
+              precision="Jetons factures, tarif du modele"
+            />
+            <TuileKpi
+              libelle="graphiques produits"
+              valeur={formaterNombre(usage.graphiques)}
+              precision="Choisis par l'agent Viz"
+            />
+            <TuileKpi
+              libelle="duree moyenne"
+              valeur={usage.questions > 0 ? `${usage.dureeMoyenne.toFixed(1)} s` : "—"}
+              precision="Question → reponse"
+            />
+          </div>
+        </section>
+      )}
+
       <section aria-labelledby="titre-suite" className="space-y-4">
         <h2 id="titre-suite" className="font-display text-sm uppercase tracking-widest text-muted">
           La suite
@@ -165,4 +208,14 @@ export default function PageTableauDeBord() {
       </section>
     </div>
   );
+}
+
+function resumerUsage(questions: QuestionAssistant[]) {
+  const total = questions.reduce((somme, q) => somme + q.duree_ms, 0);
+  return {
+    questions: questions.length,
+    dollars: questions.reduce((somme, q) => somme + q.cout_dollars, 0),
+    graphiques: questions.filter((q) => q.graphique !== null).length,
+    dureeMoyenne: questions.length > 0 ? total / questions.length / 1000 : 0,
+  };
 }
