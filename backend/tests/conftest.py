@@ -11,7 +11,17 @@ from app.core.airbyte_client import AirbyteClient
 from app.core.database import Base
 
 # Import necessaire pour que Base.metadata connaisse les tables a creer.
-from app.models import data_source, membership, organization, question, user  # noqa: F401
+from app.models import (  # noqa: F401
+    conversation,
+    data_source,
+    invitation,
+    membership,
+    organization,
+    question,
+    user,
+    workspace,
+    workspace_access,
+)
 
 
 @pytest.fixture(autouse=True)

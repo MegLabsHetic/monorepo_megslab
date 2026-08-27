@@ -1,7 +1,7 @@
-"""Une source de donnees connectee par une organisation (ex. une base PostgreSQL).
+"""Une source de donnees connectee dans un espace de travail (ex. une base PostgreSQL).
 
 Ne stocke jamais les identifiants de connexion (host/mot de passe) : Airbyte
-les detient deja, chiffres, cote workspace de l'organisation. Dupliquer ce
+les detient deja, chiffres, cote workspace Airbyte de l'espace. Dupliquer ce
 secret ici n'apporterait rien et serait une surface de fuite en plus.
 """
 
@@ -15,7 +15,7 @@ from app.core.database import Base
 from app.models.base import HorodatageMixin
 
 if TYPE_CHECKING:
-    from app.models.organization import Organization
+    from app.models.workspace import Workspace
 
 
 class TypeSource(str, enum.Enum):
@@ -35,7 +35,7 @@ class StatutSource(str, enum.Enum):
 class DataSource(HorodatageMixin, Base):
     __tablename__ = "data_sources"
 
-    organization_id: Mapped[str] = mapped_column(ForeignKey("organizations.id"))
+    workspace_id: Mapped[str] = mapped_column(ForeignKey("workspaces.id"), index=True)
     nom: Mapped[str] = mapped_column(String(255))
     type_source: Mapped[str] = mapped_column(String(50), default="postgres")
     statut: Mapped[StatutSource] = mapped_column(
@@ -48,7 +48,7 @@ class DataSource(HorodatageMixin, Base):
     airbyte_connection_id: Mapped[str | None] = mapped_column(String(64), default=None)
     schema_entrepot: Mapped[str] = mapped_column(String(64))
 
-    # Toutes les sources d'une organisation ecrivent dans le meme schema (pour
+    # Toutes les sources d'un espace ecrivent dans le meme schema (pour
     # que l'analyse puisse joindre leurs tables). Ce prefixe evite que deux
     # sources ayant une table du meme nom s'ecrasent. Vide pour les sources
     # creees avant son introduction : leurs tables restent sans prefixe.
@@ -61,7 +61,7 @@ class DataSource(HorodatageMixin, Base):
     # Les flux que l'utilisateur a choisi de synchroniser, parmi les decouverts.
     flux_selectionnes: Mapped[list] = mapped_column(JSON, default=list)
 
-    organization: Mapped["Organization"] = relationship()
+    workspace: Mapped["Workspace"] = relationship()
 
     def table_entrepot(self, nom_flux: str) -> str:
         """Le nom que porte ce flux une fois copie dans l'entrepot."""

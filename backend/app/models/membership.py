@@ -1,7 +1,9 @@
 """L'appartenance d'un utilisateur a une organisation, avec son role.
 
-C'est cette table qui porte l'autorisation : un utilisateur peut appartenir a
-plusieurs organisations, avec un role different dans chacune.
+Au niveau de l'organisation : OWNER (tout, y compris supprimer), ADMIN (gere
+l'equipe et les espaces), MEMBER (accede aux espaces qu'on lui ouvre). Le
+role VIEWER n'a de sens que dans un espace (voir `WorkspaceAccess`), l'enum
+est partage entre les deux tables.
 """
 
 import enum
@@ -23,6 +25,11 @@ class Role(str, enum.Enum):
     ADMIN = "admin"
     MEMBER = "member"
     VIEWER = "viewer"
+
+
+ROLES_ORGANISATION = (Role.OWNER, Role.ADMIN, Role.MEMBER)
+ROLES_ESPACE = (Role.ADMIN, Role.MEMBER, Role.VIEWER)
+ROLES_ADMIN_ORGANISATION = (Role.OWNER, Role.ADMIN)
 
 
 class Membership(HorodatageMixin, Base):

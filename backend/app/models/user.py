@@ -20,5 +20,10 @@ class User(HorodatageMixin, Base):
     mot_de_passe_hache: Mapped[str | None] = mapped_column(String(255), default=None)
     nom_complet: Mapped[str] = mapped_column(String(255))
     actif: Mapped[bool] = mapped_column(Boolean, default=True)
+    # Vrai quand un admin a cree le compte avec un mot de passe temporaire.
+    doit_changer_mot_de_passe: Mapped[bool] = mapped_column(Boolean, default=False)
+    # L'operateur de la plateforme : voit toutes les organisations. Jamais
+    # attribue par l'application elle-meme, uniquement par un script.
+    est_super_admin: Mapped[bool] = mapped_column(Boolean, default=False)
 
     memberships: Mapped[list["Membership"]] = relationship(back_populates="user")

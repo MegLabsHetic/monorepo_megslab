@@ -13,14 +13,16 @@ from app.core.database import Base
 from app.models.base import HorodatageMixin
 
 if TYPE_CHECKING:
-    from app.models.organization import Organization
+    from app.models.conversation import Conversation
     from app.models.user import User
+    from app.models.workspace import Workspace
 
 
 class Question(HorodatageMixin, Base):
     __tablename__ = "questions"
 
-    organization_id: Mapped[str] = mapped_column(ForeignKey("organizations.id"), index=True)
+    workspace_id: Mapped[str] = mapped_column(ForeignKey("workspaces.id"), index=True)
+    conversation_id: Mapped[str] = mapped_column(ForeignKey("conversations.id"), index=True)
     user_id: Mapped[str] = mapped_column(ForeignKey("users.id"))
 
     texte: Mapped[str] = mapped_column(Text)
@@ -43,5 +45,6 @@ class Question(HorodatageMixin, Base):
     jetons: Mapped[int] = mapped_column(Integer, default=0)
     duree_ms: Mapped[int] = mapped_column(Integer, default=0)
 
-    organization: Mapped["Organization"] = relationship()
+    workspace: Mapped["Workspace"] = relationship()
+    conversation: Mapped["Conversation"] = relationship()
     user: Mapped["User"] = relationship()
