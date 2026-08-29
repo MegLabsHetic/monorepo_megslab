@@ -8,47 +8,53 @@ from app.core.airbyte_client import AirbyteClient
 from app.core.errors import ErreurUtilisateur
 from app.models.data_source import StatutSource
 from app.models.organization import Organization
+from app.models.workspace import Workspace
 from app.services import source_service
 from app.services.source_service import SourceService
 
 
-async def _organisation(db: AsyncSession) -> Organization:
-    organisation = Organization(
-        nom="Espace de test",
+async def _espace(db: AsyncSession) -> Workspace:
+    espace = Organization(nom="Acme")
+    db.add(espace)
+    await db.flush()
+    espace = Workspace(
+        organization_id=espace.id,
+        nom="General",
         airbyte_workspace_id="workspace-test",
         airbyte_destination_id="destination-test",
+        schema_entrepot=f"org_{espace.id}",
     )
-    db.add(organisation)
+    db.add(espace)
     await db.flush()
-    return organisation
+    return espace
 
 
 async def test_connecter_postgres_enregistre_la_source_et_renvoie_les_flux(
     db: AsyncSession, airbyte_client_factice: AirbyteClient
 ) -> None:
-    organisation = await _organisation(db)
+    espace = await _espace(db)
     service = SourceService(db, airbyte_client_factice)
 
     source, flux = await service.connecter_base(
-        organisation, "postgres", "Ma base", "hote", 5432, "base", "user", "mdp"
+        espace, "postgres", "Ma base", "hote", 5432, "base", "user", "mdp"
     )
 
     assert source.airbyte_source_id == "source-test"
     assert source.statut == StatutSource.CONNECTEE
-    assert source.schema_entrepot == f"org_{organisation.id}"
+    assert source.schema_entrepot == espace.schema_entrepot
     assert [f.nom for f in flux] == ["customers"]
 
 
 async def test_synchroniser_cree_la_connexion_une_seule_fois(
     db: AsyncSession, airbyte_client_factice: AirbyteClient
 ) -> None:
-    organisation = await _organisation(db)
+    espace = await _espace(db)
     service = SourceService(db, airbyte_client_factice)
     source, _ = await service.connecter_base(
-        organisation, "postgres", "Ma base", "hote", 5432, "base", "user", "mdp"
+        espace, "postgres", "Ma base", "hote", 5432, "base", "user", "mdp"
     )
 
-    job_id = await service.synchroniser(source, organisation, ["customers"])
+    job_id = await service.synchroniser(source, espace, ["customers"])
 
     assert job_id == 1
     assert source.airbyte_connection_id == "connexion-test"
@@ -65,9 +71,9 @@ async def test_une_synchronisation_deja_en_cours_est_suivie_au_lieu_d_echouer(
 ) -> None:
     """Airbyte repond 409 quand il a deja lance une synchronisation lui-meme :
     on doit rendre le job en cours, pas une erreur."""
-    organisation = await _organisation(db)
+    espace = await _espace(db)
     source, _ = await SourceService(db, airbyte_client_factice).connecter_base(
-        organisation, "postgres", "Ma base", "hote", 5432, "base", "user", "mdp"
+        espace, "postgres", "Ma base", "hote", 5432, "base", "user", "mdp"
     )
 
     def gestionnaire(requete: httpx.Request) -> httpx.Response:
@@ -83,7 +89,7 @@ async def test_une_synchronisation_deja_en_cours_est_suivie_au_lieu_d_echouer(
         return httpx.Response(200, json={})
 
     service = SourceService(db, _client_airbyte(gestionnaire))
-    job_id = await service.synchroniser(source, organisation, ["customers"])
+    job_id = await service.synchroniser(source, espace, ["customers"])
 
     assert job_id == 77
     assert source.statut == StatutSource.SYNCHRONISATION
@@ -95,9 +101,9 @@ async def test_un_409_transitoire_est_reessaye(
     """Airbyte verrouille brievement la connexion apres la selection des flux :
     il repond alors 409 avec une liste de jobs vide. Constate en reel."""
     monkeypatch.setattr(source_service, "DELAI_ENTRE_TENTATIVES_SECONDES", 0)
-    organisation = await _organisation(db)
+    espace = await _espace(db)
     source, _ = await SourceService(db, airbyte_client_factice).connecter_base(
-        organisation, "postgres", "Ma base", "hote", 5432, "base", "user", "mdp"
+        espace, "postgres", "Ma base", "hote", 5432, "base", "user", "mdp"
     )
 
     tentatives = {"n": 0}
@@ -118,7 +124,7 @@ async def test_un_409_transitoire_est_reessaye(
         return httpx.Response(200, json={})
 
     service = SourceService(db, _client_airbyte(gestionnaire))
-    job_id = await service.synchroniser(source, organisation, ["customers"])
+    job_id = await service.synchroniser(source, espace, ["customers"])
 
     assert job_id == 12
     assert tentatives["n"] == 2
@@ -128,9 +134,9 @@ async def test_la_connexion_est_enregistree_meme_si_le_declenchement_echoue(
     db: AsyncSession, airbyte_client_factice: AirbyteClient
 ) -> None:
     """Sinon chaque nouvelle tentative creerait une connexion Airbyte orpheline."""
-    organisation = await _organisation(db)
+    espace = await _espace(db)
     source, _ = await SourceService(db, airbyte_client_factice).connecter_base(
-        organisation, "postgres", "Ma base", "hote", 5432, "base", "user", "mdp"
+        espace, "postgres", "Ma base", "hote", 5432, "base", "user", "mdp"
     )
 
     def gestionnaire(requete: httpx.Request) -> httpx.Response:
@@ -143,7 +149,7 @@ async def test_la_connexion_est_enregistree_meme_si_le_declenchement_echoue(
 
     service = SourceService(db, _client_airbyte(gestionnaire))
     with pytest.raises(ErreurUtilisateur):
-        await service.synchroniser(source, organisation, ["customers"])
+        await service.synchroniser(source, espace, ["customers"])
 
     assert source.airbyte_connection_id == "connexion-creee"
 
@@ -151,12 +157,12 @@ async def test_la_connexion_est_enregistree_meme_si_le_declenchement_echoue(
 async def test_statut_sync_marque_la_source_prete_quand_le_job_reussit(
     db: AsyncSession, airbyte_client_factice: AirbyteClient
 ) -> None:
-    organisation = await _organisation(db)
+    espace = await _espace(db)
     service = SourceService(db, airbyte_client_factice)
     source, _ = await service.connecter_base(
-        organisation, "postgres", "Ma base", "hote", 5432, "base", "user", "mdp"
+        espace, "postgres", "Ma base", "hote", 5432, "base", "user", "mdp"
     )
-    await service.synchroniser(source, organisation, ["customers"])
+    await service.synchroniser(source, espace, ["customers"])
 
     job = await service.statut_sync(source, 1)
 
@@ -168,10 +174,10 @@ async def test_seules_les_sources_inconnues_sont_proposees_a_l_import(
     db: AsyncSession, airbyte_client_factice: AirbyteClient
 ) -> None:
     """Une source deja referencee par MegLabs ne doit pas etre proposee deux fois."""
-    organisation = await _organisation(db)
+    espace = await _espace(db)
     service = SourceService(db, airbyte_client_factice)
     await service.connecter_base(
-        organisation, "postgres", "Deja connue", "hote", 5432, "base", "user", "mdp"
+        espace, "postgres", "Deja connue", "hote", 5432, "base", "user", "mdp"
     )
 
     def gestionnaire(requete: httpx.Request) -> httpx.Response:
@@ -189,7 +195,7 @@ async def test_seules_les_sources_inconnues_sont_proposees_a_l_import(
 
     importables = await SourceService(
         db, _client_airbyte(gestionnaire)
-    ).sources_airbyte_importables(organisation)
+    ).sources_airbyte_importables(espace)
 
     assert [s.id for s in importables] == ["orpheline"]
 
@@ -198,7 +204,7 @@ async def test_importer_une_source_airbyte_la_reference_avec_son_schema(
     db: AsyncSession,
 ) -> None:
     """Adopter une source ne demande aucun identifiant : ils restent chez Airbyte."""
-    organisation = await _organisation(db)
+    espace = await _espace(db)
 
     def gestionnaire(requete: httpx.Request) -> httpx.Response:
         chemin = requete.url.path
@@ -225,7 +231,7 @@ async def test_importer_une_source_airbyte_la_reference_avec_son_schema(
         )
 
     source = await SourceService(db, _client_airbyte(gestionnaire)).importer_depuis_airbyte(
-        organisation, "orpheline"
+        espace, "orpheline"
     )
 
     assert source.nom == "Stripe production"
@@ -237,7 +243,7 @@ async def test_importer_une_source_airbyte_la_reference_avec_son_schema(
 async def test_importer_une_source_deja_connue_est_refuse(
     db: AsyncSession, airbyte_client_factice: AirbyteClient
 ) -> None:
-    organisation = await _organisation(db)
+    espace = await _espace(db)
 
     def gestionnaire(requete: httpx.Request) -> httpx.Response:
         if requete.url.path.endswith("/applications/token"):
@@ -246,5 +252,5 @@ async def test_importer_une_source_deja_connue_est_refuse(
 
     with pytest.raises(ErreurUtilisateur):
         await SourceService(db, _client_airbyte(gestionnaire)).importer_depuis_airbyte(
-            organisation, "inexistante"
+            espace, "inexistante"
         )

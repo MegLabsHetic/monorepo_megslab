@@ -24,7 +24,7 @@ from app.core.entrepot_writer import (
 )
 from app.core.errors import ErreurUtilisateur
 from app.models.data_source import DataSource, StatutSource, TypeSource
-from app.models.organization import Organization
+from app.models.workspace import Workspace
 
 logger = logging.getLogger(__name__)
 
@@ -40,20 +40,20 @@ class FileSourceService:
     def __init__(self, db: AsyncSession) -> None:
         self._db = db
 
-    async def importer_fichier(self, organisation: Organization, depot: UploadFile) -> DataSource:
+    async def importer_fichier(self, espace: Workspace, depot: UploadFile) -> DataSource:
         nom_fichier = depot.filename or "fichier"
         self._verifier_format(nom_fichier)
 
         table = nom_de_table(nom_fichier)
         prefixe = f"f{uuid.uuid4().hex[:8]}_"
-        schema = f"org_{organisation.id}"
+        schema = espace.schema_entrepot
 
         lignes, colonnes = await self._ecrire_dans_entrepot(
             schema, f"{prefixe}{table}", nom_fichier, depot
         )
 
         source = DataSource(
-            organization_id=organisation.id,
+            workspace_id=espace.id,
             nom=nom_fichier,
             type_source=TypeSource.FICHIER.value,
             statut=StatutSource.PRETE,

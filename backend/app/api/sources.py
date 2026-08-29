@@ -1,16 +1,20 @@
-"""Routes de connexion et de synchronisation des sources de donnees."""
+"""Routes de connexion et de synchronisation des sources d'un espace.
+
+Lire (catalogue, apercu, profil) est ouvert a tout membre de l'espace ;
+connecter, synchroniser et importer demandent au moins le role MEMBER.
+"""
 
 from fastapi import APIRouter, Depends, File, UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import organisation_courante
+from app.api.deps import AccesEspace, acces_analyste, acces_courant
 from app.core.airbyte_client import AirbyteClient, get_airbyte_client
 from app.core.config import get_settings
 from app.core.connecteurs import CONNECTEURS
 from app.core.database import get_db
 from app.core.errors import ErreurUtilisateur
 from app.models.data_source import DataSource
-from app.models.organization import Organization
+from app.models.workspace import Workspace
 from app.schemas.source import (
     ApercuReponse,
     ConnexionBaseDemande,
@@ -28,10 +32,11 @@ from app.services.file_source_service import FileSourceService
 from app.services.source_service import SourceService
 from app.services.warehouse_service import WarehouseService
 
-router = APIRouter(prefix="/sources", tags=["sources"])
+router = APIRouter(prefix="/espaces/{espace_id}/sources", tags=["sources"])
+router_connecteurs = APIRouter(prefix="/connecteurs", tags=["sources"])
 
 
-def _en_reponse(source: DataSource) -> SourceReponse:
+def _en_reponse(source: DataSource, espace: Workspace) -> SourceReponse:
     return SourceReponse(
         id=source.id,
         nom=source.nom,
@@ -48,11 +53,11 @@ def _en_reponse(source: DataSource) -> SourceReponse:
         ],
         flux_selectionnes=source.flux_selectionnes or [],
         cree_le=source.cree_le,
-        lien_airbyte=_lien_airbyte(source),
+        lien_airbyte=_lien_airbyte(source, espace),
     )
 
 
-def _lien_airbyte(source: DataSource) -> str | None:
+def _lien_airbyte(source: DataSource, espace: Workspace) -> str | None:
     """Le lien vers la source dans Airbyte, pour la configuration avancee.
 
     Reserve aux sources qui en ont une : un fichier depose n'existe pas
@@ -60,15 +65,14 @@ def _lien_airbyte(source: DataSource) -> str | None:
     plutot que de fabriquer un lien qui ne menerait nulle part.
     """
     base = get_settings().airbyte_url_publique.rstrip("/")
-    if not base or source.airbyte_source_id is None:
+    if not base or source.airbyte_source_id is None or not espace.airbyte_workspace_id:
         return None
-    espace = source.organization.airbyte_workspace_id
-    return f"{base}/workspaces/{espace}/source/{source.airbyte_source_id}"
+    return f"{base}/workspaces/{espace.airbyte_workspace_id}/source/{source.airbyte_source_id}"
 
 
-@router.get("/connecteurs", response_model=list[TypeConnecteurReponse])
+@router_connecteurs.get("", response_model=list[TypeConnecteurReponse])
 async def lister_connecteurs():
-    """Les types de bases que l'interface peut proposer."""
+    """Les types de bases que l'interface peut proposer. Independant de l'espace."""
     return [
         TypeConnecteurReponse(cle=c.cle, libelle=c.libelle, port_defaut=c.port_defaut)
         for c in CONNECTEURS.values()
@@ -77,48 +81,47 @@ async def lister_connecteurs():
 
 @router.get("/airbyte", response_model=list[SourceImportableReponse])
 async def lister_importables(
-    organisation: Organization = Depends(organisation_courante),
+    acces: AccesEspace = Depends(acces_analyste),
     db: AsyncSession = Depends(get_db),
     airbyte_client: AirbyteClient = Depends(get_airbyte_client),
 ):
     """Les sources de l'espace Airbyte que MegLabs ne reference pas encore."""
-    service = SourceService(db, airbyte_client)
-    sources = await service.sources_airbyte_importables(organisation)
+    sources = await SourceService(db, airbyte_client).sources_airbyte_importables(acces.espace)
     return [SourceImportableReponse(id=s.id, nom=s.nom, type_source=s.type_source) for s in sources]
 
 
 @router.post("/airbyte/{airbyte_source_id}/importer", response_model=SourceReponse, status_code=201)
 async def importer_depuis_airbyte(
     airbyte_source_id: str,
-    organisation: Organization = Depends(organisation_courante),
+    acces: AccesEspace = Depends(acces_analyste),
     db: AsyncSession = Depends(get_db),
     airbyte_client: AirbyteClient = Depends(get_airbyte_client),
 ):
-    service = SourceService(db, airbyte_client)
-    source = await service.importer_depuis_airbyte(organisation, airbyte_source_id)
-    return _en_reponse(source)
+    source = await SourceService(db, airbyte_client).importer_depuis_airbyte(
+        acces.espace, airbyte_source_id
+    )
+    return _en_reponse(source, acces.espace)
 
 
 @router.get("", response_model=list[SourceReponse])
 async def lister(
-    organisation: Organization = Depends(organisation_courante),
+    acces: AccesEspace = Depends(acces_courant),
     db: AsyncSession = Depends(get_db),
     airbyte_client: AirbyteClient = Depends(get_airbyte_client),
 ):
-    sources = await SourceService(db, airbyte_client).lister(organisation)
-    return [_en_reponse(source) for source in sources]
+    sources = await SourceService(db, airbyte_client).lister(acces.espace)
+    return [_en_reponse(source, acces.espace) for source in sources]
 
 
 @router.post("", response_model=SourceReponse, status_code=201)
 async def connecter(
     demande: ConnexionBaseDemande,
-    organisation: Organization = Depends(organisation_courante),
+    acces: AccesEspace = Depends(acces_analyste),
     db: AsyncSession = Depends(get_db),
     airbyte_client: AirbyteClient = Depends(get_airbyte_client),
 ):
-    service = SourceService(db, airbyte_client)
-    source, _ = await service.connecter_base(
-        organisation,
+    source, _ = await SourceService(db, airbyte_client).connecter_base(
+        acces.espace,
         demande.type_source,
         demande.nom,
         demande.host,
@@ -127,29 +130,41 @@ async def connecter(
         demande.username,
         demande.mot_de_passe,
     )
-    return _en_reponse(source)
+    return _en_reponse(source, acces.espace)
+
+
+@router.post("/fichier", response_model=SourceReponse, status_code=201)
+async def importer_fichier(
+    fichier: UploadFile = File(...),
+    acces: AccesEspace = Depends(acces_analyste),
+    db: AsyncSession = Depends(get_db),
+):
+    """Depose un CSV ou un XLSX directement dans l'entrepot, sans passer par Airbyte."""
+    source = await FileSourceService(db).importer_fichier(acces.espace, fichier)
+    return _en_reponse(source, acces.espace)
 
 
 @router.get("/{source_id}", response_model=SourceReponse)
 async def detail(
     source_id: str,
-    organisation: Organization = Depends(organisation_courante),
+    acces: AccesEspace = Depends(acces_courant),
     db: AsyncSession = Depends(get_db),
 ):
-    return _en_reponse(await _charger_source(db, source_id, organisation))
+    return _en_reponse(await _charger_source(db, source_id, acces.espace), acces.espace)
 
 
 @router.post("/{source_id}/synchroniser", response_model=SynchronisationReponse)
 async def synchroniser(
     source_id: str,
     demande: SynchronisationDemande,
-    organisation: Organization = Depends(organisation_courante),
+    acces: AccesEspace = Depends(acces_analyste),
     db: AsyncSession = Depends(get_db),
     airbyte_client: AirbyteClient = Depends(get_airbyte_client),
 ):
-    source = await _charger_source(db, source_id, organisation)
-    service = SourceService(db, airbyte_client)
-    job_id = await service.synchroniser(source, organisation, demande.flux)
+    source = await _charger_source(db, source_id, acces.espace)
+    job_id = await SourceService(db, airbyte_client).synchroniser(
+        source, acces.espace, demande.flux
+    )
     return SynchronisationReponse(job_id=job_id)
 
 
@@ -157,36 +172,24 @@ async def synchroniser(
 async def statut_synchronisation(
     source_id: str,
     job_id: int,
-    organisation: Organization = Depends(organisation_courante),
+    acces: AccesEspace = Depends(acces_courant),
     db: AsyncSession = Depends(get_db),
     airbyte_client: AirbyteClient = Depends(get_airbyte_client),
 ):
-    source = await _charger_source(db, source_id, organisation)
-    service = SourceService(db, airbyte_client)
-    job = await service.statut_sync(source, job_id)
+    source = await _charger_source(db, source_id, acces.espace)
+    job = await SourceService(db, airbyte_client).statut_sync(source, job_id)
     return StatutSyncReponse(
         statut=job.get("status", "inconnu"), lignes_synchronisees=job.get("rowsSynced")
     )
 
 
-@router.post("/fichier", response_model=SourceReponse, status_code=201)
-async def importer_fichier(
-    fichier: UploadFile = File(...),
-    organisation: Organization = Depends(organisation_courante),
-    db: AsyncSession = Depends(get_db),
-):
-    """Depose un CSV ou un XLSX directement dans l'entrepot, sans passer par Airbyte."""
-    source = await FileSourceService(db).importer_fichier(organisation, fichier)
-    return _en_reponse(source)
-
-
 @router.get("/{source_id}/tables", response_model=list[TableReponse])
 async def lister_tables(
     source_id: str,
-    organisation: Organization = Depends(organisation_courante),
+    acces: AccesEspace = Depends(acces_courant),
     db: AsyncSession = Depends(get_db),
 ):
-    source = await _charger_source(db, source_id, organisation)
+    source = await _charger_source(db, source_id, acces.espace)
     tables = await WarehouseService(source).lister_tables()
     return [TableReponse(nom=nom, nb_lignes=lignes) for nom, lignes in tables]
 
@@ -196,10 +199,10 @@ async def apercu_table(
     source_id: str,
     table: str,
     limite: int = 50,
-    organisation: Organization = Depends(organisation_courante),
+    acces: AccesEspace = Depends(acces_courant),
     db: AsyncSession = Depends(get_db),
 ):
-    source = await _charger_source(db, source_id, organisation)
+    source = await _charger_source(db, source_id, acces.espace)
     resultat = await WarehouseService(source).apercu(table, min(limite, 200))
     return ApercuReponse(
         colonnes=resultat.colonnes,
@@ -212,10 +215,10 @@ async def apercu_table(
 async def profil_table(
     source_id: str,
     table: str,
-    organisation: Organization = Depends(organisation_courante),
+    acces: AccesEspace = Depends(acces_courant),
     db: AsyncSession = Depends(get_db),
 ):
-    source = await _charger_source(db, source_id, organisation)
+    source = await _charger_source(db, source_id, acces.espace)
     profils = await WarehouseService(source).profiler(table)
     return [
         ProfilColonneReponse(
@@ -255,10 +258,8 @@ def _texte(valeur: object) -> str | None:
     return None if valeur is None else str(valeur)
 
 
-async def _charger_source(
-    db: AsyncSession, source_id: str, organisation: Organization
-) -> DataSource:
+async def _charger_source(db: AsyncSession, source_id: str, espace: Workspace) -> DataSource:
     source = await db.get(DataSource, source_id)
-    if source is None or source.organization_id != organisation.id:
+    if source is None or source.workspace_id != espace.id:
         raise ErreurUtilisateur("Source introuvable.", code_http=404)
     return source

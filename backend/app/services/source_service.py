@@ -12,7 +12,7 @@ from app.core.airbyte_client import AirbyteClient, SourceAirbyte, StreamDecouver
 from app.core.connecteurs import connecteur
 from app.core.errors import ErreurUtilisateur
 from app.models.data_source import DataSource, StatutSource
-from app.models.organization import Organization
+from app.models.workspace import Workspace
 
 logger = logging.getLogger(__name__)
 
@@ -33,7 +33,7 @@ class SourceService:
 
     async def connecter_base(
         self,
-        organisation: Organization,
+        espace: Workspace,
         type_source: str,
         nom: str,
         host: str,
@@ -57,7 +57,7 @@ class SourceService:
                 host, port, database, username, password
             )
             source_id = await self._airbyte_client.creer_source(
-                organisation.airbyte_workspace_id, nom, configuration
+                espace.airbyte_workspace_id, nom, configuration
             )
             flux = await self._airbyte_client.lister_streams(source_id)
         except httpx.HTTPError as erreur:
@@ -65,13 +65,13 @@ class SourceService:
             raise ErreurUtilisateur(_ERREUR_AIRBYTE_INJOIGNABLE, code_http=503) from erreur
 
         source = DataSource(
-            organization_id=organisation.id,
+            workspace_id=espace.id,
             nom=nom,
             type_source=type_source,
             airbyte_source_id=source_id,
-            schema_entrepot=f"org_{organisation.id}",
+            schema_entrepot=espace.schema_entrepot,
             # Court, stable, et derive de l'id Airbyte : deux sources d'une meme
-            # organisation ne peuvent pas produire le meme prefixe.
+            # espace ne peuvent pas produire le meme prefixe.
             prefixe_entrepot=f"s{source_id.replace('-', '')[:8]}_",
             flux_decouverts=[
                 {"nom": f.nom, "namespace": f.namespace, "colonnes": f.colonnes} for f in flux
@@ -82,30 +82,30 @@ class SourceService:
         await self._db.refresh(source)
         return source, flux
 
-    async def sources_airbyte_importables(self, organisation: Organization) -> list[SourceAirbyte]:
+    async def sources_airbyte_importables(self, espace: Workspace) -> list[SourceAirbyte]:
         """Les sources presentes dans le workspace Airbyte mais inconnues de MegLabs.
 
         Typiquement : celles configurees directement dans Airbyte, pour un
         connecteur que notre formulaire ne propose pas.
         """
         try:
-            toutes = await self._airbyte_client.lister_sources(organisation.airbyte_workspace_id)
+            toutes = await self._airbyte_client.lister_sources(espace.airbyte_workspace_id)
         except httpx.HTTPError as erreur:
-            logger.exception("Echec de listage des sources Airbyte de %s", organisation.id)
+            logger.exception("Echec de listage des sources Airbyte de %s", espace.id)
             raise ErreurUtilisateur(_ERREUR_AIRBYTE_INJOIGNABLE, code_http=503) from erreur
 
-        connues = {source.airbyte_source_id for source in await self.lister(organisation)}
+        connues = {source.airbyte_source_id for source in await self.lister(espace)}
         return [source for source in toutes if source.id not in connues]
 
     async def importer_depuis_airbyte(
-        self, organisation: Organization, airbyte_source_id: str
+        self, espace: Workspace, airbyte_source_id: str
     ) -> DataSource:
         """Adopte une source existante d'Airbyte : MegLabs la reference et la gere ensuite.
 
         Aucun identifiant n'est demande : ils sont deja chez Airbyte, chiffres.
         On ne fait que decouvrir son schema et l'enregistrer.
         """
-        importables = await self.sources_airbyte_importables(organisation)
+        importables = await self.sources_airbyte_importables(espace)
         correspondance = next((s for s in importables if s.id == airbyte_source_id), None)
         if correspondance is None:
             raise ErreurUtilisateur(
@@ -120,11 +120,11 @@ class SourceService:
             raise ErreurUtilisateur(_ERREUR_AIRBYTE_INJOIGNABLE, code_http=503) from erreur
 
         source = DataSource(
-            organization_id=organisation.id,
+            workspace_id=espace.id,
             nom=correspondance.nom,
             type_source=correspondance.type_source,
             airbyte_source_id=correspondance.id,
-            schema_entrepot=f"org_{organisation.id}",
+            schema_entrepot=espace.schema_entrepot,
             prefixe_entrepot=f"s{correspondance.id.replace('-', '')[:8]}_",
             flux_decouverts=[
                 {"nom": f.nom, "namespace": f.namespace, "colonnes": f.colonnes} for f in flux
@@ -133,19 +133,19 @@ class SourceService:
         self._db.add(source)
         await self._db.commit()
         await self._db.refresh(source)
-        logger.info("Source Airbyte %s adoptee par %s", airbyte_source_id, organisation.id)
+        logger.info("Source Airbyte %s adoptee par %s", airbyte_source_id, espace.id)
         return source
 
     async def synchroniser(
-        self, source: DataSource, organisation: Organization, noms_flux: list[str]
+        self, source: DataSource, espace: Workspace, noms_flux: list[str]
     ) -> int:
-        """Relie la source a l'entrepot de l'organisation et lance un sync.
+        """Relie la source a l'entrepot de l'espace et lance un sync.
 
         Renvoie l'id du job Airbyte : le suivi de sa progression se fait a part
         (`statut_sync`), pour ne jamais faire attendre une requete HTTP le
         temps complet d'une synchronisation.
         """
-        await self._garantir_connexion(source, organisation)
+        await self._garantir_connexion(source, espace)
 
         try:
             await self._airbyte_client.selectionner_streams(source.airbyte_connection_id, noms_flux)
@@ -159,7 +159,7 @@ class SourceService:
         await self._db.commit()
         return job_id
 
-    async def _garantir_connexion(self, source: DataSource, organisation: Organization) -> None:
+    async def _garantir_connexion(self, source: DataSource, espace: Workspace) -> None:
         """Cree la connexion si elle manque, et l'enregistre aussitot.
 
         Le commit immediat n'est pas cosmetique : si le declenchement echoue
@@ -173,7 +173,7 @@ class SourceService:
         try:
             source.airbyte_connection_id = await self._airbyte_client.creer_connexion(
                 source.airbyte_source_id,
-                organisation.airbyte_destination_id,
+                espace.airbyte_destination_id,
                 f"{source.nom} -> entrepot",
                 prefixe=source.prefixe_entrepot,
             )
@@ -214,11 +214,11 @@ class SourceService:
 
         raise RuntimeError("boucle de declenchement terminee sans resultat")
 
-    async def lister(self, organisation: Organization) -> list[DataSource]:
-        """Les sources connectees par une organisation, la plus recente d'abord."""
+    async def lister(self, espace: Workspace) -> list[DataSource]:
+        """Les sources connectees par un espace, la plus recente d'abord."""
         resultat = await self._db.execute(
             select(DataSource)
-            .where(DataSource.organization_id == organisation.id)
+            .where(DataSource.workspace_id == espace.id)
             .order_by(DataSource.cree_le.desc())
         )
         return list(resultat.scalars().all())
