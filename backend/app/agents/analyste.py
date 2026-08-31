@@ -10,6 +10,7 @@ garantie, et l'utilisateur merite de savoir que ca n'a pas marche.
 """
 
 import logging
+from dataclasses import dataclass
 
 from pydantic import BaseModel, Field
 
@@ -38,6 +39,10 @@ TRY_CAST(... AS DOUBLE)) avant tout calcul, toute comparaison ou tout tri.
 Si on te renvoie une requete avec l'erreur que le moteur a produite, corrige-la
 sans changer ce qu'elle calcule.
 
+Si des echanges precedents sont fournis, la question s'inscrit dans leur suite :
+« et par etat ? » reprend la mesure de la question d'avant en changeant l'axe.
+Appuie-toi sur leur SQL, ne repars pas de zero.
+
 Ecris un SQL lisible : des alias explicites, des noms de colonnes de sortie en francais
 quand cela aide a la lecture."""
 
@@ -48,6 +53,15 @@ class PlanRequete(BaseModel):
     sql: str = Field(description="La requete SQL, ou une chaine vide si impossible")
     tables_utilisees: list[str] = Field(default_factory=list)
     explication: str = Field(description="Ce que la requete calcule, en francais")
+
+
+@dataclass(frozen=True)
+class Echange:
+    """Un echange precedent du meme fil, tel que l'Analyste le recoit."""
+
+    question: str
+    sql: str | None
+    reponse: str
 
 
 class ResultatAnalyse:
@@ -73,9 +87,12 @@ class Analyste:
         self._moteur = moteur
         self._llm = llm or LLMClient()
 
-    async def repondre(self, question: str, schema: str) -> ResultatAnalyse:
+    async def repondre(
+        self, question: str, schema: str, historique: list[Echange] | tuple[Echange, ...] = ()
+    ) -> ResultatAnalyse:
         instructions = f"{INSTRUCTIONS}\n\nSchema disponible :\n{schema}"
-        reponse = await self._proposer(instructions, question)
+        texte = _composer(question, historique)
+        reponse = await self._proposer(instructions, texte)
         plan, consommations = reponse.contenu, [reponse.consommation]
 
         if not plan.sql.strip():
@@ -85,7 +102,7 @@ class Analyste:
         try:
             resultat = self._moteur.executer(sql_execute)
         except ErreurRequete as erreur:
-            return await self._corriger(instructions, question, sql_execute, erreur, consommations)
+            return await self._corriger(instructions, texte, sql_execute, erreur, consommations)
         return ResultatAnalyse(plan, resultat, consommations, sql_execute)
 
     async def _corriger(
@@ -136,9 +153,26 @@ class Analyste:
             raise ErreurUtilisateur(erreur.raison, code_http=422) from erreur
 
 
+def _composer(question: str, historique: list[Echange] | tuple[Echange, ...]) -> str:
+    """La question, precedee des derniers echanges du fil s'il y en a."""
+    if not historique:
+        return question
+    blocs = []
+    for i, echange in enumerate(historique, start=1):
+        sql = echange.sql or "(aucune requete : la question etait sans reponse)"
+        blocs.append(
+            f"Echange {i}\nQuestion : {echange.question}\nSQL : {sql}\nReponse : {echange.reponse}"
+        )
+    return (
+        "Echanges precedents, du plus ancien au plus recent :\n\n"
+        + "\n\n".join(blocs)
+        + f"\n\nNouvelle question : {question}"
+    )
+
+
 def _demande_correction(question: str, sql: str, erreur: ErreurRequete) -> str:
     return (
-        f"Question : {question}\n\n"
+        f"{question}\n\n"
         f"Ta requete precedente :\n{sql}\n\n"
         f"Le moteur l'a rejetee avec cette erreur :\n{erreur.detail or erreur.raison}\n\n"
         "Corrige la requete sans changer ce qu'elle calcule."
