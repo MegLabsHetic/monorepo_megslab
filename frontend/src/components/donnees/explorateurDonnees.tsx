@@ -22,7 +22,7 @@ interface Props {
  * simple spinner.
  */
 export function ExplorateurDonnees({ sourceId }: Props) {
-  const { jeton } = useSession();
+  const { jeton, espace } = useSession();
   const traduireErreur = useTraduireErreur();
 
   const [tables, setTables] = useState<TableEntrepot[] | null>(null);
@@ -36,7 +36,7 @@ export function ExplorateurDonnees({ sourceId }: Props) {
   const chargerTables = useCallback(() => {
     setErreur(null);
     api
-      .tablesEntrepot(jeton, sourceId)
+      .tablesEntrepot(jeton, espace.id, sourceId)
       .then((resultat) => {
         setTables(resultat);
         setTable((actuelle) => actuelle ?? resultat[0]?.nom ?? null);
@@ -45,7 +45,7 @@ export function ExplorateurDonnees({ sourceId }: Props) {
         setTables([]);
         setErreur(traduireErreur(probleme));
       });
-  }, [jeton, sourceId, traduireErreur]);
+  }, [jeton, espace.id, sourceId, traduireErreur]);
 
   useEffect(chargerTables, [chargerTables]);
 
@@ -59,8 +59,8 @@ export function ExplorateurDonnees({ sourceId }: Props) {
     setProfil(null);
 
     Promise.all([
-      api.apercuTable(jeton, sourceId, table, 25),
-      api.profilTable(jeton, sourceId, table),
+      api.apercuTable(jeton, espace.id, sourceId, table, 25),
+      api.profilTable(jeton, espace.id, sourceId, table),
     ])
       .then(([lignes, colonnes]) => {
         if (abandonne) return;
@@ -77,7 +77,7 @@ export function ExplorateurDonnees({ sourceId }: Props) {
     return () => {
       abandonne = true;
     };
-  }, [jeton, sourceId, table, traduireErreur]);
+  }, [jeton, espace.id, sourceId, table, traduireErreur]);
 
   if (tables === null) {
     return <Squelette className="h-48 w-full" />;

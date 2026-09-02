@@ -3,23 +3,26 @@
 import { useRouter } from "next/navigation";
 import { ReactNode, useCallback, useEffect, useState } from "react";
 
+import { EcranMotDePasseTemporaire } from "@/components/compte/ecranMotDePasseTemporaire";
 import { BarreNavigation } from "@/components/nav/barreNavigation";
 import { FournisseurSession } from "@/components/session/contexteSession";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Squelette } from "@/components/ui/skeleton";
-import { ErreurApi, type Utilisateur, api } from "@/lib/api";
+import { type Espace, ErreurApi, type Utilisateur, api } from "@/lib/api";
 import { session } from "@/lib/session";
 
 interface SessionVerifiee {
   jeton: string;
   utilisateur: Utilisateur;
+  espaces: Espace[];
 }
 
 /**
  * Porte d'entree des ecrans authentifies : sans jeton valide, rien n'est rendu.
  * Un serveur injoignable ne renvoie pas vers /login (s'y reconnecter echouerait
- * aussi) mais propose de reessayer.
+ * aussi) mais propose de reessayer. Un compte cree avec un mot de passe
+ * temporaire ne voit rien d'autre que l'ecran pour le changer.
  */
 export default function LayoutPrive({ children }: { children: ReactNode }) {
   const router = useRouter();
@@ -33,11 +36,10 @@ export default function LayoutPrive({ children }: { children: ReactNode }) {
       return;
     }
     setPanne(null);
-    api
-      .profil(jeton)
-      .then((utilisateur) => setVerifiee({ jeton, utilisateur }))
+    Promise.all([api.profil(jeton), api.listerEspaces(jeton)])
+      .then(([utilisateur, espaces]) => setVerifiee({ jeton, utilisateur, espaces }))
       .catch((probleme) => {
-        if (probleme instanceof ErreurApi && probleme.statut > 0) {
+        if (probleme instanceof ErreurApi && probleme.statut === 401) {
           session.effacerJeton();
           router.replace("/login");
           return;
@@ -50,24 +52,47 @@ export default function LayoutPrive({ children }: { children: ReactNode }) {
 
   if (panne) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-bg px-4">
-        <Card className="max-w-sm text-center">
-          <h1 className="mb-2 font-display text-lg font-semibold text-text">
-            Connexion impossible
-          </h1>
-          <p className="mb-6 text-sm text-muted">{panne}</p>
-          <Button variante="contour" onClick={verifier}>
-            Reessayer
-          </Button>
-        </Card>
-      </main>
+      <EcranMessage titre="Connexion impossible" texte={panne}>
+        <Button variante="contour" onClick={verifier}>
+          Reessayer
+        </Button>
+      </EcranMessage>
     );
   }
 
   if (!verifiee) return <EcranVerification />;
 
+  if (verifiee.utilisateur.doit_changer_mot_de_passe) {
+    return <EcranMotDePasseTemporaire jeton={verifiee.jeton} onChange={verifier} />;
+  }
+
+  const espaceInitial = choisirEspaceInitial(verifiee.espaces);
+  if (!espaceInitial) {
+    return (
+      <EcranMessage
+        titre="Aucun espace de travail"
+        texte="Votre compte ne donne acces a aucun espace. Demandez a un administrateur de votre organisation de vous en ouvrir un."
+      >
+        <Button
+          variante="contour"
+          onClick={() => {
+            session.effacerJeton();
+            router.replace("/login");
+          }}
+        >
+          Se deconnecter
+        </Button>
+      </EcranMessage>
+    );
+  }
+
   return (
-    <FournisseurSession jeton={verifiee.jeton} utilisateur={verifiee.utilisateur}>
+    <FournisseurSession
+      jeton={verifiee.jeton}
+      utilisateur={verifiee.utilisateur}
+      espaces={verifiee.espaces}
+      espaceInitial={espaceInitial}
+    >
       <div className="min-h-screen bg-bg text-text">
         <a
           href="#contenu"
@@ -81,6 +106,32 @@ export default function LayoutPrive({ children }: { children: ReactNode }) {
         </main>
       </div>
     </FournisseurSession>
+  );
+}
+
+/** L'espace ouvert la derniere fois s'il est encore accessible, sinon le premier. */
+function choisirEspaceInitial(espaces: Espace[]): Espace | null {
+  const memorise = session.obtenirEspace();
+  return espaces.find((e) => e.id === memorise) ?? espaces[0] ?? null;
+}
+
+function EcranMessage({
+  titre,
+  texte,
+  children,
+}: {
+  titre: string;
+  texte: string;
+  children: ReactNode;
+}) {
+  return (
+    <main className="flex min-h-screen items-center justify-center bg-bg px-4">
+      <Card className="max-w-sm text-center">
+        <h1 className="mb-2 font-display text-lg font-semibold text-text">{titre}</h1>
+        <p className="mb-6 text-sm text-muted">{texte}</p>
+        {children}
+      </Card>
+    </main>
   );
 }
 

@@ -20,7 +20,7 @@ import { cn } from "@/lib/utils";
 
 export default function PageFicheSource() {
   const { id } = useParams<{ id: string }>();
-  const { jeton } = useSession();
+  const { jeton, espace } = useSession();
   const traduireErreur = useTraduireErreur();
   const [source, setSource] = useState<Source | null>(null);
   const [erreur, setErreur] = useState<string | null>(null);
@@ -29,7 +29,7 @@ export default function PageFicheSource() {
   const charger = useCallback(() => {
     setErreur(null);
     api
-      .detailSource(jeton, id)
+      .detailSource(jeton, espace.id, id)
       .then(setSource)
       .catch((probleme) => {
         if (probleme instanceof ErreurApi && probleme.statut === 404) {
@@ -38,7 +38,7 @@ export default function PageFicheSource() {
         }
         setErreur(traduireErreur(probleme));
       });
-  }, [jeton, id, traduireErreur]);
+  }, [jeton, espace.id, id, traduireErreur]);
 
   useEffect(charger, [charger]);
 

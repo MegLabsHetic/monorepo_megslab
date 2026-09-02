@@ -16,17 +16,17 @@ import { type ContexteAssistant, api } from "@/lib/api";
  * et des consignes — aucune ligne de donnees.
  */
 export function PanneauContexte({ onFermer }: { onFermer: () => void }) {
-  const { jeton } = useSession();
+  const { jeton, espace } = useSession();
   const traduireErreur = useTraduireErreur();
   const [contexte, setContexte] = useState<ContexteAssistant | null>(null);
   const [erreur, setErreur] = useState<string | null>(null);
 
   useEffect(() => {
     api
-      .contexteAssistant(jeton)
+      .contexteAssistant(jeton, espace.id)
       .then(setContexte)
       .catch((probleme) => setErreur(traduireErreur(probleme)));
-  }, [jeton, traduireErreur]);
+  }, [jeton, espace.id, traduireErreur]);
 
   useEffect(() => {
     const surTouche = (evenement: KeyboardEvent) => {

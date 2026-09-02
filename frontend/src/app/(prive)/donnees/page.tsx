@@ -20,7 +20,7 @@ const ETAPES = [
 ];
 
 export default function PageCatalogue() {
-  const { jeton } = useSession();
+  const { jeton, espace } = useSession();
   const traduireErreur = useTraduireErreur();
   const [sources, setSources] = useState<Source[] | null>(null);
   const [erreur, setErreur] = useState<string | null>(null);
@@ -28,10 +28,10 @@ export default function PageCatalogue() {
   const charger = useCallback(() => {
     setErreur(null);
     api
-      .listerSources(jeton)
+      .listerSources(jeton, espace.id)
       .then(setSources)
       .catch((probleme) => setErreur(traduireErreur(probleme)));
-  }, [jeton, traduireErreur]);
+  }, [jeton, espace.id, traduireErreur]);
 
   useEffect(charger, [charger]);
 

@@ -23,7 +23,7 @@ interface Props {
  * son schema.
  */
 export function ImportAirbyte({ lienAirbyte, onImportee }: Props) {
-  const { jeton } = useSession();
+  const { jeton, espace } = useSession();
   const traduireErreur = useTraduireErreur();
   const [sources, setSources] = useState<SourceImportable[] | null>(null);
   const [enCours, setEnCours] = useState<string | null>(null);
@@ -32,13 +32,13 @@ export function ImportAirbyte({ lienAirbyte, onImportee }: Props) {
   const charger = useCallback(() => {
     setErreur(null);
     api
-      .sourcesImportables(jeton)
+      .sourcesImportables(jeton, espace.id)
       .then(setSources)
       .catch((probleme) => {
         setSources([]);
         setErreur(traduireErreur(probleme));
       });
-  }, [jeton, traduireErreur]);
+  }, [jeton, espace.id, traduireErreur]);
 
   useEffect(charger, [charger]);
 
@@ -46,7 +46,7 @@ export function ImportAirbyte({ lienAirbyte, onImportee }: Props) {
     setEnCours(source.id);
     setErreur(null);
     try {
-      onImportee(await api.importerSourceAirbyte(jeton, source.id));
+      onImportee(await api.importerSourceAirbyte(jeton, espace.id, source.id));
     } catch (probleme) {
       setErreur(traduireErreur(probleme));
     } finally {
