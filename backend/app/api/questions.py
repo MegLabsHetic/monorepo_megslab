@@ -1,56 +1,42 @@
-"""Routes de l'assistant : poser une question, relire l'historique, voir le contexte."""
+"""Routes de l'assistant a l'echelle d'un espace : toutes les questions, le contexte."""
 
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import organisation_courante, utilisateur_courant
+from app.api.deps import AccesEspace, acces_courant
 from app.core.database import get_db
-from app.core.llm_client import LLMClient, get_llm_client
-from app.models.organization import Organization
 from app.models.question import Question
-from app.models.user import User
 from app.schemas.question import (
     AnalyseReponse,
     ContexteReponse,
     EtapeReponse,
     GraphiqueReponse,
-    QuestionDemande,
     QuestionReponse,
     ResultatReponse,
 )
 from app.services.chat_service import ChatService
 
-router = APIRouter(prefix="/questions", tags=["assistant"])
-
-
-@router.post("", response_model=QuestionReponse, status_code=201)
-async def poser(
-    demande: QuestionDemande,
-    organisation: Organization = Depends(organisation_courante),
-    utilisateur: User = Depends(utilisateur_courant),
-    db: AsyncSession = Depends(get_db),
-    llm: LLMClient = Depends(get_llm_client),
-):
-    question = await ChatService(db, llm).poser(organisation, utilisateur, demande.texte)
-    return _en_reponse(question)
+router = APIRouter(prefix="/espaces/{espace_id}/questions", tags=["assistant"])
 
 
 @router.get("", response_model=list[QuestionReponse])
 async def historique(
-    organisation: Organization = Depends(organisation_courante),
+    acces: AccesEspace = Depends(acces_courant),
     db: AsyncSession = Depends(get_db),
 ):
-    questions = await ChatService(db).historique(organisation)
-    return [_en_reponse(question) for question in questions]
+    """Toutes les questions de l'espace, les plus recentes d'abord : sert aux
+    compteurs d'usage et de cout."""
+    questions = await ChatService(db).historique(acces.espace)
+    return [en_reponse(question) for question in questions]
 
 
 @router.get("/contexte", response_model=ContexteReponse)
 async def contexte(
-    organisation: Organization = Depends(organisation_courante),
+    acces: AccesEspace = Depends(acces_courant),
     db: AsyncSession = Depends(get_db),
 ):
     """Ce que le modele recoit reellement. Lu dans l'entrepot, pas simule."""
-    contexte, instructions = await ChatService(db).contexte(organisation)
+    contexte, instructions = await ChatService(db).contexte(acces.espace)
     return ContexteReponse(
         schema=contexte.texte(),
         instructions=instructions,
@@ -60,10 +46,11 @@ async def contexte(
     )
 
 
-def _en_reponse(question: Question) -> QuestionReponse:
+def en_reponse(question: Question) -> QuestionReponse:
     resultat = question.resultat
     return QuestionReponse(
         id=question.id,
+        conversation_id=question.conversation_id,
         texte=question.texte,
         reponse=question.reponse,
         sql=question.sql,

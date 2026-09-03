@@ -38,7 +38,7 @@ interface Props {
 
 export function PaletteCommandes({ ouverte, onFermer }: Props) {
   const router = useRouter();
-  const { jeton } = useSession();
+  const { jeton, espace } = useSession();
   const [recherche, setRecherche] = useState("");
   const [surligne, setSurligne] = useState(0);
   const [commandesSources, setCommandesSources] = useState<Commande[]>([]);
@@ -57,7 +57,7 @@ export function PaletteCommandes({ ouverte, onFermer }: Props) {
     if (!ouverte || commandesSources.length > 0) return;
     let annule = false;
     api
-      .listerSources(jeton)
+      .listerSources(jeton, espace.id)
       .then((sources) => {
         if (annule) return;
         setCommandesSources(
@@ -73,7 +73,7 @@ export function PaletteCommandes({ ouverte, onFermer }: Props) {
     return () => {
       annule = true;
     };
-  }, [ouverte, commandesSources.length, jeton]);
+  }, [ouverte, commandesSources.length, jeton, espace.id]);
 
   const resultats = useMemo(() => {
     const toutes = [...COMMANDES_FIXES, ...commandesSources];

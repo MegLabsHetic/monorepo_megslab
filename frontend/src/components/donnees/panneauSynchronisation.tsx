@@ -28,7 +28,7 @@ interface Props {
  * Le sondage s'arrete des que le job atteint un etat terminal.
  */
 export function PanneauSynchronisation({ source, onTerminee }: Props) {
-  const { jeton } = useSession();
+  const { jeton, espace } = useSession();
   const traduireErreur = useTraduireErreur();
 
   const [selection, setSelection] = useState<string[]>(
@@ -50,7 +50,7 @@ export function PanneauSynchronisation({ source, onTerminee }: Props) {
     setStatut(null);
     setSecondes(0);
     try {
-      const { job_id } = await api.synchroniserSource(jeton, source.id, selection);
+      const { job_id } = await api.synchroniserSource(jeton, espace.id, source.id, selection);
       setJobId(job_id);
     } catch (probleme) {
       setErreur(traduireErreur(probleme));
@@ -62,13 +62,13 @@ export function PanneauSynchronisation({ source, onTerminee }: Props) {
   const interroger = useCallback(async () => {
     if (jobId === null) return;
     try {
-      const resultat = await api.statutSynchronisation(jeton, source.id, jobId);
+      const resultat = await api.statutSynchronisation(jeton, espace.id, source.id, jobId);
       setStatut(resultat);
       if (synchronisationTerminee(resultat.statut)) onTerminee?.();
     } catch (probleme) {
       setErreur(traduireErreur(probleme));
     }
-  }, [jeton, source.id, jobId, onTerminee, traduireErreur]);
+  }, [jeton, espace.id, source.id, jobId, onTerminee, traduireErreur]);
 
   useEffect(() => {
     if (!enCours) return;

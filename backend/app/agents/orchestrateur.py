@@ -15,7 +15,7 @@ import logging
 import time
 from dataclasses import dataclass, field
 
-from app.agents.analyste import Analyste, ResultatAnalyse
+from app.agents.analyste import Analyste, Echange, ResultatAnalyse
 from app.agents.data import AgentData, ContexteDonnees
 from app.agents.ml import AgentML, AnalyseSerie
 from app.agents.redacteur import Redacteur, Redaction
@@ -67,13 +67,15 @@ class Orchestrateur:
         self._redacteur = Redacteur(self._llm)
         self._viz = AgentViz(self._llm)
 
-    async def repondre(self, question: str) -> ReponseComplete:
+    async def repondre(
+        self, question: str, historique: list[Echange] | tuple[Echange, ...] = ()
+    ) -> ReponseComplete:
         depart = time.perf_counter()
         etapes: list[Etape] = []
         consommations: list[Consommation] = []
 
         contexte = await self._etape_data(etapes)
-        analyse = await self._etape_analyse(question, contexte.texte(), etapes)
+        analyse = await self._etape_analyse(question, contexte.texte(), etapes, historique)
         consommations.extend(analyse.consommations)
 
         if analyse.resultat is None:
@@ -142,11 +144,15 @@ class Orchestrateur:
         return contexte
 
     async def _etape_analyse(
-        self, question: str, schema: str, etapes: list[Etape]
+        self,
+        question: str,
+        schema: str,
+        etapes: list[Etape],
+        historique: list[Echange] | tuple[Echange, ...],
     ) -> ResultatAnalyse:
         depart = time.perf_counter()
         try:
-            analyse = await self._analyste.repondre(question, schema)
+            analyse = await self._analyste.repondre(question, schema, historique)
         except ErreurUtilisateur as refus:
             etapes.append(Etape("analyste", "refusee", _ms(depart), refus.message))
             raise

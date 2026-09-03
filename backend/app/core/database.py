@@ -16,6 +16,11 @@ _engine = create_async_engine(get_settings().database_url)
 _session_factory = async_sessionmaker(_engine, expire_on_commit=False)
 
 
+def creer_session() -> AsyncSession:
+    """Une session hors requete HTTP, pour les scripts d'administration."""
+    return _session_factory()
+
+
 async def get_db() -> AsyncGenerator[AsyncSession, None]:
     """Dependance FastAPI : une session par requete, fermee a la fin."""
     async with _session_factory() as session:

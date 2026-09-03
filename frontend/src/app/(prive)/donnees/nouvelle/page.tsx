@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import { DecouverteEnCours } from "@/components/donnees/decouverteEnCours";
 import { FormulaireConnexionPostgres } from "@/components/donnees/formulaireConnexionPostgres";
@@ -25,20 +25,14 @@ type Etape =
 const LIBELLES_ETAPES = ["Identifiants", "Decouverte", "Tables a synchroniser"];
 
 export default function PageNouvelleSource() {
-  const { jeton } = useSession();
+  const { jeton, espace } = useSession();
   const routeur = useRouter();
   const traduireErreur = useTraduireErreur();
   const [mode, setMode] = useState<Mode>("choix");
   const [etape, setEtape] = useState<Etape>({ nom: "identifiants" });
   const [erreur, setErreur] = useState<string | null>(null);
-  const [lienAirbyte, setLienAirbyte] = useState<string | null>(null);
-
-  useEffect(() => {
-    api
-      .organisation(jeton)
-      .then((organisation) => setLienAirbyte(organisation.lien_airbyte))
-      .catch(() => setLienAirbyte(null));
-  }, [jeton]);
+  // Le lien vers Airbyte est celui de l'espace ouvert : chaque espace a le sien.
+  const lienAirbyte = espace.lien_airbyte;
 
   const connecter = async (identifiants: ConnexionPostgres) => {
     setErreur(null);
@@ -48,7 +42,7 @@ export default function PageNouvelleSource() {
       hote: identifiants.host,
     });
     try {
-      const source = await api.connecterSource(jeton, identifiants);
+      const source = await api.connecterSource(jeton, espace.id, identifiants);
       setEtape({ nom: "flux", source });
     } catch (probleme) {
       setErreur(traduireErreur(probleme));

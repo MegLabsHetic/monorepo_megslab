@@ -15,8 +15,10 @@ from app.agents.viz import SpecGraphique
 from app.core.duckdb_engine import ColonneProfil, ErreurRequete, Resultat, TableProfil
 from app.core.errors import ErreurUtilisateur
 from app.core.llm_client import Consommation, Reponse
+from app.models.conversation import Conversation
 from app.models.organization import Organization
 from app.models.user import User
+from app.models.workspace import Workspace
 from app.services.chat_service import ChatService
 
 CONSOMMATION = Consommation(
@@ -67,16 +69,28 @@ class FauxMoteur:
         return Resultat(colonnes=["n"], lignes=[(3,)], tronque=False)
 
 
-async def _organisation_et_utilisateur(db: AsyncSession) -> tuple[Organization, User]:
-    organisation = Organization(nom="Acme", airbyte_workspace_id="w", airbyte_destination_id="d")
+async def _espace_et_utilisateur(db: AsyncSession) -> tuple[Workspace, User, Conversation]:
+    organisation = Organization(nom="Acme")
     utilisateur = User(email="ada@example.com", nom_complet="Ada")
     db.add_all([organisation, utilisateur])
     await db.flush()
-    return organisation, utilisateur
+    espace = Workspace(
+        organization_id=organisation.id,
+        nom="General",
+        airbyte_workspace_id="w",
+        airbyte_destination_id="d",
+        schema_entrepot=f"org_{organisation.id}",
+    )
+    db.add(espace)
+    await db.flush()
+    conversation = Conversation(workspace_id=espace.id, user_id=utilisateur.id)
+    db.add(conversation)
+    await db.flush()
+    return espace, utilisateur, conversation
 
 
 async def test_une_question_produit_une_reponse_du_sql_et_un_cout(db: AsyncSession) -> None:
-    organisation, utilisateur = await _organisation_et_utilisateur(db)
+    espace, utilisateur, conversation = await _espace_et_utilisateur(db)
     llm = FauxLLM()
     moteurs: list[FauxMoteur] = []
 
@@ -86,7 +100,7 @@ async def test_une_question_produit_une_reponse_du_sql_et_un_cout(db: AsyncSessi
         return moteur
 
     question = await ChatService(db, llm, fabrique).poser(  # type: ignore[arg-type]
-        organisation, utilisateur, "Combien de ventes ?"
+        espace, utilisateur, conversation, "Combien de ventes ?"
     )
 
     assert question.reponse == "Il y a 3 ventes."
@@ -107,7 +121,7 @@ async def test_une_question_produit_une_reponse_du_sql_et_un_cout(db: AsyncSessi
     ]
     assert question.analyse is None and question.graphique is None
     # Le schema demande au moteur est bien celui de l'organisation.
-    assert moteurs[0].schema_demande == f"org_{organisation.id}"
+    assert moteurs[0].schema_demande == espace.schema_entrepot
 
 
 class FauxMoteurCapricieux(FauxMoteur):
@@ -147,12 +161,12 @@ class FauxLLMQuiCorrige(FauxLLM):
 
 
 async def test_une_requete_rejetee_par_le_moteur_est_corrigee_une_fois(db: AsyncSession) -> None:
-    organisation, utilisateur = await _organisation_et_utilisateur(db)
+    espace, utilisateur, conversation = await _espace_et_utilisateur(db)
     llm = FauxLLMQuiCorrige()
     moteur = FauxMoteurCapricieux("x")
 
     question = await ChatService(db, llm, lambda _: moteur).poser(  # type: ignore[arg-type]
-        organisation, utilisateur, "Combien de ventes ?"
+        espace, utilisateur, conversation, "Combien de ventes ?"
     )
 
     assert len(moteur.tentatives) == 2
@@ -167,13 +181,13 @@ async def test_une_requete_rejetee_par_le_moteur_est_corrigee_une_fois(db: Async
 
 async def test_une_deuxieme_erreur_du_moteur_est_rendue_sans_insister(db: AsyncSession) -> None:
     """Une seule reprise : si la correction echoue aussi, on ne boucle pas."""
-    organisation, utilisateur = await _organisation_et_utilisateur(db)
+    espace, utilisateur, conversation = await _espace_et_utilisateur(db)
     llm = FauxLLM()
     moteur = FauxMoteurCapricieux("x", echecs=2)
 
     with pytest.raises(ErreurUtilisateur) as capture:
         await ChatService(db, llm, lambda _: moteur).poser(  # type: ignore[arg-type]
-            organisation, utilisateur, "Combien de ventes ?"
+            espace, utilisateur, conversation, "Combien de ventes ?"
         )
 
     assert capture.value.code_http == 422
@@ -183,13 +197,13 @@ async def test_une_deuxieme_erreur_du_moteur_est_rendue_sans_insister(db: AsyncS
 
 async def test_le_sql_du_modele_passe_par_le_garde_fou(db: AsyncSession) -> None:
     """Un DELETE propose par le modele ne doit jamais atteindre le moteur."""
-    organisation, utilisateur = await _organisation_et_utilisateur(db)
+    espace, utilisateur, conversation = await _espace_et_utilisateur(db)
     llm = FauxLLM(sql='DELETE FROM entrepot."ventes"')
     moteur = FauxMoteur("x")
 
     with pytest.raises(ErreurUtilisateur) as capture:
         await ChatService(db, llm, lambda _: moteur).poser(  # type: ignore[arg-type]
-            organisation, utilisateur, "Supprime tout"
+            espace, utilisateur, conversation, "Supprime tout"
         )
 
     assert capture.value.code_http == 422
@@ -200,7 +214,7 @@ async def test_le_sql_du_modele_passe_par_le_garde_fou(db: AsyncSession) -> None
 async def test_sans_table_dans_l_entrepot_on_refuse_avant_d_appeler_le_modele(
     db: AsyncSession,
 ) -> None:
-    organisation, utilisateur = await _organisation_et_utilisateur(db)
+    espace, utilisateur, conversation = await _espace_et_utilisateur(db)
     llm = FauxLLM()
 
     class MoteurVide(FauxMoteur):
@@ -209,24 +223,50 @@ async def test_sans_table_dans_l_entrepot_on_refuse_avant_d_appeler_le_modele(
 
     with pytest.raises(ErreurUtilisateur) as capture:
         await ChatService(db, llm, MoteurVide).poser(  # type: ignore[arg-type]
-            organisation, utilisateur, "Combien ?"
+            espace, utilisateur, conversation, "Combien ?"
         )
 
     assert capture.value.code_http == 409
     assert llm.appels == []
 
 
-async def test_l_historique_rend_les_questions_de_l_organisation_seulement(
-    db: AsyncSession,
-) -> None:
-    organisation, utilisateur = await _organisation_et_utilisateur(db)
-    autre = Organization(nom="Autre", airbyte_workspace_id="w2", airbyte_destination_id="d2")
+async def test_l_historique_rend_les_questions_de_l_espace_seulement(db: AsyncSession) -> None:
+    espace, utilisateur, conversation = await _espace_et_utilisateur(db)
+    autre = Workspace(
+        organization_id=espace.organization_id,
+        nom="Autre",
+        airbyte_workspace_id="w2",
+        airbyte_destination_id="d2",
+        schema_entrepot="ws_autre",
+    )
     db.add(autre)
     await db.flush()
+    fil_autre = Conversation(workspace_id=autre.id, user_id=utilisateur.id)
+    db.add(fil_autre)
+    await db.flush()
     service = ChatService(db, FauxLLM(), FauxMoteur)  # type: ignore[arg-type]
-    await service.poser(organisation, utilisateur, "Question A")
-    await service.poser(autre, utilisateur, "Question B")
+    await service.poser(espace, utilisateur, conversation, "Question A")
+    await service.poser(autre, utilisateur, fil_autre, "Question B")
 
-    historique = await service.historique(organisation)
+    historique = await service.historique(espace)
 
     assert [q.texte for q in historique] == ["Question A"]
+
+
+async def test_les_echanges_precedents_du_fil_sont_transmis_a_l_analyste(
+    db: AsyncSession,
+) -> None:
+    """« Et par produit ? » n'a de sens qu'avec la question d'avant sous les yeux."""
+    espace, utilisateur, conversation = await _espace_et_utilisateur(db)
+    llm = FauxLLMQuiCorrige()  # garde le texte de chaque demande
+    service = ChatService(db, llm, FauxMoteur)  # type: ignore[arg-type]
+
+    await service.poser(espace, utilisateur, conversation, "Combien de ventes ?")
+    await service.poser(espace, utilisateur, conversation, "Et par produit ?")
+
+    plans = [q for q, f in zip(llm.questions, llm.appels) if f == "PlanRequete"]
+    assert plans[0] == "Combien de ventes ?"  # premiere question : rien avant
+    assert "Combien de ventes ?" in plans[1] and "SELECT" in plans[1]
+    assert plans[1].endswith("Nouvelle question : Et par produit ?")
+    # Le fil prend pour titre sa premiere question.
+    assert conversation.titre == "Combien de ventes ?"

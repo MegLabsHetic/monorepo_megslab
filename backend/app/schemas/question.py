@@ -59,6 +59,7 @@ class GraphiqueReponse(BaseModel):
 
 class QuestionReponse(BaseModel):
     id: str
+    conversation_id: str
     texte: str
     reponse: str
     sql: str | None

@@ -19,7 +19,7 @@ interface Props {
 }
 
 export function ZoneDepotFichier({ onImporte }: Props) {
-  const { jeton } = useSession();
+  const { jeton, espace } = useSession();
   const traduireErreur = useTraduireErreur();
   const champRef = useRef<HTMLInputElement>(null);
 
@@ -44,7 +44,7 @@ export function ZoneDepotFichier({ onImporte }: Props) {
     setFichierEnCours(fichier);
     setEnCours(true);
     try {
-      onImporte(await api.importerFichier(jeton, fichier));
+      onImporte(await api.importerFichier(jeton, espace.id, fichier));
     } catch (probleme) {
       setErreur(traduireErreur(probleme));
     } finally {

@@ -1,10 +1,16 @@
-"""Contrat de sortie des routes d'organisation."""
+"""Contrats des routes d'organisation."""
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class OrganisationReponse(BaseModel):
     id: str
     nom: str
-    # Nul si l'URL publique d'Airbyte n'est pas configuree.
-    lien_airbyte: str | None = None
+    # Le role de l'utilisateur courant : owner, admin ou member.
+    role: str
+    nb_espaces: int
+    nb_membres: int
+
+
+class OrganisationModification(BaseModel):
+    nom: str = Field(min_length=1, max_length=255)

@@ -4,11 +4,12 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 
-import { PaletteCommandes } from "@/components/nav/paletteCommandes";
-import { useSession } from "@/components/session/contexteSession";
-import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/marque/logo";
 import { SelecteurTheme } from "@/components/marque/selecteurTheme";
+import { PaletteCommandes } from "@/components/nav/paletteCommandes";
+import { SelecteurEspace } from "@/components/nav/selecteurEspace";
+import { useDroits, useSession } from "@/components/session/contexteSession";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 const LIENS = [
@@ -20,6 +21,7 @@ const LIENS = [
 export function BarreNavigation() {
   const pathname = usePathname();
   const { utilisateur, deconnecter } = useSession();
+  const { administreOrganisation, estSuperAdmin } = useDroits();
   const [paletteOuverte, setPaletteOuverte] = useState(false);
 
   useEffect(() => {
@@ -33,7 +35,13 @@ export function BarreNavigation() {
     return () => window.removeEventListener("keydown", raccourci);
   }, []);
 
-  const liens = LIENS.map((lien) => {
+  const tousLesLiens = [
+    ...LIENS,
+    ...(administreOrganisation ? [{ href: "/equipe", libelle: "Equipe" }] : []),
+    ...(estSuperAdmin ? [{ href: "/plateforme", libelle: "Plateforme" }] : []),
+  ];
+
+  const liens = tousLesLiens.map((lien) => {
     const actif = pathname === lien.href || pathname.startsWith(`${lien.href}/`);
     return (
       <Link
@@ -62,6 +70,7 @@ export function BarreNavigation() {
           <Logo className="hidden h-8 sm:block" />
           <Logo className="h-8 sm:hidden" monogramme />
         </Link>
+        <SelecteurEspace />
         <nav aria-label="Navigation principale" className="hidden gap-1 md:flex">
           {liens}
         </nav>
@@ -76,9 +85,31 @@ export function BarreNavigation() {
             Rechercher
             <span className="rounded border border-line px-1">Ctrl K</span>
           </button>
-          <span className="hidden max-w-[16rem] truncate text-xs text-muted lg:inline">
-            {utilisateur.email}
-          </span>
+          <Link
+            href="/profil"
+            className="hidden max-w-[14rem] truncate rounded-md px-2 py-1 text-xs text-muted transition-colors duration-140 hover:text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-marque lg:inline"
+            title="Mon profil"
+          >
+            {utilisateur.nom_complet}
+          </Link>
+          <Link
+            href="/parametres"
+            aria-label="Parametres"
+            title="Parametres"
+            className="rounded-md p-1.5 text-muted transition-colors duration-140 hover:text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-marque"
+          >
+            <svg
+              className="h-4 w-4"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              aria-hidden
+            >
+              <circle cx="12" cy="12" r="3" />
+              <path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3h0a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8v0a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z" />
+            </svg>
+          </Link>
           <Button variante="discret" className="w-auto px-3" onClick={deconnecter}>
             Se deconnecter
           </Button>
@@ -87,7 +118,7 @@ export function BarreNavigation() {
 
       <nav
         aria-label="Navigation compacte"
-        className="mx-auto flex max-w-6xl gap-1 px-4 pb-2 md:hidden"
+        className="mx-auto flex max-w-6xl gap-1 overflow-x-auto px-4 pb-2 md:hidden"
       >
         {liens}
       </nav>

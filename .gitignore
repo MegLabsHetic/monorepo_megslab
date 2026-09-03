@@ -33,3 +33,4 @@ npm-debug.log*
 Thumbs.db
 .vscode/
 .idea/
+backend/data/*.db.bak

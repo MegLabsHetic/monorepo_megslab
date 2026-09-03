@@ -24,11 +24,90 @@ export class ErreurApi extends Error {
   }
 }
 
+// --- Comptes, organisation, espaces ---------------------------------------------
+
+export interface OrganisationDuProfil {
+  id: string;
+  nom: string;
+  /** owner, admin ou member */
+  role: string;
+}
+
 export interface Utilisateur {
   id: string;
   email: string;
   nom_complet: string;
+  est_super_admin: boolean;
+  doit_changer_mot_de_passe: boolean;
+  organisation: OrganisationDuProfil | null;
 }
+
+export interface Espace {
+  id: string;
+  nom: string;
+  /** admin, member ou viewer : le role de l'utilisateur courant dans cet espace. */
+  role: string;
+  schema_entrepot: string;
+  lien_airbyte: string | null;
+  cree_le: string;
+}
+
+export interface AccesEspace {
+  user_id: string;
+  email: string;
+  nom_complet: string;
+  role: string;
+}
+
+export interface Organisation {
+  id: string;
+  nom: string;
+  role: string;
+  nb_espaces: number;
+  nb_membres: number;
+}
+
+export interface AccesMembre {
+  espace_id: string;
+  espace_nom: string;
+  role: string;
+}
+
+export interface Membre {
+  id: string;
+  email: string;
+  nom_complet: string;
+  role: string;
+  actif: boolean;
+  doit_changer_mot_de_passe: boolean;
+  acces: AccesMembre[];
+  cree_le: string;
+}
+
+export interface AccesDemande {
+  espace_id: string;
+  role: string;
+}
+
+export interface Invitation {
+  id: string;
+  email: string;
+  role: string;
+  acces: AccesDemande[];
+  jeton: string;
+  expire_le: string;
+  acceptee_le: string | null;
+  cree_le: string;
+}
+
+export interface InfoInvitation {
+  organisation: string;
+  email: string;
+  role: string;
+  compte_existant: boolean;
+}
+
+// --- Sources ---------------------------------------------------------------------
 
 export interface Flux {
   nom: string;
@@ -49,78 +128,6 @@ export interface Source {
   cree_le: string;
   /** Nul pour un fichier depose, ou si l'URL publique d'Airbyte n'est pas configuree. */
   lien_airbyte: string | null;
-}
-
-export interface Organisation {
-  id: string;
-  nom: string;
-  lien_airbyte: string | null;
-}
-
-export interface EtapeAgent {
-  agent: string;
-  statut: "terminee" | "refusee" | "ignoree" | string;
-  duree_ms: number;
-  detail: string;
-}
-
-export interface Anomalie {
-  x: string;
-  y: number;
-  /** Ecart a la droite, en ecarts-types des residus. */
-  ecart: number;
-}
-
-export interface Prevision {
-  x: string;
-  y: number;
-  y_min: number;
-  y_max: number;
-}
-
-/** Ce que l'agent ML a calcule : une regression lineaire, ses ecarts, sa projection. */
-export interface AnalyseSerie {
-  colonne_x: string;
-  colonne_y: string;
-  nb_points: number;
-  pente: number;
-  variation_pct: number | null;
-  r2: number;
-  tendance: string;
-  anomalies: Anomalie[];
-  previsions: Prevision[];
-}
-
-export interface SpecGraphique {
-  type: "barres" | "lignes" | string;
-  axe_x: string;
-  axes_y: string[];
-  titre: string;
-  raison: string;
-}
-
-export interface QuestionAssistant {
-  id: string;
-  texte: string;
-  reponse: string;
-  sql: string | null;
-  resultat: Apercu | null;
-  analyse: AnalyseSerie | null;
-  graphique: SpecGraphique | null;
-  etapes: EtapeAgent[];
-  cout_dollars: number;
-  jetons: number;
-  duree_ms: number;
-  cree_le: string;
-}
-
-/** Ce que le modele recoit reellement : lu dans l'entrepot, jamais simule. */
-export interface ContexteAssistant {
-  schema: string;
-  instructions: string;
-  nb_tables: number;
-  nb_colonnes: number;
-  nb_lignes: number;
 }
 
 /** Une source presente dans l'espace Airbyte, que MegLabs ne reference pas encore. */
@@ -174,6 +181,115 @@ export interface ProfilColonne {
   moyenne: string | null;
 }
 
+// --- Assistant -------------------------------------------------------------------
+
+export interface EtapeAgent {
+  agent: string;
+  statut: "terminee" | "refusee" | "ignoree" | string;
+  duree_ms: number;
+  detail: string;
+}
+
+export interface Anomalie {
+  x: string;
+  y: number;
+  /** Ecart a la droite, en ecarts-types des residus. */
+  ecart: number;
+}
+
+export interface Prevision {
+  x: string;
+  y: number;
+  y_min: number;
+  y_max: number;
+}
+
+/** Ce que l'agent ML a calcule : une regression lineaire, ses ecarts, sa projection. */
+export interface AnalyseSerie {
+  colonne_x: string;
+  colonne_y: string;
+  nb_points: number;
+  pente: number;
+  variation_pct: number | null;
+  r2: number;
+  tendance: string;
+  anomalies: Anomalie[];
+  previsions: Prevision[];
+}
+
+export interface SpecGraphique {
+  type: "barres" | "lignes" | string;
+  axe_x: string;
+  axes_y: string[];
+  titre: string;
+  raison: string;
+}
+
+export interface QuestionAssistant {
+  id: string;
+  conversation_id: string;
+  texte: string;
+  reponse: string;
+  sql: string | null;
+  resultat: Apercu | null;
+  analyse: AnalyseSerie | null;
+  graphique: SpecGraphique | null;
+  etapes: EtapeAgent[];
+  cout_dollars: number;
+  jetons: number;
+  duree_ms: number;
+  cree_le: string;
+}
+
+export interface Conversation {
+  id: string;
+  titre: string;
+  epinglee: boolean;
+  nb_questions: number;
+  auteur: string;
+  auteur_id: string;
+  cree_le: string;
+  maj_le: string;
+}
+
+/** Ce que le modele recoit reellement : lu dans l'entrepot, jamais simule. */
+export interface ContexteAssistant {
+  schema: string;
+  instructions: string;
+  nb_tables: number;
+  nb_colonnes: number;
+  nb_lignes: number;
+}
+
+// --- Plateforme ------------------------------------------------------------------
+
+export interface OrganisationPlateforme {
+  id: string;
+  nom: string;
+  cree_le: string;
+  nb_membres: number;
+  nb_espaces: number;
+  nb_sources: number;
+  nb_questions: number;
+  cout_dollars: number;
+}
+
+export interface ComposantSante {
+  nom: string;
+  etat: "ok" | "ko" | "non_teste" | string;
+  detail: string;
+  latence_ms: number | null;
+}
+
+export interface Sante {
+  composants: ComposantSante[];
+  nb_organisations: number;
+  nb_utilisateurs: number;
+  cout_total_dollars: number;
+}
+
+// --- Appels ----------------------------------------------------------------------
+
 interface Options extends RequestInit {
   delaiMax?: number;
   /** Pour un envoi multipart : le navigateur doit poser le Content-Type. */
@@ -204,12 +320,20 @@ async function requete<T>(chemin: string, options: Options = {}): Promise<T> {
     const corps = await reponse.json().catch(() => null);
     throw new ErreurApi(corps?.detail ?? "Une erreur est survenue.", reponse.status);
   }
+  if (reponse.status === 204) return undefined as T;
   return reponse.json();
 }
 
 const entete = (jeton: string) => ({ Authorization: `Bearer ${jeton}` });
+const json = (jeton: string, method: string, corps?: unknown): Options => ({
+  method,
+  headers: entete(jeton),
+  body: corps === undefined ? undefined : JSON.stringify(corps),
+});
+const espace = (id: string) => `/espaces/${encodeURIComponent(id)}`;
 
 export const api = {
+  // --- Compte ---
   inscrire: (email: string, mot_de_passe: string, nom_complet: string) =>
     requete<Utilisateur>("/auth/inscription", {
       method: "POST",
@@ -224,59 +348,124 @@ export const api = {
 
   profil: (jeton: string) => requete<Utilisateur>("/auth/moi", { headers: entete(jeton) }),
 
+  modifierProfil: (jeton: string, nom_complet: string) =>
+    requete<Utilisateur>("/auth/moi", json(jeton, "PATCH", { nom_complet })),
+
+  changerMotDePasse: (jeton: string, actuel: string, nouveau: string) =>
+    requete<void>("/auth/mot-de-passe", json(jeton, "POST", { actuel, nouveau })),
+
+  infoInvitation: (jetonInvitation: string) =>
+    requete<InfoInvitation>(`/auth/invitation/${encodeURIComponent(jetonInvitation)}`),
+
+  accepterInvitation: (jetonInvitation: string, nom_complet?: string, mot_de_passe?: string) =>
+    requete<{ jeton: string }>(`/auth/invitation/${encodeURIComponent(jetonInvitation)}`, {
+      method: "POST",
+      body: JSON.stringify({ nom_complet, mot_de_passe }),
+    }),
+
+  // --- Organisation et equipe ---
   organisation: (jeton: string) =>
     requete<Organisation>("/organisation", { headers: entete(jeton) }),
 
+  renommerOrganisation: (jeton: string, nom: string) =>
+    requete<Organisation>("/organisation", json(jeton, "PATCH", { nom })),
+
+  membres: (jeton: string) =>
+    requete<Membre[]>("/organisation/membres", { headers: entete(jeton) }),
+
+  creerMembre: (
+    jeton: string,
+    membre: {
+      email: string;
+      nom_complet: string;
+      mot_de_passe_temporaire: string;
+      role: string;
+      acces: AccesDemande[];
+    }
+  ) => requete<Membre>("/organisation/membres", json(jeton, "POST", membre)),
+
+  changerRole: (jeton: string, userId: string, role: string) =>
+    requete<void>(`/organisation/membres/${userId}`, json(jeton, "PATCH", { role })),
+
+  retirerMembre: (jeton: string, userId: string) =>
+    requete<void>(`/organisation/membres/${userId}`, json(jeton, "DELETE")),
+
+  invitations: (jeton: string) =>
+    requete<Invitation[]>("/organisation/invitations", { headers: entete(jeton) }),
+
+  inviter: (jeton: string, email: string, role: string, acces: AccesDemande[]) =>
+    requete<Invitation>("/organisation/invitations", json(jeton, "POST", { email, role, acces })),
+
+  annulerInvitation: (jeton: string, invitationId: string) =>
+    requete<void>(`/organisation/invitations/${invitationId}`, json(jeton, "DELETE")),
+
+  // --- Espaces ---
+  listerEspaces: (jeton: string) => requete<Espace[]>("/espaces", { headers: entete(jeton) }),
+
+  // Creer un espace provisionne un workspace et une destination Airbyte.
+  creerEspace: (jeton: string, nom: string) =>
+    requete<Espace>("/espaces", {
+      ...json(jeton, "POST", { nom }),
+      delaiMax: DELAI_CONNEXION_SOURCE,
+    }),
+
+  renommerEspace: (jeton: string, espaceId: string, nom: string) =>
+    requete<Espace>(espace(espaceId), json(jeton, "PATCH", { nom })),
+
+  accesEspace: (jeton: string, espaceId: string) =>
+    requete<AccesEspace[]>(`${espace(espaceId)}/acces`, { headers: entete(jeton) }),
+
+  definirAcces: (jeton: string, espaceId: string, userId: string, role: string | null) =>
+    requete<void>(`${espace(espaceId)}/acces/${userId}`, json(jeton, "PUT", { role })),
+
+  // --- Sources ---
+  listerConnecteurs: (jeton: string) =>
+    requete<TypeConnecteur[]>("/connecteurs", { headers: entete(jeton) }),
+
   // Ces deux appels interrogent Airbyte : lister ses sources et decouvrir le
   // schema de celle qu'on adopte prennent le meme temps qu'une connexion.
-  sourcesImportables: (jeton: string) =>
-    requete<SourceImportable[]>("/sources/airbyte", {
+  sourcesImportables: (jeton: string, espaceId: string) =>
+    requete<SourceImportable[]>(`${espace(espaceId)}/sources/airbyte`, {
       headers: entete(jeton),
       delaiMax: DELAI_CONNEXION_SOURCE,
     }),
 
-  importerSourceAirbyte: (jeton: string, id: string) =>
-    requete<Source>(`/sources/airbyte/${id}/importer`, {
+  importerSourceAirbyte: (jeton: string, espaceId: string, id: string) =>
+    requete<Source>(`${espace(espaceId)}/sources/airbyte/${id}/importer`, {
       method: "POST",
       headers: entete(jeton),
       delaiMax: DELAI_CONNEXION_SOURCE,
     }),
 
-  listerConnecteurs: (jeton: string) =>
-    requete<TypeConnecteur[]>("/sources/connecteurs", { headers: entete(jeton) }),
+  listerSources: (jeton: string, espaceId: string) =>
+    requete<Source[]>(`${espace(espaceId)}/sources`, { headers: entete(jeton) }),
 
-  listerSources: (jeton: string) => requete<Source[]>("/sources", { headers: entete(jeton) }),
+  detailSource: (jeton: string, espaceId: string, id: string) =>
+    requete<Source>(`${espace(espaceId)}/sources/${id}`, { headers: entete(jeton) }),
 
-  detailSource: (jeton: string, id: string) =>
-    requete<Source>(`/sources/${id}`, { headers: entete(jeton) }),
-
-  connecterSource: (jeton: string, identifiants: ConnexionPostgres) =>
-    requete<Source>("/sources", {
-      method: "POST",
-      headers: entete(jeton),
-      body: JSON.stringify(identifiants),
+  connecterSource: (jeton: string, espaceId: string, identifiants: ConnexionPostgres) =>
+    requete<Source>(`${espace(espaceId)}/sources`, {
+      ...json(jeton, "POST", identifiants),
       delaiMax: DELAI_CONNEXION_SOURCE,
     }),
 
-  synchroniserSource: (jeton: string, id: string, flux: string[]) =>
-    requete<{ job_id: number }>(`/sources/${id}/synchroniser`, {
-      method: "POST",
-      headers: entete(jeton),
-      body: JSON.stringify({ flux }),
+  synchroniserSource: (jeton: string, espaceId: string, id: string, flux: string[]) =>
+    requete<{ job_id: number }>(`${espace(espaceId)}/sources/${id}/synchroniser`, {
+      ...json(jeton, "POST", { flux }),
       delaiMax: DELAI_SYNCHRONISATION,
     }),
 
-  statutSynchronisation: (jeton: string, id: string, jobId: number) =>
-    requete<StatutSynchronisation>(`/sources/${id}/synchronisation/${jobId}`, {
+  statutSynchronisation: (jeton: string, espaceId: string, id: string, jobId: number) =>
+    requete<StatutSynchronisation>(`${espace(espaceId)}/sources/${id}/synchronisation/${jobId}`, {
       headers: entete(jeton),
     }),
 
-  importerFichier: async (jeton: string, fichier: File) => {
+  importerFichier: async (jeton: string, espaceId: string, fichier: File) => {
     // multipart/form-data : on laisse le navigateur poser lui-meme le
     // Content-Type, il doit y ajouter la frontiere qu'il a generee.
     const corps = new FormData();
     corps.append("fichier", fichier);
-    return requete<Source>("/sources/fichier", {
+    return requete<Source>(`${espace(espaceId)}/sources/fichier`, {
       method: "POST",
       headers: entete(jeton),
       body: corps,
@@ -287,40 +476,71 @@ export const api = {
 
   // Ces trois appels lisent l'entrepot : ils ouvrent une connexion analytique
   // et prennent plusieurs secondes, d'ou le delai plus large.
-  tablesEntrepot: (jeton: string, id: string) =>
-    requete<TableEntrepot[]>(`/sources/${id}/tables`, {
+  tablesEntrepot: (jeton: string, espaceId: string, id: string) =>
+    requete<TableEntrepot[]>(`${espace(espaceId)}/sources/${id}/tables`, {
       headers: entete(jeton),
       delaiMax: DELAI_ENTREPOT,
     }),
 
-  apercuTable: (jeton: string, id: string, table: string, limite = 50) =>
-    requete<Apercu>(`/sources/${id}/tables/${encodeURIComponent(table)}/apercu?limite=${limite}`, {
+  apercuTable: (jeton: string, espaceId: string, id: string, table: string, limite = 50) =>
+    requete<Apercu>(
+      `${espace(espaceId)}/sources/${id}/tables/${encodeURIComponent(table)}/apercu?limite=${limite}`,
+      { headers: entete(jeton), delaiMax: DELAI_ENTREPOT }
+    ),
+
+  profilTable: (jeton: string, espaceId: string, id: string, table: string) =>
+    requete<ProfilColonne[]>(
+      `${espace(espaceId)}/sources/${id}/tables/${encodeURIComponent(table)}/profil`,
+      { headers: entete(jeton), delaiMax: DELAI_ENTREPOT }
+    ),
+
+  // --- Assistant ---
+  conversations: (jeton: string, espaceId: string) =>
+    requete<Conversation[]>(`${espace(espaceId)}/conversations`, { headers: entete(jeton) }),
+
+  creerConversation: (jeton: string, espaceId: string, titre?: string) =>
+    requete<Conversation>(`${espace(espaceId)}/conversations`, json(jeton, "POST", { titre })),
+
+  modifierConversation: (
+    jeton: string,
+    espaceId: string,
+    id: string,
+    modification: { titre?: string; epinglee?: boolean }
+  ) =>
+    requete<Conversation>(
+      `${espace(espaceId)}/conversations/${id}`,
+      json(jeton, "PATCH", modification)
+    ),
+
+  supprimerConversation: (jeton: string, espaceId: string, id: string) =>
+    requete<void>(`${espace(espaceId)}/conversations/${id}`, json(jeton, "DELETE")),
+
+  questionsConversation: (jeton: string, espaceId: string, id: string) =>
+    requete<QuestionAssistant[]>(`${espace(espaceId)}/conversations/${id}/questions`, {
       headers: entete(jeton),
-      delaiMax: DELAI_ENTREPOT,
     }),
 
-  profilTable: (jeton: string, id: string, table: string) =>
-    requete<ProfilColonne[]>(`/sources/${id}/tables/${encodeURIComponent(table)}/profil`, {
-      headers: entete(jeton),
-      delaiMax: DELAI_ENTREPOT,
-    }),
-
-  // Une question traverse deux appels au modele et une lecture de l'entrepot :
-  // comptez dix a quinze secondes en pratique.
-  poserQuestion: (jeton: string, texte: string) =>
-    requete<QuestionAssistant>("/questions", {
-      method: "POST",
-      headers: entete(jeton),
-      body: JSON.stringify({ texte }),
+  // Une question traverse trois appels au modele et une lecture de l'entrepot :
+  // comptez quinze a vingt secondes en pratique.
+  poserQuestion: (jeton: string, espaceId: string, conversationId: string, texte: string) =>
+    requete<QuestionAssistant>(`${espace(espaceId)}/conversations/${conversationId}/questions`, {
+      ...json(jeton, "POST", { texte }),
       delaiMax: DELAI_CONNEXION_SOURCE,
     }),
 
-  historiqueQuestions: (jeton: string) =>
-    requete<QuestionAssistant[]>("/questions", { headers: entete(jeton) }),
+  historiqueQuestions: (jeton: string, espaceId: string) =>
+    requete<QuestionAssistant[]>(`${espace(espaceId)}/questions`, { headers: entete(jeton) }),
 
-  contexteAssistant: (jeton: string) =>
-    requete<ContexteAssistant>("/questions/contexte", {
+  contexteAssistant: (jeton: string, espaceId: string) =>
+    requete<ContexteAssistant>(`${espace(espaceId)}/questions/contexte`, {
       headers: entete(jeton),
       delaiMax: DELAI_ENTREPOT,
     }),
+
+  // --- Plateforme ---
+  organisationsPlateforme: (jeton: string) =>
+    requete<OrganisationPlateforme[]>("/plateforme/organisations", { headers: entete(jeton) }),
+
+  santePlateforme: (jeton: string) =>
+    requete<Sante>("/plateforme/sante", { headers: entete(jeton), delaiMax: DELAI_ENTREPOT }),
 };

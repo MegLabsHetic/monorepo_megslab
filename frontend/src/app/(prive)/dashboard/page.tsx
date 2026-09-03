@@ -16,7 +16,7 @@ import { calculerTotaux, decrireStatutSource, formaterDate, formaterNombre } fro
 const NOMBRE_SOURCES_RECENTES = 3;
 
 export default function PageTableauDeBord() {
-  const { utilisateur, jeton } = useSession();
+  const { utilisateur, jeton, espace } = useSession();
   const traduireErreur = useTraduireErreur();
   const [sources, setSources] = useState<Source[] | null>(null);
   const [questions, setQuestions] = useState<QuestionAssistant[] | null>(null);
@@ -25,14 +25,14 @@ export default function PageTableauDeBord() {
   const charger = useCallback(() => {
     setErreur(null);
     api
-      .listerSources(jeton)
+      .listerSources(jeton, espace.id)
       .then(setSources)
       .catch((probleme) => setErreur(traduireErreur(probleme)));
     api
-      .historiqueQuestions(jeton)
+      .historiqueQuestions(jeton, espace.id)
       .then(setQuestions)
       .catch(() => setQuestions(null));
-  }, [jeton, traduireErreur]);
+  }, [jeton, espace.id, traduireErreur]);
 
   useEffect(charger, [charger]);
 

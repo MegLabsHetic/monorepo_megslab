@@ -9,6 +9,8 @@ from app.core.airbyte_client import AirbyteClient
 from app.core.errors import ErreurUtilisateur
 from app.models.membership import Membership, Role
 from app.models.user import User
+from app.models.workspace import Workspace
+from app.models.workspace_access import WorkspaceAccess
 from app.services.organization_service import OrganizationService
 
 
@@ -24,7 +26,17 @@ async def test_le_createur_devient_owner_de_l_organisation(
     )
     await db.commit()
 
-    assert organisation.airbyte_workspace_id == "workspace-test"
+    espace = (
+        await db.execute(select(Workspace).where(Workspace.organization_id == organisation.id))
+    ).scalar_one()
+    assert espace.nom == "General"
+    assert espace.airbyte_workspace_id == "workspace-test"
+    assert espace.airbyte_destination_id == "destination-test"
+    assert espace.schema_entrepot == f"ws_{espace.id}"
+    acces = (
+        await db.execute(select(WorkspaceAccess).where(WorkspaceAccess.workspace_id == espace.id))
+    ).scalar_one()
+    assert acces.user_id == utilisateur.id and acces.role == Role.ADMIN
 
     resultat = await db.execute(
         select(Membership).where(Membership.organization_id == organisation.id)
