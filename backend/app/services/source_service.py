@@ -2,6 +2,7 @@
 
 import asyncio
 import logging
+from datetime import UTC, datetime
 
 import httpx
 from sqlalchemy import select
@@ -233,6 +234,8 @@ class SourceService:
 
         if job.get("status") == "succeeded":
             source.statut = StatutSource.PRETE
+            source.lignes_synchronisees = job.get("rowsSynced")
+            source.derniere_sync_le = datetime.now(UTC)
             await self._db.commit()
             # L'entrepot vient de changer : le contexte que l'assistant garde
             # en memoire ne le decrit plus.

@@ -53,6 +53,8 @@ def _en_reponse(source: DataSource, espace: Workspace) -> SourceReponse:
         ],
         flux_selectionnes=source.flux_selectionnes or [],
         cree_le=source.cree_le,
+        lignes_synchronisees=source.lignes_synchronisees,
+        derniere_sync_le=source.derniere_sync_le,
         lien_airbyte=_lien_airbyte(source, espace),
     )
 
