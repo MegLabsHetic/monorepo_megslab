@@ -22,9 +22,11 @@ from app.core.duckdb_engine import DuckDBEngine, ErreurRequete
 from app.core.errors import ErreurUtilisateur
 from app.core.llm_client import LLMClient
 from app.models.conversation import Conversation
+from app.models.organization import Organization
 from app.models.question import Question
 from app.models.user import User
 from app.models.workspace import Workspace
+from app.services.budget_service import BudgetService
 from app.services.conversation_service import TITRE_PAR_DEFAUT, titre_depuis_question
 
 logger = logging.getLogger(__name__)
@@ -52,6 +54,12 @@ class ChatService:
     async def poser(
         self, espace: Workspace, utilisateur: User, conversation: Conversation, texte: str
     ) -> Question:
+        # Le budget se verifie AVANT d'appeler le modele : une question de
+        # trop coute, meme si on refuse ensuite d'afficher sa reponse.
+        organisation = await self._db.get(Organization, espace.organization_id)
+        assert organisation is not None
+        await BudgetService(self._db).verifier_avant_question(organisation)
+
         moteur = self._fabrique_moteur(espace.schema_entrepot)
         precedents = await self._derniers_echanges(conversation)
         complete = await Orchestrateur(moteur, self._llm).repondre(texte, precedents)
@@ -119,11 +127,22 @@ class ChatService:
             analyse=complete.analyse.en_dict() if complete.analyse else None,
             graphique=complete.graphique.model_dump() if complete.graphique else None,
             etapes=[
-                {"agent": e.agent, "statut": e.statut, "duree_ms": e.duree_ms, "detail": e.detail}
+                {
+                    "agent": e.agent,
+                    "statut": e.statut,
+                    "duree_ms": e.duree_ms,
+                    "detail": e.detail,
+                    "cout_dollars": e.cout_dollars,
+                    "jetons": e.jetons,
+                }
                 for e in complete.etapes
             ],
             cout_dollars=complete.cout_dollars,
             jetons=complete.jetons,
+            jetons_entree=complete.jetons_detail["entree"],
+            jetons_sortie=complete.jetons_detail["sortie"],
+            jetons_cache_lus=complete.jetons_detail["cache_lus"],
+            jetons_cache_ecrits=complete.jetons_detail["cache_ecrits"],
             duree_ms=complete.duree_ms,
         )
 
