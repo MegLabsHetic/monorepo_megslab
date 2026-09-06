@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 
+import { ActionsReponse } from "@/components/assistant/actionsReponse";
 import { Graphique, formaterLibelles } from "@/components/assistant/graphique";
 import { type AnalyseSerie, type EtapeAgent, type QuestionAssistant } from "@/lib/api";
 import { formaterNombre } from "@/lib/sources";
@@ -15,6 +16,7 @@ import { cn } from "@/lib/utils";
 export function ReponseAssistant({ question }: { question: QuestionAssistant }) {
   const [sqlOuvert, setSqlOuvert] = useState(false);
   const [resultatOuvert, setResultatOuvert] = useState(false);
+  const carte = useRef<HTMLDivElement>(null);
 
   return (
     <article className="animate-apparition space-y-4">
@@ -24,7 +26,7 @@ export function ReponseAssistant({ question }: { question: QuestionAssistant }) 
         </p>
       </div>
 
-      <div className="rounded-2xl border border-line bg-surface shadow-carte">
+      <div ref={carte} className="rounded-2xl border border-line bg-surface shadow-carte">
         <div className="border-b border-line px-5 py-3">
           <Pipeline etapes={question.etapes} />
         </div>
@@ -78,6 +80,7 @@ export function ReponseAssistant({ question }: { question: QuestionAssistant }) 
           </span>
           <span>{formaterNombre(question.jetons)} jetons</span>
           <span>{(question.duree_ms / 1000).toFixed(1)} s</span>
+          <ActionsReponse question={question} carte={carte} />
         </footer>
       </div>
     </article>
@@ -227,7 +230,7 @@ function Depliable({
   );
 }
 
-function TableauResultat({
+export function TableauResultat({
   colonnes,
   lignes,
 }: {
