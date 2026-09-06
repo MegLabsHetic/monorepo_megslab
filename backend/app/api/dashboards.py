@@ -5,6 +5,7 @@ from datetime import UTC, datetime
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.api.audit import journaliser
 from app.api.deps import AccesEspace, acces_analyste, acces_courant, utilisateur_courant
 from app.core.database import get_db
 from app.core.errors import ErreurUtilisateur
@@ -40,6 +41,17 @@ async def creer(
     db: AsyncSession = Depends(get_db),
 ):
     dashboard = await DashboardService(db).creer(acces.espace, utilisateur, demande.nom)
+    await journaliser(
+        db,
+        acces.organisation.id,
+        utilisateur,
+        "dashboard.cree",
+        "dashboard",
+        dashboard.id,
+        dashboard.nom,
+        {},
+        acces.espace.id,
+    )
     return _resume(dashboard, 0, utilisateur)
 
 
@@ -91,8 +103,19 @@ async def supprimer(
     db: AsyncSession = Depends(get_db),
 ):
     service = DashboardService(db)
-    await service.supprimer(
-        await service.charger(acces.espace, dashboard_id), utilisateur, acces.role
+    dashboard = await service.charger(acces.espace, dashboard_id)
+    nom = dashboard.nom
+    await service.supprimer(dashboard, utilisateur, acces.role)
+    await journaliser(
+        db,
+        acces.organisation.id,
+        utilisateur,
+        "dashboard.supprime",
+        "dashboard",
+        dashboard_id,
+        nom,
+        {},
+        acces.espace.id,
     )
 
 
@@ -101,6 +124,7 @@ async def epingler(
     dashboard_id: str,
     demande: EpinglageDemande,
     acces: AccesEspace = Depends(acces_analyste),
+    utilisateur: User = Depends(utilisateur_courant),
     db: AsyncSession = Depends(get_db),
 ):
     service = DashboardService(db)
@@ -109,6 +133,17 @@ async def epingler(
     if question is None or question.workspace_id != acces.espace.id:
         raise ErreurUtilisateur("Question introuvable.", code_http=404)
     widget = await service.epingler(dashboard, question, demande.titre)
+    await journaliser(
+        db,
+        acces.organisation.id,
+        utilisateur,
+        "dashboard.epingle",
+        "dashboard",
+        dashboard.id,
+        dashboard.nom,
+        {"widget": widget.titre},
+        acces.espace.id,
+    )
     return await _widget(db, WidgetVivant(widget, None, None, None))
 
 

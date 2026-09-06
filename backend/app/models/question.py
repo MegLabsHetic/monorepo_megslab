@@ -29,6 +29,11 @@ class Question(HorodatageMixin, Base):
     reponse: Mapped[str] = mapped_column(Text)
     # Nul quand l'Analyste a juge la question sans reponse dans le schema.
     sql: Mapped[str | None] = mapped_column(Text, default=None)
+    # Ce que l'Analyste dit calculer, en francais : la lecture humaine du SQL.
+    explication: Mapped[str] = mapped_column(Text, default="", server_default="")
+    # L'avis de l'utilisateur sur la reponse : 1 (utile), -1 (fausse ou inutile), nul sinon.
+    avis: Mapped[int | None] = mapped_column(Integer, default=None)
+    commentaire_avis: Mapped[str] = mapped_column(Text, default="", server_default="")
     nb_lignes: Mapped[int | None] = mapped_column(Integer, default=None)
     # Un extrait borne du resultat, pour relire une reponse sans re-executer.
     # Forme : {"colonnes": [...], "lignes": [[...]], "tronque": bool}

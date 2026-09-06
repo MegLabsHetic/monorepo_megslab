@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { DecouverteEnCours } from "@/components/donnees/decouverteEnCours";
 import { FormulaireConnexionPostgres } from "@/components/donnees/formulaireConnexionPostgres";
@@ -33,6 +33,27 @@ export default function PageNouvelleSource() {
   const [erreur, setErreur] = useState<string | null>(null);
   // Le lien vers Airbyte est celui de l'espace ouvert : chaque espace a le sien.
   const lienAirbyte = espace.lien_airbyte;
+  const [demoDisponible, setDemoDisponible] = useState(false);
+  const [demoEnCours, setDemoEnCours] = useState(false);
+
+  useEffect(() => {
+    api
+      .demoDisponible(jeton, espace.id)
+      .then((r) => setDemoDisponible(r.disponible))
+      .catch(() => setDemoDisponible(false));
+  }, [jeton, espace.id]);
+
+  const chargerDemo = async () => {
+    setErreur(null);
+    setDemoEnCours(true);
+    try {
+      const source = await api.chargerDemo(jeton, espace.id);
+      routeur.push(`/donnees/${source.id}`);
+    } catch (probleme) {
+      setErreur(traduireErreur(probleme));
+      setDemoEnCours(false);
+    }
+  };
 
   const connecter = async (identifiants: ConnexionPostgres) => {
     setErreur(null);
@@ -96,8 +117,22 @@ export default function PageNouvelleSource() {
             description="Pour tout autre connecteur : configurez-le dans Airbyte, puis reprenez-le ici."
             onClick={() => setMode("airbyte")}
           />
+          {demoDisponible && (
+            <ChoixSource
+              titre={
+                demoEnCours
+                  ? "Chargement du jeu de demonstration…"
+                  : "Charger le jeu de demonstration"
+              }
+              description="Les commandes, clients et produits d'Olist, copies dans votre entrepot en quelques secondes. De vraies tables, comme une source synchronisee."
+              onClick={() => {
+                if (!demoEnCours) void chargerDemo();
+              }}
+            />
+          )}
         </div>
       )}
+      {mode === "choix" && erreur && <p className="text-sm text-danger">{erreur}</p>}
 
       {mode === "airbyte" && (
         <Card className="p-6 sm:p-8">

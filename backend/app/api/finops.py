@@ -6,10 +6,12 @@ from fastapi import APIRouter, Depends, Query
 from fastapi.responses import Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import organisation_administree, organisation_courante
+from app.api.audit import journaliser
+from app.api.deps import organisation_administree, organisation_courante, utilisateur_courant
 from app.core.database import get_db
 from app.core.errors import ErreurUtilisateur
 from app.models.organization import Organization
+from app.models.user import User
 from app.schemas.finops import (
     BudgetDemande,
     BudgetReponse,
@@ -35,12 +37,23 @@ async def budget(
 @router.put("/budget", response_model=BudgetReponse)
 async def definir_budget(
     demande: BudgetDemande,
+    utilisateur: User = Depends(utilisateur_courant),
     organisation: Organization = Depends(organisation_administree),
     db: AsyncSession = Depends(get_db),
 ):
     service = BudgetService(db)
     await service.definir(
         organisation, demande.budget_dollars, demande.seuil_alerte_pct, demande.bloquant
+    )
+    await journaliser(
+        db,
+        organisation.id,
+        utilisateur,
+        "budget.modifie",
+        "organisation",
+        organisation.id,
+        organisation.nom,
+        demande.model_dump(),
     )
     return _budget(await service.etat(organisation))
 
