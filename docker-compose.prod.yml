@@ -1,0 +1,94 @@
+# Deploiement de production. Le docker-compose.yml voisin reste celui du
+# developpement : il monte le code en volume et lance des serveurs a rechargement
+# automatique, ce qu'il ne faut jamais servir.
+#
+#   docker compose -f docker-compose.prod.yml --env-file .env.production up -d --build
+#
+# Rien n'est publie sur l'hote sauf les ports 80 et 443 de Caddy : ni la base,
+# ni le backend, ni le frontend ne sont joignables depuis l'exterieur.
+name: megslab
+
+services:
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      DOMAINE: ${DOMAINE:?le nom de domaine doit etre renseigne}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      # Les certificats vivent ici : sans ce volume, chaque redemarrage en
+      # redemande un et Let's Encrypt finit par limiter le domaine.
+      - caddy_certificats:/data
+      - caddy_config:/config
+    depends_on:
+      - backend
+      - frontend
+
+  base:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-megslab}
+      POSTGRES_USER: ${POSTGRES_USER:?utilisateur de la base applicative}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?mot de passe de la base applicative}
+    volumes:
+      - base_applicative:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # Les migrations tournent une fois, avant le backend, et le bloquent si elles
+  # echouent. Les faire au demarrage de l'API les rejouerait a chaque replica.
+  migrations:
+    build: ./backend
+    command: ["alembic", "upgrade", "head"]
+    restart: "no"
+    env_file:
+      - .env.production
+    environment:
+      ENVIRONNEMENT: production
+    depends_on:
+      base:
+        condition: service_healthy
+
+  backend:
+    build: ./backend
+    restart: unless-stopped
+    env_file:
+      - .env.production
+    environment:
+      ENVIRONNEMENT: production
+    depends_on:
+      base:
+        condition: service_healthy
+      migrations:
+        condition: service_completed_successfully
+    deploy:
+      resources:
+        limits:
+          cpus: "1.5"
+          memory: 1536M
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        # Fige dans le bundle a la construction, pas lu au demarrage.
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:?URL publique de l'API, par exemple https://votre-domaine/api}
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: "1"
+          memory: 768M
+
+volumes:
+  base_applicative:
+  caddy_certificats:
+  caddy_config:

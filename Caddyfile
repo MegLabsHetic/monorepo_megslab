@@ -1,0 +1,26 @@
+# HTTPS automatique : Caddy demande et renouvelle le certificat Let's Encrypt
+# tout seul. Rien a planifier, rien a renouveler a la main.
+{$DOMAINE} {
+	encode zstd gzip
+
+	# L'API et l'interface partagent le domaine : le navigateur parle a la meme
+	# origine, donc plus de CORS a accorder ni de second certificat a tenir.
+	# Cette route passe AVANT le catch-all, sinon le frontend l'attraperait.
+	handle /api/* {
+		uri strip_prefix /api
+		reverse_proxy backend:8000
+	}
+
+	handle {
+		reverse_proxy frontend:3000
+	}
+
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		X-Frame-Options "DENY"
+		# Caddy annonce sa version par defaut : inutile a l'utilisateur.
+		-Server
+	}
+}
