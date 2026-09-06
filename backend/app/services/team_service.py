@@ -20,6 +20,7 @@ from app.models.user import User
 from app.models.workspace import Workspace
 from app.models.workspace_access import WorkspaceAccess
 from app.services.auth_service import hacher_mot_de_passe
+from app.services.notification_service import NotificationService
 
 DUREE_INVITATION = timedelta(days=7)
 
@@ -143,6 +144,13 @@ class TeamService:
                 )
             )
         invitation.acceptee_le = datetime.now(UTC)
+        NotificationService(self._db).creer(
+            invitation.invitee_par,
+            "equipe",
+            f"{utilisateur.nom_complet} a rejoint l'organisation",
+            f"Invitation acceptee par {utilisateur.email}.",
+            "/equipe",
+        )
         await self._db.commit()
         await self._db.refresh(utilisateur)
         return utilisateur

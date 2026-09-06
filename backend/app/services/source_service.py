@@ -15,6 +15,7 @@ from app.core.entrepot_writer import EntrepotWriter, ErreurImport
 from app.core.errors import ErreurUtilisateur
 from app.models.data_source import DataSource, StatutSource
 from app.models.workspace import Workspace
+from app.services.notification_service import NotificationService
 
 logger = logging.getLogger(__name__)
 
@@ -178,6 +179,14 @@ class SourceService:
         await self._db.commit()
         return job_id
 
+    async def _prevenir(self, source: DataSource, titre: str, corps: str) -> None:
+        """Tous ceux qui peuvent ouvrir l'espace sont prevenus, dans la meme transaction."""
+        espace = await self._db.get(Workspace, source.workspace_id)
+        if espace is not None:
+            await NotificationService(self._db).notifier_espace(
+                espace, "sync", titre, corps, f"/donnees/{source.id}"
+            )
+
     async def planifier(self, source: DataSource, espace: Workspace, frequence: str) -> DataSource:
         """Pose la planification cote Airbyte : c'est lui qui declenche ensuite les syncs."""
         if frequence not in PLANIFICATIONS:
@@ -310,11 +319,21 @@ class SourceService:
             source.statut = StatutSource.PRETE
             source.lignes_synchronisees = job.get("rowsSynced")
             source.derniere_sync_le = datetime.now(UTC)
+            await self._prevenir(
+                source,
+                f"Synchronisation terminee : {source.nom}",
+                f"{job.get('rowsSynced') or 0} ligne(s) copiee(s) dans l'entrepot.",
+            )
             await self._db.commit()
             # L'entrepot vient de changer : le contexte que l'assistant garde
             # en memoire ne le decrit plus.
             AgentData.oublier(source.schema_entrepot)
         elif job.get("status") in ("failed", "cancelled", "incomplete"):
             source.statut = StatutSource.ERREUR
+            await self._prevenir(
+                source,
+                f"Synchronisation en echec : {source.nom}",
+                f"Airbyte a termine le job {job_id} avec le statut {job.get('status')}.",
+            )
             await self._db.commit()
         return job
