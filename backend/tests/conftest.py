@@ -13,6 +13,7 @@ from app.core.database import Base
 # Import necessaire pour que Base.metadata connaisse les tables a creer.
 from app.models import (  # noqa: F401
     conversation,
+    dashboard,
     data_source,
     invitation,
     membership,

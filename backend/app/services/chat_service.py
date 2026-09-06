@@ -123,7 +123,7 @@ class ChatService:
             reponse=complete.reponse,
             sql=complete.sql,
             nb_lignes=complete.resultat.nb_lignes if complete.resultat else None,
-            resultat=_extrait(complete.resultat) if complete.resultat else None,
+            resultat=extrait_json(complete.resultat) if complete.resultat else None,
             analyse=complete.analyse.en_dict() if complete.analyse else None,
             graphique=complete.graphique.model_dump() if complete.graphique else None,
             etapes=[
@@ -147,7 +147,7 @@ class ChatService:
         )
 
 
-def _extrait(resultat) -> dict:
+def extrait_json(resultat) -> dict:
     """Les premieres lignes, rendues stockables en JSON.
 
     Decimal, date et UUID n'existent pas en JSON : ils deviennent du texte. Les
