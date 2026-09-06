@@ -14,6 +14,8 @@ class EtapeReponse(BaseModel):
     statut: str
     duree_ms: int
     detail: str = ""
+    cout_dollars: float = 0.0
+    jetons: int = 0
 
 
 class ResultatReponse(BaseModel):

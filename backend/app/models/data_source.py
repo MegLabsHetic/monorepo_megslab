@@ -6,9 +6,10 @@ secret ici n'apporterait rien et serait une surface de fuite en plus.
 """
 
 import enum
+from datetime import datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import JSON, Enum, ForeignKey, String
+from sqlalchemy import JSON, DateTime, Enum, ForeignKey, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.database import Base
@@ -53,6 +54,10 @@ class DataSource(HorodatageMixin, Base):
     # sources ayant une table du meme nom s'ecrasent. Vide pour les sources
     # creees avant son introduction : leurs tables restent sans prefixe.
     prefixe_entrepot: Mapped[str] = mapped_column(String(32), default="")
+    # Ce que la derniere synchronisation reussie a copie, et quand : la
+    # fraicheur des donnees et le cout de leur transfert partent de la.
+    lignes_synchronisees: Mapped[int | None] = mapped_column(Integer, default=None)
+    derniere_sync_le: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), default=None)
 
     # Le schema decouvert, garde tel quel : sans ca, les tables d'une source ne
     # seraient consultables qu'une seule fois, juste apres sa connexion.

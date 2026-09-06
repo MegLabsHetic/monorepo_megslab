@@ -35,6 +35,9 @@ class Etape:
     statut: str  # "terminee" | "refusee" | "ignoree"
     duree_ms: int
     detail: str = ""
+    # Ce que l'etape a coute, quand elle a appele le modele.
+    cout_dollars: float = 0.0
+    jetons: int = 0
 
 
 @dataclass
@@ -56,6 +59,15 @@ class ReponseComplete:
     @property
     def jetons(self) -> int:
         return sum(c.jetons_total for c in self.consommations)
+
+    @property
+    def jetons_detail(self) -> dict[str, int]:
+        return {
+            "entree": sum(c.jetons_entree for c in self.consommations),
+            "sortie": sum(c.jetons_sortie for c in self.consommations),
+            "cache_lus": sum(c.jetons_cache_lus for c in self.consommations),
+            "cache_ecrits": sum(c.jetons_cache_ecrits for c in self.consommations),
+        }
 
 
 class Orchestrateur:
@@ -165,7 +177,16 @@ class Orchestrateur:
             # Dire qu'il y a eu une reprise fait partie du compte-rendu : elle
             # a coute un appel de plus, et le lecteur doit pouvoir le voir.
             detail += ", apres une correction"
-        etapes.append(Etape("analyste", "terminee", _ms(depart), detail))
+        etapes.append(
+            Etape(
+                "analyste",
+                "terminee",
+                _ms(depart),
+                detail,
+                cout_dollars=sum(c.cout_dollars for c in analyse.consommations),
+                jetons=sum(c.jetons_total for c in analyse.consommations),
+            )
+        )
         return analyse
 
     def _etape_ml(self, resultat: Resultat, etapes: list[Etape]) -> AnalyseSerie | None:
@@ -198,7 +219,13 @@ class Orchestrateur:
             analyse.resultat,
             serie.resume() if serie is not None else None,
         )
-        return redaction, Etape("redacteur", "terminee", _ms(depart))
+        return redaction, Etape(
+            "redacteur",
+            "terminee",
+            _ms(depart),
+            cout_dollars=redaction.consommation.cout_dollars,
+            jetons=redaction.consommation.jetons_total,
+        )
 
     async def _etape_viz(
         self, question: str, resultat: Resultat
@@ -214,7 +241,14 @@ class Orchestrateur:
             return None, Etape("viz", "refusee", _ms(depart), erreur.message)
         spec = reponse.contenu
         detail = spec.type if spec.type != "aucun" else f"aucun graphique : {spec.raison}"
-        return reponse, Etape("viz", "terminee", _ms(depart), detail)
+        return reponse, Etape(
+            "viz",
+            "terminee",
+            _ms(depart),
+            detail,
+            cout_dollars=reponse.consommation.cout_dollars,
+            jetons=reponse.consommation.jetons_total,
+        )
 
 
 def _etapes_sans_resultat() -> list[Etape]:

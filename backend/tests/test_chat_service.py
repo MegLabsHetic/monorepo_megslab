@@ -270,3 +270,39 @@ async def test_les_echanges_precedents_du_fil_sont_transmis_a_l_analyste(
     assert plans[1].endswith("Nouvelle question : Et par produit ?")
     # Le fil prend pour titre sa premiere question.
     assert conversation.titre == "Combien de ventes ?"
+
+
+async def test_chaque_etape_conserve_ce_qu_elle_a_coute(db: AsyncSession) -> None:
+    espace, utilisateur, conversation = await _espace_et_utilisateur(db)
+    service = ChatService(db, FauxLLM(), FauxMoteur)  # type: ignore[arg-type]
+
+    question = await service.poser(espace, utilisateur, conversation, "Combien de ventes ?")
+
+    couts = {e["agent"]: e["cout_dollars"] for e in question.etapes}
+    assert couts["analyste"] == pytest.approx(CONSOMMATION.cout_dollars)
+    assert couts["redacteur"] == pytest.approx(CONSOMMATION.cout_dollars)
+    assert couts["data"] == 0 and couts["ml"] == 0
+    assert question.jetons_entree == 200 and question.jetons_sortie == 100
+
+
+async def test_un_budget_atteint_refuse_la_question_avant_tout_appel_au_modele(
+    db: AsyncSession,
+) -> None:
+    from app.models.organization import Organization as Org
+
+    espace, utilisateur, conversation = await _espace_et_utilisateur(db)
+    organisation = await db.get(Org, espace.organization_id)
+    assert organisation is not None
+    organisation.budget_mensuel_dollars = 0.0001
+    organisation.budget_bloquant = True
+    await db.flush()
+    llm = FauxLLM()
+    service = ChatService(db, llm, FauxMoteur)  # type: ignore[arg-type]
+    # Une premiere question passe : rien n'a encore ete depense.
+    await service.poser(espace, utilisateur, conversation, "Combien de ventes ?")
+
+    with pytest.raises(ErreurUtilisateur) as capture:
+        await service.poser(espace, utilisateur, conversation, "Et par produit ?")
+
+    assert capture.value.code_http == 402
+    assert llm.appels == ["PlanRequete", "Redaction"]  # la deuxieme n'a rien appele

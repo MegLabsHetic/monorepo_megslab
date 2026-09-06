@@ -43,6 +43,12 @@ class Question(HorodatageMixin, Base):
     etapes: Mapped[list] = mapped_column(JSON, default=list)
     cout_dollars: Mapped[float] = mapped_column(Float, default=0.0)
     jetons: Mapped[int] = mapped_column(Integer, default=0)
+    # Les jetons par nature : c'est ce qui permet de voir la part du cache
+    # de prompt, et donc ce que coute vraiment un schema envoye a chaque question.
+    jetons_entree: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
+    jetons_sortie: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
+    jetons_cache_lus: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
+    jetons_cache_ecrits: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
     duree_ms: Mapped[int] = mapped_column(Integer, default=0)
 
     workspace: Mapped["Workspace"] = relationship()

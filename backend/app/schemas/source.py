@@ -50,6 +50,9 @@ class SourceReponse(BaseModel):
     flux_disponibles: list[FluxReponse]
     flux_selectionnes: list[str]
     cree_le: datetime
+    # Ce que la derniere synchronisation reussie a copie, et quand.
+    lignes_synchronisees: int | None = None
+    derniere_sync_le: datetime | None = None
     # Nul pour une source fichier (aucun objet Airbyte) ou si l'URL publique
     # d'Airbyte n'est pas configuree.
     lien_airbyte: str | None = None

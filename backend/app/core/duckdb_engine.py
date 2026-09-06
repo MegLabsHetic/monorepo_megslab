@@ -229,6 +229,21 @@ class DuckDBEngine:
         with self._session() as connexion:
             return [self._profil_table(connexion, table) for table in self._tables(connexion)]
 
+    def tailles_tables(self) -> list[tuple[str, int]]:
+        """Chaque table de l'espace avec sa taille sur disque, en octets, lue dans Postgres.
+
+        `pg_total_relation_size` compte la table, ses index et son TOAST : c'est
+        ce que l'entrepot occupe reellement pour cet espace.
+        """
+        interne = (
+            "SELECT c.relname, pg_total_relation_size(c.oid) FROM pg_class c "
+            "JOIN pg_namespace n ON n.oid = c.relnamespace "
+            f"WHERE n.nspname = '{self._schema}' AND c.relkind = 'r' ORDER BY c.relname"
+        )
+        with self._session() as connexion:
+            resultat = self._lire(connexion, _requete_postgres(interne), LIGNES_MAX)
+        return [(str(nom), int(octets)) for nom, octets in resultat.lignes]
+
     # --- Interieur ---------------------------------------------------------
 
     def _profil_table(self, connexion: duckdb.DuckDBPyConnection, table: str) -> TableProfil:
