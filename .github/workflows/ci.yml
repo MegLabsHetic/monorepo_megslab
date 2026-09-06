@@ -33,6 +33,45 @@ jobs:
       - name: Tests
         run: pytest -q
 
+  migrations-postgres:
+    name: Migrations (Postgres)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    # La base applicative est en SQLite en developpement et en Postgres en
+    # production. SQLite accepte des choses que Postgres refuse — un DEFAULT 1
+    # sur une colonne booleenne, par exemple — et les tests unitaires, qui
+    # tournent sur SQLite en memoire, ne peuvent pas le voir. Ce job rejoue donc
+    # les migrations sur le moteur reellement deploye.
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: megslab
+          POSTGRES_PASSWORD: megslab
+          POSTGRES_DB: megslab_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U megslab"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: backend/requirements.txt
+      - name: Dependances
+        run: pip install -r requirements.txt
+      - name: Migrations
+        env:
+          DATABASE_URL: postgresql+asyncpg://megslab:megslab@localhost:5432/megslab_ci
+        run: alembic upgrade head
+
   frontend:
     name: Frontend (lint, types, build)
     runs-on: ubuntu-latest

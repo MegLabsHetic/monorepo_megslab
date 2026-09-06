@@ -32,7 +32,7 @@ def upgrade() -> None:
     )
     op.add_column(
         "organizations",
-        sa.Column("budget_bloquant", sa.Boolean(), server_default=sa.text("1"), nullable=False),
+        sa.Column("budget_bloquant", sa.Boolean(), server_default=sa.true(), nullable=False),
     )
     op.add_column(
         "questions", sa.Column("jetons_entree", sa.Integer(), server_default="0", nullable=False)
