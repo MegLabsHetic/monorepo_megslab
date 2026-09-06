@@ -19,6 +19,10 @@ class Settings(BaseSettings):
 
     model_config = SettingsConfigDict(env_file=_RACINE_DEPOT / ".env", extra="ignore")
 
+    # « production » durcit le demarrage : voir `_exiger_les_secrets`. Toute
+    # autre valeur est traitee comme un poste de developpement.
+    environnement: str = "developpement"
+
     cors_origins: str = "http://localhost:3000"
     database_url: str = "sqlite+aiosqlite:///./data/megslab.db"
 
@@ -61,6 +65,39 @@ class Settings(BaseSettings):
     def cors_origins_list(self) -> list[str]:
         return [origine.strip() for origine in self.cors_origins.split(",") if origine.strip()]
 
+    @property
+    def en_production(self) -> bool:
+        return self.environnement.strip().lower() == "production"
+
+
+class ConfigurationIncomplete(RuntimeError):
+    """Un secret indispensable manque. Leve au demarrage, jamais en cours de requete."""
+
+
+def _exiger_les_secrets(reglages: Settings) -> None:
+    """Refuse de demarrer en production avec une configuration a trous.
+
+    Un secret JWT genere a la volee parait fonctionner : chaque redemarrage
+    deconnecte tout le monde, et deux instances ne reconnaissent pas les jetons
+    l'une de l'autre. La panne est silencieuse et intermittente, donc chere a
+    diagnostiquer. Mieux vaut ne pas demarrer du tout.
+    """
+    manquants = [
+        nom
+        for nom, valeur in (
+            ("JWT_SECRET", reglages.jwt_secret),
+            ("WAREHOUSE_POSTGRES_DATABASE", reglages.warehouse_postgres_database),
+            ("WAREHOUSE_POSTGRES_USERNAME", reglages.warehouse_postgres_username),
+            ("WAREHOUSE_POSTGRES_PASSWORD", reglages.warehouse_postgres_password),
+        )
+        if not valeur
+    ]
+    if manquants:
+        raise ConfigurationIncomplete(
+            "Demarrage refuse : ces variables d'environnement sont vides alors que "
+            f"ENVIRONNEMENT=production : {', '.join(manquants)}."
+        )
+
 
 @lru_cache
 def get_settings() -> Settings:
@@ -72,6 +109,10 @@ def get_settings() -> Settings:
     processus, meme s'il n'est pas fourni.
     """
     reglages = Settings()
-    if not reglages.jwt_secret:
+    if reglages.en_production:
+        _exiger_les_secrets(reglages)
+    elif not reglages.jwt_secret:
+        # Developpement seulement : un oubli ne doit jamais signer les jetons
+        # avec une chaine vide. En production, on refuse de demarrer.
         reglages.jwt_secret = secrets.token_hex(32)
     return reglages
