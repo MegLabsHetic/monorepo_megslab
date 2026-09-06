@@ -22,6 +22,14 @@ from app.core.duckdb_engine import PREFIXE_TECHNIQUE
 
 logger = logging.getLogger(__name__)
 
+_MOT_DE_PASSE_DSN = re.compile(r"password=\S+")
+
+
+def _sans_secret(message: str) -> str:
+    """Un message d'erreur qui cite le DSN cite aussi le mot de passe."""
+    return _MOT_DE_PASSE_DSN.sub("password=***", message)
+
+
 EXTENSIONS_ACCEPTEES = {".csv", ".xlsx"}
 LIGNES_MAX_IMPORT = 1_000_000
 
@@ -99,8 +107,16 @@ class EntrepotWriter:
                 ).fetchall()
             ]
         except duckdb.Error as erreur:
-            logger.exception("Echec d'import du fichier %s dans %s", fichier.name, self._schema)
-            raise ErreurImport(self._message_lisible(erreur)) from erreur
+            # Pas de logger.exception ici : quand c'est l'attache qui echoue, le
+            # message de DuckDB reprend le DSN, mot de passe compris. Message
+            # masque, chainage coupe pour qu'aucune trace en amont ne le reimprime.
+            logger.error(
+                "Echec d'import du fichier %s dans %s : %s",
+                fichier.name,
+                self._schema,
+                _sans_secret(str(erreur)),
+            )
+            raise ErreurImport(self._message_lisible(erreur)) from None
         finally:
             connexion.close()
 
@@ -150,7 +166,7 @@ class EntrepotWriter:
                 "Echec de copie du schema %s vers %s : %s",
                 schema_source,
                 self._schema,
-                re.sub(r"password=\S+", "password=***", str(erreur))[:300],
+                _sans_secret(str(erreur))[:300],
             )
             raise ErreurImport("L'entrepot n'a pas pu copier le jeu de demonstration.") from None
         finally:
@@ -173,7 +189,7 @@ class EntrepotWriter:
             logger.error(
                 "Echec de suppression de tables dans %s : %s",
                 self._schema,
-                re.sub(r"password=\S+", "password=***", str(erreur))[:300],
+                _sans_secret(str(erreur))[:300],
             )
             raise ErreurImport(
                 "L'entrepot n'a pas pu supprimer les tables de cette source."
