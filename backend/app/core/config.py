@@ -53,6 +53,10 @@ class Settings(BaseSettings):
     warehouse_lecture_host: str = "127.0.0.1"
     warehouse_lecture_port: int = 55433
 
+    # Le schema de l'entrepot qui contient le jeu de demonstration a copier
+    # dans un espace en un clic. Vide : la fonctionnalite n'est pas proposee.
+    demo_schema: str = ""
+
     @property
     def cors_origins_list(self) -> list[str]:
         return [origine.strip() for origine in self.cors_origins.split(",") if origine.strip()]

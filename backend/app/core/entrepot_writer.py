@@ -47,6 +47,16 @@ def nom_de_table(nom_fichier: str) -> str:
     return nettoye[:48]
 
 
+def _executer_dans_postgres(connexion: duckdb.DuckDBPyConnection, sql: str) -> None:
+    """Fait executer une instruction par Postgres lui-meme, via la base attachee.
+
+    Les identifiants viennent du catalogue de l'entrepot ou de nos propres
+    constantes, jamais d'une saisie : c'est la seule raison pour laquelle
+    cette porte reste ouverte au writer, et fermee au moteur de lecture.
+    """
+    connexion.execute(f"CALL postgres_execute('entrepot', '{sql.replace(chr(39), chr(39) * 2)}')")
+
+
 class EntrepotWriter:
     def __init__(self, schema_entrepot: str) -> None:
         self._schema = schema_entrepot
@@ -94,6 +104,52 @@ class EntrepotWriter:
             connexion.close()
 
         return int(lignes), colonnes
+
+    def copier_tables(
+        self, schema_source: str, tables: list[str], prefixe: str
+    ) -> dict[str, list[str]]:
+        """Copie des tables d'un autre schema de l'entrepot dans celui-ci, par Postgres.
+
+        Rend les colonnes de chaque table copiee, comme `importer`. Les noms
+        viennent du catalogue de l'entrepot, jamais d'une saisie.
+        """
+        connexion = duckdb.connect(":memory:")
+        colonnes: dict[str, list[str]] = {}
+        try:
+            connexion.execute("INSTALL postgres; LOAD postgres;")
+            connexion.execute(f"ATTACH '{self._dsn()}' AS entrepot (TYPE postgres)")
+            connexion.execute(f'CREATE SCHEMA IF NOT EXISTS entrepot."{self._schema}"')
+            for table in tables:
+                # La copie est faite PAR Postgres : rien ne transite par ici.
+                # Faire lire puis reecrire un million de lignes par DuckDB a
+                # travers le reseau prendrait des minutes ; cote serveur, des secondes.
+                origine = f'"{schema_source}"."{table}"'
+                cible = f'"{self._schema}"."{prefixe}{table}"'
+                _executer_dans_postgres(connexion, f"DROP TABLE IF EXISTS {cible}")
+                _executer_dans_postgres(connexion, f"CREATE TABLE {cible} AS TABLE {origine}")
+            # Le catalogue attache ne voit pas les tables creees derriere son dos.
+            connexion.execute("CALL postgres_clear_cache()")
+            for table in tables:
+                colonnes[table] = [
+                    nom
+                    for (nom,) in connexion.execute(
+                        "select column_name from duckdb_columns() "
+                        "where database_name = 'entrepot' and schema_name = ? and table_name = ? "
+                        "order by column_index",
+                        [self._schema, f"{prefixe}{table}"],
+                    ).fetchall()
+                ]
+        except duckdb.Error as erreur:
+            logger.error(
+                "Echec de copie du schema %s vers %s : %s",
+                schema_source,
+                self._schema,
+                re.sub(r"password=\S+", "password=***", str(erreur))[:300],
+            )
+            raise ErreurImport("L'entrepot n'a pas pu copier le jeu de demonstration.") from None
+        finally:
+            connexion.close()
+        return colonnes
 
     def supprimer_tables(self, tables: list[str]) -> None:
         """Fait tomber les tables d'une source dans l'entrepot. Les noms viennent
