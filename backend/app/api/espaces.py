@@ -3,6 +3,7 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.api.audit import journaliser
 from app.api.deps import (
     AccesEspace,
     acces_admin_espace,
@@ -74,6 +75,17 @@ async def creer(
     espace = await WorkspaceService(db, airbyte_client).creer(
         organisation, demande.nom.strip(), utilisateur
     )
+    await journaliser(
+        db,
+        organisation.id,
+        utilisateur,
+        "espace.cree",
+        "espace",
+        espace.id,
+        espace.nom,
+        {},
+        espace.id,
+    )
     return en_reponse(espace, Role.ADMIN)
 
 
@@ -86,10 +98,22 @@ async def detail(acces: AccesEspace = Depends(acces_courant)):
 async def renommer(
     demande: EspaceModification,
     acces: AccesEspace = Depends(acces_admin_espace),
+    utilisateur: User = Depends(utilisateur_courant),
     db: AsyncSession = Depends(get_db),
     airbyte_client: AirbyteClient = Depends(get_airbyte_client),
 ):
     espace = await WorkspaceService(db, airbyte_client).renommer(acces.espace, demande.nom)
+    await journaliser(
+        db,
+        acces.organisation.id,
+        utilisateur,
+        "espace.renomme",
+        "espace",
+        espace.id,
+        espace.nom,
+        {},
+        espace.id,
+    )
     return en_reponse(espace, acces.role)
 
 
@@ -113,6 +137,7 @@ async def definir_acces(
     user_id: str,
     demande: AccesEspaceDemande,
     acces: AccesEspace = Depends(acces_admin_espace),
+    utilisateur: User = Depends(utilisateur_courant),
     db: AsyncSession = Depends(get_db),
     airbyte_client: AirbyteClient = Depends(get_airbyte_client),
 ):
@@ -125,6 +150,17 @@ async def definir_acces(
         raise ErreurUtilisateur("Cette personne ne fait pas partie de l'organisation.", 404)
     role = _role(demande.role)
     await WorkspaceService(db, airbyte_client).definir_acces(acces.espace, membre, role)
+    await journaliser(
+        db,
+        acces.organisation.id,
+        utilisateur,
+        "espace.acces_modifie",
+        "utilisateur",
+        membre.id,
+        membre.email,
+        {"role": demande.role},
+        acces.espace.id,
+    )
 
 
 def _role(valeur: str | None) -> Role | None:

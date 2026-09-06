@@ -9,6 +9,8 @@ from app.api.conversations import router as conversations_router
 from app.api.dashboards import router as dashboards_router
 from app.api.espaces import router as espaces_router
 from app.api.finops import router as finops_router
+from app.api.journal import router as journal_router
+from app.api.notifications import router as notifications_router
 from app.api.organisation import router as organisation_router
 from app.api.plateforme import router as plateforme_router
 from app.api.questions import router as questions_router
@@ -42,6 +44,8 @@ def create_app() -> FastAPI:
     app.include_router(auth_router)
     app.include_router(organisation_router)
     app.include_router(finops_router)
+    app.include_router(journal_router)
+    app.include_router(notifications_router)
     app.include_router(espaces_router)
     app.include_router(router_connecteurs)
     app.include_router(sources_router)

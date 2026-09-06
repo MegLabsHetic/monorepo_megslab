@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.api.audit import journaliser
 from app.api.deps import organisation_administree, organisation_courante, utilisateur_courant
 from app.core.database import get_db
 from app.core.errors import ErreurUtilisateur
@@ -59,6 +60,16 @@ async def renommer(
     db: AsyncSession = Depends(get_db),
 ):
     await OrganizationService(db, airbyte_client=None).renommer(organisation, demande.nom)  # type: ignore[arg-type]
+    await journaliser(
+        db,
+        organisation.id,
+        utilisateur,
+        "organisation.renommee",
+        "organisation",
+        organisation.id,
+        demande.nom,
+        {},
+    )
     return await detail(utilisateur, organisation, db)
 
 
@@ -76,12 +87,13 @@ async def lister_membres(
 @router.post("/membres", response_model=MembreReponse, status_code=201)
 async def creer_membre(
     demande: MembreCreation,
+    utilisateur: User = Depends(utilisateur_courant),
     organisation: Organization = Depends(organisation_administree),
     db: AsyncSession = Depends(get_db),
 ):
     """Un compte cree directement par l'admin, avec un mot de passe temporaire."""
     service = TeamService(db)
-    utilisateur = await service.creer_membre(
+    utilisateur_cree = await service.creer_membre(
         organisation,
         demande.email,
         demande.nom_complet,
@@ -90,28 +102,53 @@ async def creer_membre(
         _acces(demande.acces),
     )
     membres = await service.membres(organisation)
-    return _membre(next(m for m in membres if m.utilisateur.id == utilisateur.id))
+    await journaliser(
+        db,
+        organisation.id,
+        utilisateur,
+        "membre.cree",
+        "utilisateur",
+        utilisateur_cree.id,
+        utilisateur_cree.email,
+        {"role": demande.role},
+    )
+    return _membre(next(m for m in membres if m.utilisateur.id == utilisateur_cree.id))
 
 
 @router.patch("/membres/{user_id}", status_code=204)
 async def changer_role(
     user_id: str,
     demande: RoleModification,
+    utilisateur: User = Depends(utilisateur_courant),
     organisation: Organization = Depends(organisation_administree),
     db: AsyncSession = Depends(get_db),
 ):
-    await TeamService(db).changer_role(
-        organisation, await _utilisateur(db, user_id), _role(demande.role)
+    cible = await _utilisateur(db, user_id)
+    await TeamService(db).changer_role(organisation, cible, _role(demande.role))
+    await journaliser(
+        db,
+        organisation.id,
+        utilisateur,
+        "membre.role_modifie",
+        "utilisateur",
+        cible.id,
+        cible.email,
+        {"role": demande.role},
     )
 
 
 @router.delete("/membres/{user_id}", status_code=204)
 async def retirer_membre(
     user_id: str,
+    utilisateur: User = Depends(utilisateur_courant),
     organisation: Organization = Depends(organisation_administree),
     db: AsyncSession = Depends(get_db),
 ):
-    await TeamService(db).retirer(organisation, await _utilisateur(db, user_id))
+    cible = await _utilisateur(db, user_id)
+    await TeamService(db).retirer(organisation, cible)
+    await journaliser(
+        db, organisation.id, utilisateur, "membre.retire", "utilisateur", cible.id, cible.email, {}
+    )
 
 
 # --- Invitations ---------------------------------------------------------------
@@ -135,16 +172,30 @@ async def inviter(
     invitation = await TeamService(db).inviter(
         organisation, demande.email, _role(demande.role), _acces(demande.acces), utilisateur
     )
+    await journaliser(
+        db,
+        organisation.id,
+        utilisateur,
+        "invitation.creee",
+        "invitation",
+        invitation.id,
+        invitation.email,
+        {"role": demande.role},
+    )
     return _invitation(invitation)
 
 
 @router.delete("/invitations/{invitation_id}", status_code=204)
 async def annuler_invitation(
     invitation_id: str,
+    utilisateur: User = Depends(utilisateur_courant),
     organisation: Organization = Depends(organisation_administree),
     db: AsyncSession = Depends(get_db),
 ):
     await TeamService(db).supprimer_invitation(organisation, invitation_id)
+    await journaliser(
+        db, organisation.id, utilisateur, "invitation.annulee", "invitation", invitation_id, "", {}
+    )
 
 
 # --- Interieur -----------------------------------------------------------------
