@@ -230,11 +230,39 @@ export interface SpecGraphique {
   raison: string;
 }
 
+export interface Notification {
+  id: string;
+  type: "sync" | "budget" | "equipe" | string;
+  titre: string;
+  corps: string;
+  lien: string | null;
+  lue: boolean;
+  cree_le: string;
+}
+
+export interface EntreeJournal {
+  id: string;
+  action: string;
+  cible_type: string;
+  cible_id: string | null;
+  cible_nom: string;
+  detail: Record<string, unknown>;
+  auteur: string;
+  auteur_email: string;
+  espace: string | null;
+  cree_le: string;
+}
+
 export interface QuestionAssistant {
   id: string;
   conversation_id: string;
   texte: string;
   reponse: string;
+  /** Ce que l'Analyste dit calculer : la lecture humaine du SQL. */
+  explication: string;
+  /** 1 utile, -1 fausse ou inutile, nul sans avis. */
+  avis: number | null;
+  commentaire_avis: string;
   sql: string | null;
   resultat: Apercu | null;
   analyse: AnalyseSerie | null;
@@ -775,6 +803,55 @@ export const api = {
     }
     return reponse.blob();
   },
+
+  // --- Avis, suggestions, demo ---
+  noterQuestion: (
+    jeton: string,
+    espaceId: string,
+    questionId: string,
+    avis: number | null,
+    commentaire = ""
+  ) =>
+    requete<QuestionAssistant>(
+      `${espace(espaceId)}/questions/${questionId}/avis`,
+      json(jeton, "PATCH", { avis, commentaire })
+    ),
+
+  // Un appel au modele a effort minimal, garde une demi-heure par espace.
+  suggestions: (jeton: string, espaceId: string) =>
+    requete<{ questions: string[]; cout_dollars: number }>(
+      `${espace(espaceId)}/questions/suggestions`,
+      { headers: entete(jeton), delaiMax: DELAI_ENTREPOT }
+    ),
+
+  demoDisponible: (jeton: string, espaceId: string) =>
+    requete<{ disponible: boolean }>(`${espace(espaceId)}/sources/demo/disponible`, {
+      headers: entete(jeton),
+    }),
+
+  chargerDemo: (jeton: string, espaceId: string) =>
+    requete<Source>(`${espace(espaceId)}/sources/demo`, {
+      ...json(jeton, "POST"),
+      delaiMax: DELAI_CONNEXION_SOURCE,
+    }),
+
+  // --- Notifications et journal ---
+  notifications: (jeton: string) =>
+    requete<{ non_lues: number; notifications: Notification[] }>("/notifications", {
+      headers: entete(jeton),
+    }),
+
+  marquerLue: (jeton: string, id: string) =>
+    requete<void>(`/notifications/${id}/lue`, json(jeton, "POST")),
+
+  toutMarquerLu: (jeton: string) =>
+    requete<void>("/notifications/toutes-lues", json(jeton, "POST")),
+
+  journal: (jeton: string, page = 0, limite = 50) =>
+    requete<{ total: number; page: number; entrees: EntreeJournal[] }>(
+      `/organisation/journal?page=${page}&limite=${limite}`,
+      { headers: entete(jeton) }
+    ),
 
   // --- Plateforme ---
   organisationsPlateforme: (jeton: string) =>

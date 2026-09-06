@@ -59,6 +59,7 @@ function Assistant() {
   const [contexteOuvert, setContexteOuvert] = useState(false);
   const [entrepot, setEntrepot] = useState<ContexteAssistant | null>(null);
   const [budget, setBudget] = useState<EtatBudget | null>(null);
+  const [suggestions, setSuggestions] = useState<string[]>(SUGGESTIONS);
   const [budgetAtteint, setBudgetAtteint] = useState<string | null>(null);
   const bas = useRef<HTMLDivElement>(null);
   const champ = useRef<HTMLTextAreaElement>(null);
@@ -116,6 +117,17 @@ function Assistant() {
   useEffect(() => {
     void chargerBudget();
   }, [chargerBudget]);
+
+  useEffect(() => {
+    // Des questions proposees a partir du schema reel ; les generiques restent
+    // en secours si le modele ou l'entrepot ne repond pas.
+    api
+      .suggestions(jeton, espace.id)
+      .then((r) => {
+        if (r.questions.length > 0) setSuggestions(r.questions);
+      })
+      .catch(() => undefined);
+  }, [jeton, espace.id]);
 
   useEffect(() => {
     bas.current?.scrollIntoView({ behavior: "smooth", block: "end" });
@@ -223,7 +235,7 @@ function Assistant() {
               </p>
               {peutAnalyser ? (
                 <ul className="mt-4 flex flex-wrap gap-2">
-                  {SUGGESTIONS.map((suggestion) => (
+                  {suggestions.map((suggestion) => (
                     <li key={suggestion}>
                       <button
                         type="button"

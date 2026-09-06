@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 
 import { Logo } from "@/components/marque/logo";
 import { SelecteurTheme } from "@/components/marque/selecteurTheme";
+import { Cloche } from "@/components/nav/cloche";
 import { PaletteCommandes } from "@/components/nav/paletteCommandes";
 import { SelecteurEspace } from "@/components/nav/selecteurEspace";
 import { useDroits, useSession } from "@/components/session/contexteSession";
@@ -39,7 +40,12 @@ export function BarreNavigation() {
 
   const tousLesLiens = [
     ...LIENS,
-    ...(administreOrganisation ? [{ href: "/equipe", libelle: "Equipe" }] : []),
+    ...(administreOrganisation
+      ? [
+          { href: "/equipe", libelle: "Equipe" },
+          { href: "/journal", libelle: "Journal" },
+        ]
+      : []),
     ...(estSuperAdmin ? [{ href: "/plateforme", libelle: "Plateforme" }] : []),
   ];
 
@@ -78,6 +84,7 @@ export function BarreNavigation() {
         </nav>
 
         <div className="ml-auto flex items-center gap-2">
+          <Cloche />
           <SelecteurTheme />
           <button
             type="button"

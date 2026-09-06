@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 
 import { ActionsReponse } from "@/components/assistant/actionsReponse";
+import { AvisReponse } from "@/components/assistant/avisReponse";
 import { Graphique, formaterLibelles } from "@/components/assistant/graphique";
 import { type AnalyseSerie, type EtapeAgent, type QuestionAssistant } from "@/lib/api";
 import { formaterNombre } from "@/lib/sources";
@@ -32,6 +33,12 @@ export function ReponseAssistant({ question }: { question: QuestionAssistant }) 
         </div>
 
         <p className="px-5 py-5 text-[15px] leading-relaxed text-text">{question.reponse}</p>
+        {question.sql && question.explication && (
+          <p className="px-5 pb-4 text-xs text-muted">
+            <span className="font-mono uppercase tracking-widest">Ce que la requete calcule</span>{" "}
+            {question.explication}
+          </p>
+        )}
 
         {question.graphique && question.resultat && (
           <div className="border-t border-line px-5 py-5">
@@ -80,6 +87,7 @@ export function ReponseAssistant({ question }: { question: QuestionAssistant }) 
           </span>
           <span>{formaterNombre(question.jetons)} jetons</span>
           <span>{(question.duree_ms / 1000).toFixed(1)} s</span>
+          <AvisReponse question={question} />
           <ActionsReponse question={question} carte={carte} />
         </footer>
       </div>
