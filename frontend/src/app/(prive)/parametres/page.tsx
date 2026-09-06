@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 
 import { libelleRoleEspace } from "@/components/equipe/rolesEspace";
+import { SectionBudget } from "@/components/finops/sectionBudget";
 import { useDroits, useSession, useTraduireErreur } from "@/components/session/contexteSession";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -216,6 +217,8 @@ export default function PageParametres() {
           </form>
         )}
       </section>
+
+      <SectionBudget peutModifier={administreOrganisation} />
 
       <section className="space-y-4" aria-labelledby="titre-organisation">
         <h2

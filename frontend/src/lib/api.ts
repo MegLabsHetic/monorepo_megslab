@@ -126,6 +126,9 @@ export interface Source {
   flux_disponibles: Flux[];
   flux_selectionnes: string[];
   cree_le: string;
+  /** Ce que la derniere synchronisation reussie a copie, et quand. */
+  lignes_synchronisees: number | null;
+  derniere_sync_le: string | null;
   /** Nul pour un fichier depose, ou si l'URL publique d'Airbyte n'est pas configuree. */
   lien_airbyte: string | null;
 }
@@ -259,6 +262,57 @@ export interface ContexteAssistant {
   nb_tables: number;
   nb_colonnes: number;
   nb_lignes: number;
+}
+
+// --- FinOps ----------------------------------------------------------------------
+
+export interface EtatBudget {
+  budget_dollars: number | null;
+  depense_mois_dollars: number;
+  pourcentage: number | null;
+  seuil_alerte_pct: number;
+  bloquant: boolean;
+  alerte: boolean;
+  bloque: boolean;
+  jours_ecoules: number;
+  jours_dans_le_mois: number;
+  /** Un simple prorata de la depense sur les jours ecoules : un ordre de grandeur. */
+  prevision_fin_de_mois_dollars: number;
+}
+
+export interface LigneFinops {
+  cle: string;
+  libelle: string;
+  cout_dollars: number;
+  nb_questions: number;
+  jetons: number;
+}
+
+export interface RapportFinops {
+  annee: number;
+  mois: number;
+  total_dollars: number;
+  nb_questions: number;
+  duree_moyenne_ms: number;
+  jetons: {
+    entree: number;
+    sortie: number;
+    cache_lus: number;
+    cache_ecrits: number;
+    taux_cache: number | null;
+  };
+  par_jour: LigneFinops[];
+  par_utilisateur: LigneFinops[];
+  par_espace: LigneFinops[];
+  par_agent: LigneFinops[];
+  budget: EtatBudget | null;
+}
+
+export interface PoidsEspace {
+  espace_id: string;
+  espace_nom: string;
+  nb_tables: number;
+  octets: number;
 }
 
 // --- Plateforme ------------------------------------------------------------------
@@ -536,6 +590,39 @@ export const api = {
       headers: entete(jeton),
       delaiMax: DELAI_ENTREPOT,
     }),
+
+  // --- FinOps ---
+  budget: (jeton: string) =>
+    requete<EtatBudget>("/organisation/budget", { headers: entete(jeton) }),
+
+  definirBudget: (
+    jeton: string,
+    budget: { budget_dollars: number | null; seuil_alerte_pct: number; bloquant: boolean }
+  ) => requete<EtatBudget>("/organisation/budget", json(jeton, "PUT", budget)),
+
+  rapportFinops: (jeton: string, mois?: string) =>
+    requete<RapportFinops>(`/organisation/finops${mois ? `?mois=${mois}` : ""}`, {
+      headers: entete(jeton),
+    }),
+
+  // Chaque espace ouvre l'entrepot : plusieurs secondes par espace.
+  poidsEntrepot: (jeton: string) =>
+    requete<PoidsEspace[]>("/organisation/finops/entrepot", {
+      headers: entete(jeton),
+      delaiMax: DELAI_ENTREPOT,
+    }),
+
+  exporterFinops: async (jeton: string, mois?: string): Promise<Blob> => {
+    const reponse = await fetch(
+      `${URL_BASE}/organisation/finops/export${mois ? `?mois=${mois}` : ""}`,
+      { headers: entete(jeton) }
+    );
+    if (!reponse.ok) {
+      const corps = await reponse.json().catch(() => null);
+      throw new ErreurApi(corps?.detail ?? "Export impossible.", reponse.status);
+    }
+    return reponse.blob();
+  },
 
   // --- Plateforme ---
   organisationsPlateforme: (jeton: string) =>

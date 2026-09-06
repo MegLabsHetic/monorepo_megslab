@@ -11,10 +11,12 @@ import { useDroits, useSession, useTraduireErreur } from "@/components/session/c
 import { Alert } from "@/components/ui/alert";
 import { Button, classesBouton } from "@/components/ui/button";
 import { Squelette } from "@/components/ui/skeleton";
+import { BarreBudget } from "@/components/finops/barreBudget";
 import {
   type ContexteAssistant,
   type Conversation,
   ErreurApi,
+  type EtatBudget,
   type QuestionAssistant,
   api,
 } from "@/lib/api";
@@ -56,6 +58,8 @@ function Assistant() {
   const [entrepotVide, setEntrepotVide] = useState(false);
   const [contexteOuvert, setContexteOuvert] = useState(false);
   const [entrepot, setEntrepot] = useState<ContexteAssistant | null>(null);
+  const [budget, setBudget] = useState<EtatBudget | null>(null);
+  const [budgetAtteint, setBudgetAtteint] = useState<string | null>(null);
   const bas = useRef<HTMLDivElement>(null);
   const champ = useRef<HTMLTextAreaElement>(null);
 
@@ -100,6 +104,19 @@ function Assistant() {
       .catch(() => setEntrepot(null));
   }, [jeton, espace.id]);
 
+  const chargerBudget = useCallback(
+    () =>
+      api
+        .budget(jeton)
+        .then(setBudget)
+        .catch(() => setBudget(null)),
+    [jeton]
+  );
+
+  useEffect(() => {
+    void chargerBudget();
+  }, [chargerBudget]);
+
   useEffect(() => {
     bas.current?.scrollIntoView({ behavior: "smooth", block: "end" });
   }, [questions, enCours]);
@@ -110,6 +127,7 @@ function Assistant() {
       if (!propre || enCours) return;
       setErreur(null);
       setEntrepotVide(false);
+      setBudgetAtteint(null);
       setEnCours(true);
       setTexte("");
       try {
@@ -122,9 +140,13 @@ function Assistant() {
         const reponse = await api.poserQuestion(jeton, espace.id, cible, propre);
         setQuestions((actuel) => [...(actuel ?? []), reponse]);
         void chargerFils();
+        void chargerBudget();
       } catch (probleme) {
         if (probleme instanceof ErreurApi && probleme.statut === 409) {
           setEntrepotVide(true);
+        } else if (probleme instanceof ErreurApi && probleme.statut === 402) {
+          setBudgetAtteint(probleme.message);
+          void chargerBudget();
         } else {
           setErreur(traduireErreur(probleme));
         }
@@ -134,7 +156,7 @@ function Assistant() {
         champ.current?.focus();
       }
     },
-    [jeton, espace.id, filId, enCours, router, traduireErreur, chargerFils]
+    [jeton, espace.id, filId, enCours, router, traduireErreur, chargerFils, chargerBudget]
   );
 
   const surTouche = (evenement: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -179,13 +201,16 @@ function Assistant() {
               </p>
             )}
           </div>
-          <Button
-            variante="contour"
-            className="w-auto px-4"
-            onClick={() => setContexteOuvert(true)}
-          >
-            Ce que le modele voit
-          </Button>
+          <div className="flex flex-col items-end gap-2">
+            <Button
+              variante="contour"
+              className="w-auto px-4"
+              onClick={() => setContexteOuvert(true)}
+            >
+              Ce que le modele voit
+            </Button>
+            {budget && budget.budget_dollars !== null && <BarreBudget etat={budget} compacte />}
+          </div>
         </header>
 
         <section aria-live="polite" className="flex-1 space-y-8 py-8">
@@ -241,6 +266,14 @@ function Assistant() {
                 Connectez une source
               </Link>{" "}
               et lancez une synchronisation.
+            </Alert>
+          )}
+          {budgetAtteint && (
+            <Alert>
+              {budgetAtteint}{" "}
+              <Link href="/parametres" className="underline underline-offset-4">
+                Voir les parametres
+              </Link>
             </Alert>
           )}
           {erreur && <Alert>{erreur}</Alert>}
