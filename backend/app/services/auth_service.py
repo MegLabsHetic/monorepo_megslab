@@ -4,7 +4,7 @@ from datetime import UTC, datetime, timedelta
 
 import jwt
 from argon2 import PasswordHasher
-from argon2.exceptions import VerifyMismatchError
+from argon2.exceptions import InvalidHash, VerificationError
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -112,9 +112,15 @@ class AuthService:
         return jwt.encode(charge, get_settings().jwt_secret, algorithm=ALGORITHME_JWT)
 
     def _mot_de_passe_valide(self, hache: str, mot_de_passe: str) -> bool:
+        """Faux plutot qu'une erreur, quel que soit le motif.
+
+        `VerificationError` couvre le mot de passe qui ne correspond pas ;
+        `InvalidHash` couvre l'empreinte illisible en base. Les distinguer
+        dirait a l'appelant si le compte existe : les deux valent « non ».
+        """
         try:
             return _hacheur.verify(hache, mot_de_passe)
-        except VerifyMismatchError:
+        except (VerificationError, InvalidHash):
             return False
 
     async def _trouver_par_email(self, email: str) -> User | None:

@@ -92,3 +92,20 @@ async def test_la_connexion_avec_un_email_inconnu_est_refusee(db: AsyncSession) 
 
     with pytest.raises(ErreurUtilisateur):
         await service.connecter("personne@example.com", "peu-importe")
+
+
+async def test_une_empreinte_de_mot_de_passe_illisible_est_un_refus_pas_une_panne(
+    db: AsyncSession, airbyte_client_factice: AirbyteClient
+) -> None:
+    """Une empreinte corrompue en base doit se comporter comme un mauvais mot de
+    passe. Laisser remonter l'erreur d'argon2 donnerait une 500, qui apprend a
+    qui la provoque que ce compte-la existe."""
+    service = AuthService(db, airbyte_client_factice)
+    utilisateur = await service.inscrire("ada@example.com", "mot-de-passe-solide", "Ada")
+    utilisateur.mot_de_passe_hache = "ceci-n-est-pas-une-empreinte-argon2"
+    await db.commit()
+
+    with pytest.raises(ErreurUtilisateur) as refus:
+        await service.connecter("ada@example.com", "mot-de-passe-solide")
+
+    assert refus.value.code_http == 401
