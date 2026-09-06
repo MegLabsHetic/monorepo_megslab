@@ -1,0 +1,45 @@
+# Un seul point d'entree. Caddy obtient et renouvelle les certificats tout seul.
+#
+# `DOMAINE` vient de deploy/.env. Pour tester avant que le DNS ait propage,
+# mettre `DOMAINE=<ip-du-vps>.nip.io` : ce service resout n'importe quel
+# sous-domaine vers l'IP qu'il contient.
+
+{
+	# Sans elle, Caddy retombe sur `admin@localhost`, que Let's Encrypt refuse
+	# (« contact email has invalid domain ») : aucun certificat n'est emis et le
+	# site ne repond qu'en HTTP.
+	email {$EMAIL_ACME}
+}
+
+(entetes) {
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		X-Frame-Options "DENY"
+		# Caddy annonce sa version par defaut : inutile a l'utilisateur.
+		-Server
+	}
+}
+
+# --- Production --------------------------------------------------------------
+
+{$DOMAINE} {
+	import entetes
+	encode zstd gzip
+	reverse_proxy front-prod:3000
+}
+
+# La zone DNS porte un `www` historique qui pointe sur l'apex. Sans ce bloc,
+# Caddy ne reconnait pas le nom, ne demande aucun certificat, et le navigateur
+# affiche une erreur TLS plutot qu'une page introuvable — un symptome qui ne
+# designe pas sa cause.
+www.{$DOMAINE} {
+	redir https://{$DOMAINE}{uri} permanent
+}
+
+api.{$DOMAINE} {
+	import entetes
+	encode zstd gzip
+	reverse_proxy back-prod:8000
+}

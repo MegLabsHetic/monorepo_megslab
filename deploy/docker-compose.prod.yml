@@ -1,0 +1,113 @@
+# Pile de production : le produit, derriere une entree unique.
+#
+# Airbyte et l'entrepot ne sont PAS ici, volontairement : ils ont leur propre
+# cycle de vie et doivent pouvoir demarrer et s'arreter sans toucher au produit.
+# Le backend les rejoint par le reseau `kind`, ou ils vivent deja.
+#
+#   docker compose -f deploy/docker-compose.prod.yml --env-file deploy/.env up -d --build
+
+name: megslab
+
+services:
+
+  # --- Entree unique ---------------------------------------------------------
+  caddy:
+    image: caddy:2-alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      DOMAINE: ${DOMAINE:?renseigne DOMAINE dans deploy/.env}
+      EMAIL_ACME: ${EMAIL_ACME:?renseigne EMAIL_ACME dans deploy/.env}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      # Les certificats vivent ici : sans ce volume, chaque redemarrage en
+      # redemande un et Let's Encrypt finit par limiter le domaine.
+      - caddy_data:/data
+      - caddy_config:/config
+    networks: [edge]
+    mem_limit: 256m
+    restart: unless-stopped
+
+  # --- Base applicative ------------------------------------------------------
+  # Rien a voir avec l'entrepot : celle-ci porte les comptes, les espaces, les
+  # questions et le journal. L'entrepot, lui, porte les donnees des clients.
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:?}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?}
+      POSTGRES_DB: megslab_prod
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./init-databases.sh:/docker-entrypoint-initdb.d/init-databases.sh:ro
+    networks: [data]
+    mem_limit: 2g
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # --- Migrations ------------------------------------------------------------
+  # Une fois, avant le backend, et elles le bloquent si elles echouent. Les
+  # faire au demarrage de l'API les rejouerait a chaque replica.
+  migrations:
+    build:
+      context: ../backend
+      dockerfile: Dockerfile.prod
+    command: ["alembic", "upgrade", "head"]
+    env_file: [.env.prod]
+    environment:
+      ENVIRONNEMENT: production
+    networks: [data]
+    depends_on:
+      postgres: {condition: service_healthy}
+    restart: "no"
+
+  # --- Production ------------------------------------------------------------
+  back-prod:
+    build:
+      context: ../backend
+      dockerfile: Dockerfile.prod
+    env_file: [.env.prod]
+    environment:
+      ENVIRONNEMENT: production
+    # `kind` en plus : c'est la que vivent l'entrepot et Airbyte. Le backend les
+    # nomme alors par leur nom de conteneur, pas par une IP de reseau Docker qui
+    # change au prochain redemarrage du cluster.
+    networks: [edge, data, kind]
+    depends_on:
+      postgres: {condition: service_healthy}
+      migrations: {condition: service_completed_successfully}
+    mem_limit: 3g
+    restart: unless-stopped
+
+  front-prod:
+    build:
+      context: ../frontend
+      dockerfile: Dockerfile.prod
+      args:
+        # Fige a la compilation : voir le commentaire dans frontend/Dockerfile.prod
+        NEXT_PUBLIC_API_URL: https://api.${DOMAINE}
+    networks: [edge]
+    depends_on: [back-prod]
+    mem_limit: 512m
+    restart: unless-stopped
+
+networks:
+  # `edge` porte le trafic web, `data` isole la base applicative : le front n'a
+  # aucune route vers PostgreSQL, meme s'il etait compromis.
+  edge:
+  data:
+    internal: true
+  # Cree par Airbyte (abctl). Externe : cette pile ne le possede pas et ne doit
+  # ni le creer ni le detruire.
+  kind:
+    external: true
+
+volumes:
+  pgdata:
+  caddy_data:
+  caddy_config:
