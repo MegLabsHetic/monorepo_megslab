@@ -9,6 +9,10 @@ python-multipart==0.0.20
 SQLAlchemy[asyncio]==2.0.43
 aiosqlite==0.21.0
 alembic==1.13.3
+# Base applicative en Postgres : asyncpg pour l'application, psycopg2 pour
+# Alembic, qui migre en synchrone (voir alembic/env.py).
+asyncpg==0.31.0
+psycopg2-binary==2.9.12
 
 # Moteur analytique + garde-fou SQL
 duckdb==1.5.5
