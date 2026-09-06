@@ -38,6 +38,14 @@ www.{$DOMAINE} {
 	redir https://{$DOMAINE}{uri} permanent
 }
 
+# Airbyte, servi par le meme Caddy plutot que par son port 8000 en clair.
+# L'ingress du cluster n'a aucune regle d'hote : il accepte le Host transmis
+# tel quel, il n'y a donc rien a reconfigurer cote Airbyte pour cette etape.
+airbyte.{$DOMAINE} {
+	import entetes
+	reverse_proxy airbyte-abctl-control-plane:80
+}
+
 api.{$DOMAINE} {
 	import entetes
 	encode zstd gzip

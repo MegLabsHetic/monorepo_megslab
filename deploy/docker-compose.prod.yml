@@ -25,7 +25,9 @@ services:
       # redemande un et Let's Encrypt finit par limiter le domaine.
       - caddy_data:/data
       - caddy_config:/config
-    networks: [edge]
+    # `kind` en plus d'`edge` : c'est le reseau du cluster Airbyte, que Caddy
+    # sert desormais sur son propre sous-domaine.
+    networks: [edge, kind]
     mem_limit: 256m
     restart: unless-stopped
 
