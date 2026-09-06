@@ -12,25 +12,30 @@ from app.core.database import Base
 
 # Import necessaire pour que Base.metadata connaisse les tables a creer.
 from app.models import (  # noqa: F401
+    audit_log,
     conversation,
     dashboard,
     data_source,
     invitation,
     membership,
+    notification,
     organization,
     question,
     user,
     workspace,
     workspace_access,
 )
+from app.services.suggestion_service import SuggestionService
 
 
 @pytest.fixture(autouse=True)
 def _contexte_donnees_oublie():
     """Le cache de l'agent Data est global au processus : chaque test repart a vide."""
     AgentData.oublier_tout()
+    SuggestionService.oublier_tout()
     yield
     AgentData.oublier_tout()
+    SuggestionService.oublier_tout()
 
 
 @pytest.fixture
