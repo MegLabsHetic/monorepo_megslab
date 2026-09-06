@@ -46,6 +46,8 @@ class ReponseComplete:
     reponse: str
     sql: str | None
     resultat: Resultat | None
+    # Ce que l'Analyste dit calculer : la lecture humaine du SQL.
+    explication: str = ""
     analyse: AnalyseSerie | None = None
     graphique: SpecGraphique | None = None
     etapes: list[Etape] = field(default_factory=list)
@@ -97,6 +99,7 @@ class Orchestrateur:
             return ReponseComplete(
                 question=question,
                 reponse=analyse.plan.explication,
+                explication=analyse.plan.explication,
                 sql=None,
                 resultat=None,
                 etapes=etapes,
@@ -127,6 +130,7 @@ class Orchestrateur:
         return ReponseComplete(
             question=question,
             reponse=redaction.contenu.reponse,
+            explication=analyse.plan.explication,
             sql=analyse.sql_execute,
             resultat=analyse.resultat,
             analyse=serie,

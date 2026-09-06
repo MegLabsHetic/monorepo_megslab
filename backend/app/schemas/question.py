@@ -59,11 +59,26 @@ class GraphiqueReponse(BaseModel):
     raison: str = ""
 
 
+class AvisDemande(BaseModel):
+    # 1 : utile, -1 : fausse ou inutile, nul : retirer l'avis.
+    avis: int | None = None
+    commentaire: str = Field(default="", max_length=500)
+
+
+class SuggestionsReponse(BaseModel):
+    questions: list[str]
+    # Zero si servies depuis le cache.
+    cout_dollars: float
+
+
 class QuestionReponse(BaseModel):
     id: str
     conversation_id: str
     texte: str
     reponse: str
+    explication: str = ""
+    avis: int | None = None
+    commentaire_avis: str = ""
     sql: str | None
     resultat: ResultatReponse | None
     analyse: AnalyseReponse | None = None

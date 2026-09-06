@@ -26,8 +26,10 @@ from app.models.organization import Organization
 from app.models.question import Question
 from app.models.user import User
 from app.models.workspace import Workspace
+from app.services.audit_service import AuditService
 from app.services.budget_service import BudgetService
 from app.services.conversation_service import TITRE_PAR_DEFAUT, titre_depuis_question
+from app.services.notification_service import NotificationService
 
 logger = logging.getLogger(__name__)
 
@@ -58,7 +60,8 @@ class ChatService:
         # trop coute, meme si on refuse ensuite d'afficher sa reponse.
         organisation = await self._db.get(Organization, espace.organization_id)
         assert organisation is not None
-        await BudgetService(self._db).verifier_avant_question(organisation)
+        budget = BudgetService(self._db)
+        avant = await budget.verifier_avant_question(organisation)
 
         moteur = self._fabrique_moteur(espace.schema_entrepot)
         precedents = await self._derniers_echanges(conversation)
@@ -70,6 +73,18 @@ class ChatService:
             conversation.titre = titre_depuis_question(texte)
         # Une question ajoutee doit faire remonter le fil, meme sans autre changement.
         conversation.maj_le = datetime.now(UTC)
+        AuditService(self._db).enregistrer(
+            organisation.id,
+            utilisateur,
+            "question.posee",
+            "question",
+            None,
+            texte,
+            {"cout_dollars": round(complete.cout_dollars, 6), "duree_ms": complete.duree_ms},
+            espace.id,
+        )
+        await self._db.flush()
+        await self._alerter_si_seuil_franchi(organisation, avant, budget)
         await self._db.commit()
         await self._db.refresh(question)
         logger.info(
@@ -80,6 +95,32 @@ class ChatService:
             question.duree_ms,
         )
         return question
+
+    async def noter(self, question: Question, avis: int | None, commentaire: str) -> Question:
+        """L'avis de l'utilisateur sur une reponse : la matiere premiere d'un jeu d'evaluation."""
+        if avis not in (None, 1, -1):
+            raise ErreurUtilisateur("Un avis vaut 1, -1 ou rien.", code_http=422)
+        question.avis = avis
+        question.commentaire_avis = commentaire.strip()[:500]
+        await self._db.commit()
+        await self._db.refresh(question)
+        return question
+
+    async def _alerter_si_seuil_franchi(
+        self, organisation: Organization, avant, budget: BudgetService
+    ) -> None:
+        """Une notification aux admins au franchissement du seuil, pas a chaque question."""
+        apres = await budget.etat(organisation)
+        if apres.alerte and not avant.alerte and apres.budget_dollars is not None:
+            await NotificationService(self._db).notifier_admins(
+                organisation.id,
+                "budget",
+                f"Budget de l'assistant : {apres.pourcentage:.0f} % consomme",
+                f"{apres.depense_mois_dollars:.2f} $ depenses "
+                f"sur {apres.budget_dollars:.2f} $ ce mois."
+                + (" Les questions seront refusees a 100 %." if apres.bloquant else ""),
+                "/finops",
+            )
 
     async def contexte(self, espace: Workspace) -> tuple[ContexteDonnees, str]:
         """Ce qui partirait au modele pour cet espace, maintenant."""
@@ -121,6 +162,7 @@ class ChatService:
             user_id=utilisateur.id,
             texte=complete.question,
             reponse=complete.reponse,
+            explication=complete.explication,
             sql=complete.sql,
             nb_lignes=complete.resultat.nb_lignes if complete.resultat else None,
             resultat=extrait_json(complete.resultat) if complete.resultat else None,
