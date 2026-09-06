@@ -51,6 +51,7 @@ class SourceReponse(BaseModel):
     flux_selectionnes: list[str]
     cree_le: datetime
     # Ce que la derniere synchronisation reussie a copie, et quand.
+    planification: str = "manuelle"
     lignes_synchronisees: int | None = None
     derniere_sync_le: datetime | None = None
     # Nul pour une source fichier (aucun objet Airbyte) ou si l'URL publique
@@ -60,6 +61,40 @@ class SourceReponse(BaseModel):
 
 class SynchronisationDemande(BaseModel):
     flux: list[str] = Field(min_length=1)
+
+
+class PlanificationDemande(BaseModel):
+    # manuelle, horaire, quotidienne ou hebdomadaire
+    frequence: str
+
+
+class ColonneSanteReponse(BaseModel):
+    nom: str
+    type: str
+    pourcentage_nuls: float
+    # Sur un echantillon de vingt mille lignes : sert a reperer une categorie ou une constante.
+    distinctes_echantillon: int
+    modalites: list[str] | None
+
+
+class TableSanteReponse(BaseModel):
+    nom: str
+    nb_lignes: int
+    colonnes: list[ColonneSanteReponse]
+    alertes: list[str]
+
+
+class SanteReponse(BaseModel):
+    """Ce que l'entrepot dit de cette source, table par table, et ce qui merite un regard.
+
+    Les alertes sont des regles explicites (table vide, colonne vide, colonne
+    constante, donnees anciennes), pas un score.
+    """
+
+    derniere_sync_le: datetime | None
+    lignes_synchronisees: int | None
+    alertes: list[str]
+    tables: list[TableSanteReponse]
 
 
 class SynchronisationReponse(BaseModel):

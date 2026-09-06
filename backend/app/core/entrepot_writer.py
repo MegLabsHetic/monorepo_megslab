@@ -95,6 +95,30 @@ class EntrepotWriter:
 
         return int(lignes), colonnes
 
+    def supprimer_tables(self, tables: list[str]) -> None:
+        """Fait tomber les tables d'une source dans l'entrepot. Les noms viennent
+        de ce que MegLabs a lui-meme enregistre a la synchronisation, jamais
+        d'une saisie."""
+        connexion = duckdb.connect(":memory:")
+        try:
+            connexion.execute("INSTALL postgres; LOAD postgres;")
+            connexion.execute(f"ATTACH '{self._dsn()}' AS entrepot (TYPE postgres)")
+            for table in tables:
+                nom = table.replace('"', '""')
+                connexion.execute(f'DROP TABLE IF EXISTS entrepot."{self._schema}"."{nom}"')
+        except duckdb.Error as erreur:
+            # Pas de trace complete : le message d'attache cite le DSN, mot de passe compris.
+            logger.error(
+                "Echec de suppression de tables dans %s : %s",
+                self._schema,
+                re.sub(r"password=\S+", "password=***", str(erreur))[:300],
+            )
+            raise ErreurImport(
+                "L'entrepot n'a pas pu supprimer les tables de cette source."
+            ) from None
+        finally:
+            connexion.close()
+
     @staticmethod
     def _expression_de_lecture(fichier: Path, extension: str) -> str:
         """Le chemin est celui d'un fichier que NOUS venons d'ecrire dans un

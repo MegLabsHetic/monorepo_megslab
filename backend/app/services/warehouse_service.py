@@ -7,7 +7,7 @@ bloquerait la boucle d'evenements de tout le serveur pendant ce temps.
 
 import asyncio
 
-from app.core.duckdb_engine import DuckDBEngine, ErreurRequete, Resultat
+from app.core.duckdb_engine import DuckDBEngine, ErreurRequete, Resultat, TableProfil
 from app.core.errors import ErreurUtilisateur
 from app.models.data_source import DataSource
 
@@ -42,6 +42,15 @@ class WarehouseService:
 
     async def profiler(self, table: str) -> list[dict]:
         return await self._dans_un_thread(self._moteur.profiler, self._table_de_cette_source(table))
+
+    async def sante(self) -> list[tuple[str, TableProfil]]:
+        """Le profil de chaque table synchronisee de cette source, sous son nom logique."""
+        selectionnes = self._source.flux_selectionnes or []
+        if not selectionnes:
+            return []
+        noms = {self._source.table_entrepot(flux): flux for flux in selectionnes}
+        profils = await self._dans_un_thread(self._moteur.profil_tables, list(noms))
+        return [(noms[profil.nom], profil) for profil in profils]
 
     def _table_de_cette_source(self, table: str) -> str:
         """Traduit un nom de flux en nom de table d'entrepot, en refusant ce qui

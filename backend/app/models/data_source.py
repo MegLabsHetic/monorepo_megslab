@@ -56,6 +56,11 @@ class DataSource(HorodatageMixin, Base):
     prefixe_entrepot: Mapped[str] = mapped_column(String(32), default="")
     # Ce que la derniere synchronisation reussie a copie, et quand : la
     # fraicheur des donnees et le cout de leur transfert partent de la.
+    # « manuelle », « horaire », « quotidienne » ou « hebdomadaire » : la
+    # planification posee cote Airbyte, pour l'afficher sans l'interroger.
+    planification: Mapped[str] = mapped_column(
+        String(20), default="manuelle", server_default="manuelle"
+    )
     lignes_synchronisees: Mapped[int | None] = mapped_column(Integer, default=None)
     derniere_sync_le: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), default=None)
 
