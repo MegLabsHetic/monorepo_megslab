@@ -1,7 +1,7 @@
 -r requirements.txt
 
-pytest==8.4.2
-pytest-asyncio==1.2.0
+pytest==9.0.3
+pytest-asyncio==1.4.0
 httpx==0.28.1
 ruff==0.13.2
-black==25.9.0
+black==26.3.1
