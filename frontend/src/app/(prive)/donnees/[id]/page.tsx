@@ -4,10 +4,10 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 
-import { BlocAVenir } from "@/components/donnees/blocAVenir";
 import { ExplorateurDonnees } from "@/components/donnees/explorateurDonnees";
 import { ExplorateurSchema } from "@/components/donnees/explorateurSchema";
 import { LogoConnecteur } from "@/components/donnees/logoConnecteur";
+import { PanneauCycleDeVie } from "@/components/donnees/panneauCycleDeVie";
 import { PanneauSynchronisation } from "@/components/donnees/panneauSynchronisation";
 import { PastilleStatut } from "@/components/donnees/pastilleStatut";
 import { useSession, useTraduireErreur } from "@/components/session/contexteSession";
@@ -212,19 +212,33 @@ export default function PageFicheSource() {
         </section>
       )}
 
-      <section aria-labelledby="titre-avenir" className="space-y-4">
-        <h2 id="titre-avenir" className="font-display text-lg font-semibold text-muted">
-          Pas encore disponible
+      <section aria-labelledby="titre-cycle" className="space-y-4">
+        <div>
+          <h2 id="titre-cycle" className="font-display text-lg font-semibold text-text">
+            Cycle de vie
+          </h2>
+          <p className="mt-1 text-sm text-muted">
+            Fraicheur, planification, sante des tables, suppression.
+          </p>
+        </div>
+        <PanneauCycleDeVie source={source} onChange={charger} />
+      </section>
+
+      <section aria-labelledby="titre-questions" className="space-y-3">
+        <h2
+          id="titre-questions"
+          className="font-display text-sm uppercase tracking-widest text-muted"
+        >
+          Interroger ces donnees
         </h2>
-        <div className="grid gap-4 lg:grid-cols-2">
-          <BlocAVenir
-            titre="Historique des synchronisations"
-            description="Seul le job de synchronisation en cours peut etre interroge : les executions passees ne sont pas conservees."
-          />
-          <BlocAVenir
-            titre="Interroger en langage naturel"
-            description="Poser une question et obtenir une reponse verifiee sur ces tables. Cette partie n'est pas encore branchee."
-          />
+        <div className="rounded-xl border border-line bg-surface p-5">
+          <p className="text-sm text-muted">
+            Les tables synchronisees de cette source font partie de ce que l&apos;assistant voit.
+            Posez-lui une question en francais : il ecrit et execute la requete.
+          </p>
+          <Link href="/assistant" className={classesBouton("primaire", "mt-4 w-auto px-5")}>
+            Ouvrir l&apos;assistant
+          </Link>
         </div>
       </section>
     </div>

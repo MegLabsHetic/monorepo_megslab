@@ -229,6 +229,13 @@ class DuckDBEngine:
         with self._session() as connexion:
             return [self._profil_table(connexion, table) for table in self._tables(connexion)]
 
+    def profil_tables(self, noms: list[str]) -> list[TableProfil]:
+        """Le profil des tables demandees seulement, en une ouverture : ce qu'il
+        faut pour juger la sante d'une source sans profiler tout l'espace."""
+        with self._session() as connexion:
+            connues = set(self._tables(connexion))
+            return [self._profil_table(connexion, nom) for nom in noms if nom in connues]
+
     def tailles_tables(self) -> list[tuple[str, int]]:
         """Chaque table de l'espace avec sa taille sur disque, en octets, lue dans Postgres.
 

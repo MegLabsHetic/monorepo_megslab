@@ -240,6 +240,76 @@ async def test_importer_une_source_airbyte_la_reference_avec_son_schema(
     assert [flux["nom"] for flux in source.flux_decouverts] == ["charges"]
 
 
+async def test_planifier_pose_un_cron_quartz_cote_airbyte(
+    db: AsyncSession, airbyte_client_factice: AirbyteClient
+) -> None:
+    espace = await _espace(db)
+    source, _ = await SourceService(db, airbyte_client_factice).connecter_base(
+        espace, "postgres", "Ma base", "hote", 5432, "base", "user", "mdp"
+    )
+    corps_recus: list[dict] = []
+
+    def gestionnaire(requete: httpx.Request) -> httpx.Response:
+        chemin = requete.url.path
+        if chemin.endswith("/applications/token"):
+            return httpx.Response(200, json={"access_token": "j", "expires_in": 3600})
+        if "/connections" in chemin and requete.method == "PATCH":
+            corps_recus.append(__import__("json").loads(requete.content))
+            return httpx.Response(200, json={})
+        if "/connections" in chemin:
+            return httpx.Response(200, json={"connectionId": "connexion-test"})
+        return httpx.Response(200, json={})
+
+    service = SourceService(db, _client_airbyte(gestionnaire))
+    source = await service.planifier(source, espace, "quotidienne")
+
+    assert source.planification == "quotidienne"
+    assert corps_recus[-1] == {
+        "schedule": {"scheduleType": "cron", "cronExpression": "0 0 6 * * ?"}
+    }
+
+    await service.planifier(source, espace, "manuelle")
+    assert corps_recus[-1] == {"schedule": {"scheduleType": "manual"}}
+
+    with pytest.raises(ErreurUtilisateur):
+        await service.planifier(source, espace, "toutes-les-minutes")
+
+
+async def test_supprimer_retire_airbyte_puis_les_tables_puis_la_source(
+    db: AsyncSession, airbyte_client_factice: AirbyteClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    espace = await _espace(db)
+    service = SourceService(db, airbyte_client_factice)
+    source, _ = await service.connecter_base(
+        espace, "postgres", "Ma base", "hote", 5432, "base", "user", "mdp"
+    )
+    await service.synchroniser(source, espace, ["customers"])
+    prefixe = source.prefixe_entrepot
+    supprimees: list[tuple[str, list[str]]] = []
+
+    def faux_supprimer(self, tables):  # noqa: ANN001
+        supprimees.append((self._schema, tables))
+
+    monkeypatch.setattr(source_service.EntrepotWriter, "supprimer_tables", faux_supprimer)
+    appels: list[tuple[str, str]] = []
+
+    def gestionnaire(requete: httpx.Request) -> httpx.Response:
+        chemin = requete.url.path
+        if chemin.endswith("/applications/token"):
+            return httpx.Response(200, json={"access_token": "j", "expires_in": 3600})
+        appels.append((requete.method, chemin))
+        return httpx.Response(204)
+
+    await SourceService(db, _client_airbyte(gestionnaire)).supprimer(source)
+
+    assert appels == [
+        ("DELETE", "/api/public/v1/connections/connexion-test"),
+        ("DELETE", "/api/public/v1/sources/source-test"),
+    ]
+    assert supprimees == [(espace.schema_entrepot, [f"{prefixe}customers"])]
+    assert await service.lister(espace) == []
+
+
 async def test_importer_une_source_deja_connue_est_refuse(
     db: AsyncSession, airbyte_client_factice: AirbyteClient
 ) -> None:

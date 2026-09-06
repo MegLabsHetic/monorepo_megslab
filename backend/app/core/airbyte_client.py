@@ -205,6 +205,23 @@ class AirbyteClient:
                 return job.get("jobId")
         return None
 
+    async def planifier_connexion(self, connection_id: str, cron: str | None) -> None:
+        """Une expression cron (format Quartz, six champs) ou None pour repasser en manuel."""
+        planification = (
+            {"scheduleType": "cron", "cronExpression": cron} if cron else {"scheduleType": "manual"}
+        )
+        await self._appeler(
+            "PATCH",
+            f"/api/public/v1/connections/{connection_id}",
+            json={"schedule": planification},
+        )
+
+    async def supprimer_connexion(self, connection_id: str) -> None:
+        await self._appeler("DELETE", f"/api/public/v1/connections/{connection_id}")
+
+    async def supprimer_source(self, source_id: str) -> None:
+        await self._appeler("DELETE", f"/api/public/v1/sources/{source_id}")
+
     # --- Authentification -----------------------------------------------
 
     async def _appeler(self, methode: str, chemin: str, **kwargs) -> dict:
@@ -216,7 +233,8 @@ class AirbyteClient:
             **kwargs,
         )
         reponse.raise_for_status()
-        return reponse.json()
+        # Une suppression repond 204 sans corps.
+        return reponse.json() if reponse.content else {}
 
     async def _jeton_valide(self) -> str:
         maintenant = datetime.now(UTC)

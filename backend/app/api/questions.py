@@ -1,10 +1,18 @@
 """Routes de l'assistant a l'echelle d'un espace : toutes les questions, le contexte."""
 
+import asyncio
+import csv
+import io
+
 from fastapi import APIRouter, Depends
+from fastapi.responses import Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import AccesEspace, acces_courant
 from app.core.database import get_db
+from app.core.duckdb_engine import DuckDBEngine, ErreurRequete
+from app.core.errors import ErreurUtilisateur
+from app.core.sql_guard import SqlRefuse, valider
 from app.models.question import Question
 from app.schemas.question import (
     AnalyseReponse,
@@ -43,6 +51,41 @@ async def contexte(
         nb_tables=contexte.nb_tables,
         nb_colonnes=contexte.nb_colonnes,
         nb_lignes=contexte.nb_lignes,
+    )
+
+
+@router.get("/{question_id}/export.csv")
+async def exporter(
+    question_id: str,
+    acces: AccesEspace = Depends(acces_courant),
+    db: AsyncSession = Depends(get_db),
+):
+    """Le resultat complet de la requete, rejouee a l'instant, en CSV pour Excel.
+
+    La reponse conservee ne garde qu'un extrait ; l'export re-execute le SQL
+    valide, jusqu'a la limite du moteur (cinq mille lignes).
+    """
+    question = await db.get(Question, question_id)
+    if question is None or question.workspace_id != acces.espace.id:
+        raise ErreurUtilisateur("Question introuvable.", code_http=404)
+    if not question.sql:
+        raise ErreurUtilisateur("Cette reponse n'a pas de requete a exporter.", code_http=422)
+    try:
+        resultat = await asyncio.to_thread(
+            DuckDBEngine(acces.espace.schema_entrepot).executer, valider(question.sql)
+        )
+    except (SqlRefuse, ErreurRequete) as erreur:
+        raise ErreurUtilisateur(erreur.raison, code_http=502) from erreur
+
+    tampon = io.StringIO()
+    ecrivain = csv.writer(tampon, delimiter=";", lineterminator="\n")
+    ecrivain.writerow(resultat.colonnes)
+    for ligne in resultat.lignes:
+        ecrivain.writerow(["" if v is None else v for v in ligne])
+    return Response(
+        content="﻿" + tampon.getvalue(),
+        media_type="text/csv; charset=utf-8",
+        headers={"Content-Disposition": f'attachment; filename="meglabs-{question.id[:8]}.csv"'},
     )
 
 

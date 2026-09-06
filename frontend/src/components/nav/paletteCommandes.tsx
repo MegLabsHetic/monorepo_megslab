@@ -29,6 +29,9 @@ const COMMANDES_FIXES: Commande[] = [
     href: "/donnees/nouvelle",
   },
   { id: "assistant", libelle: "Assistant", detail: "Poser une question", href: "/assistant" },
+  { id: "tableaux", libelle: "Tableaux de bord", detail: "Reponses epinglees", href: "/tableaux" },
+  { id: "finops", libelle: "FinOps", detail: "Couts et budget", href: "/finops" },
+  { id: "equipe", libelle: "Equipe", detail: "Membres et invitations", href: "/equipe" },
 ];
 
 interface Props {

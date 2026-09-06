@@ -10,6 +10,7 @@ from app.core.database import Base
 # Sans cet import, autogenerate ne verrait aucune table.
 from app.models import (  # noqa: F401
     conversation,
+    dashboard,
     data_source,
     invitation,
     membership,

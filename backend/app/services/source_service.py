@@ -11,6 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.agents.data import AgentData
 from app.core.airbyte_client import AirbyteClient, SourceAirbyte, StreamDecouvert
 from app.core.connecteurs import connecteur
+from app.core.entrepot_writer import EntrepotWriter, ErreurImport
 from app.core.errors import ErreurUtilisateur
 from app.models.data_source import DataSource, StatutSource
 from app.models.workspace import Workspace
@@ -25,6 +26,23 @@ DELAI_ENTRE_TENTATIVES_SECONDES = 2
 _ERREUR_AIRBYTE_INJOIGNABLE = (
     "Le service de connexion aux sources de donnees est momentanement indisponible."
 )
+
+# Les frequences proposees, en cron Quartz (six champs, comme Airbyte l'attend).
+# Quotidien et hebdomadaire a 6 h UTC : les donnees sont pretes au debut de la journee.
+PLANIFICATIONS: dict[str, str | None] = {
+    "manuelle": None,
+    "horaire": "0 0 * * * ?",
+    "quotidienne": "0 0 6 * * ?",
+    "hebdomadaire": "0 0 6 ? * MON",
+}
+
+
+async def _ignorer_404(appel) -> None:
+    try:
+        await appel
+    except httpx.HTTPStatusError as erreur:
+        if erreur.response.status_code != 404:
+            raise
 
 
 class SourceService:
@@ -159,6 +177,62 @@ class SourceService:
         source.flux_selectionnes = noms_flux
         await self._db.commit()
         return job_id
+
+    async def planifier(self, source: DataSource, espace: Workspace, frequence: str) -> DataSource:
+        """Pose la planification cote Airbyte : c'est lui qui declenche ensuite les syncs."""
+        if frequence not in PLANIFICATIONS:
+            raise ErreurUtilisateur("Cette frequence n'existe pas.", code_http=422)
+        if source.airbyte_source_id is None:
+            raise ErreurUtilisateur(
+                "Un fichier depose ne se synchronise pas : deposez-en une nouvelle version.",
+                code_http=422,
+            )
+        await self._garantir_connexion(source, espace)
+        try:
+            await self._airbyte_client.planifier_connexion(
+                source.airbyte_connection_id, PLANIFICATIONS[frequence]
+            )
+        except httpx.HTTPError as erreur:
+            logger.exception("Echec de planification Airbyte pour la source %s", source.id)
+            raise ErreurUtilisateur(_ERREUR_AIRBYTE_INJOIGNABLE, code_http=503) from erreur
+        source.planification = frequence
+        await self._db.commit()
+        await self._db.refresh(source)
+        return source
+
+    async def supprimer(self, source: DataSource) -> None:
+        """Retire la source de partout, dans l'ordre : Airbyte, l'entrepot, MegLabs.
+
+        Si Airbyte ne repond pas, on s'arrete la : une source a moitie
+        supprimee (tables tombees, connexion Airbyte encore active) serait
+        pire qu'une source encore entiere.
+        """
+        if source.airbyte_source_id is not None:
+            await self._supprimer_dans_airbyte(source)
+        tables = [source.table_entrepot(flux) for flux in source.flux_selectionnes or []]
+        if tables:
+            try:
+                await asyncio.to_thread(
+                    EntrepotWriter(source.schema_entrepot).supprimer_tables, tables
+                )
+            except ErreurImport as erreur:
+                raise ErreurUtilisateur(erreur.raison, code_http=502) from erreur
+        await self._db.delete(source)
+        await self._db.commit()
+        AgentData.oublier(source.schema_entrepot)
+        logger.info("Source %s supprimee (%s table(s) retiree(s))", source.id, len(tables))
+
+    async def _supprimer_dans_airbyte(self, source: DataSource) -> None:
+        """Connexion puis source. Un 404 signifie « deja parti » : on continue."""
+        try:
+            if source.airbyte_connection_id:
+                await _ignorer_404(
+                    self._airbyte_client.supprimer_connexion(source.airbyte_connection_id)
+                )
+            await _ignorer_404(self._airbyte_client.supprimer_source(source.airbyte_source_id))
+        except httpx.HTTPError as erreur:
+            logger.exception("Echec de suppression Airbyte pour la source %s", source.id)
+            raise ErreurUtilisateur(_ERREUR_AIRBYTE_INJOIGNABLE, code_http=503) from erreur
 
     async def _garantir_connexion(self, source: DataSource, espace: Workspace) -> None:
         """Cree la connexion si elle manque, et l'enregistre aussitot.

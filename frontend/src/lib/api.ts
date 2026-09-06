@@ -126,6 +126,8 @@ export interface Source {
   flux_disponibles: Flux[];
   flux_selectionnes: string[];
   cree_le: string;
+  /** manuelle, horaire, quotidienne ou hebdomadaire : ce qu'Airbyte declenche seul. */
+  planification: string;
   /** Ce que la derniere synchronisation reussie a copie, et quand. */
   lignes_synchronisees: number | null;
   derniere_sync_le: string | null;
@@ -262,6 +264,68 @@ export interface ContexteAssistant {
   nb_tables: number;
   nb_colonnes: number;
   nb_lignes: number;
+}
+
+// --- Tableaux de bord ------------------------------------------------------------
+
+export interface Dashboard {
+  id: string;
+  nom: string;
+  nb_widgets: number;
+  auteur: string;
+  auteur_id: string;
+  cree_le: string;
+  maj_le: string;
+}
+
+export interface Widget {
+  id: string;
+  titre: string;
+  sql: string;
+  question_id: string | null;
+  conversation_id: string | null;
+  position: number;
+  graphique: SpecGraphique | null;
+  /** Le resultat tel que la requete vient de le rendre ; nul si elle a echoue. */
+  resultat: Apercu | null;
+  analyse: AnalyseSerie | null;
+  erreur: string | null;
+}
+
+export interface DashboardDetail {
+  id: string;
+  nom: string;
+  auteur: string;
+  auteur_id: string;
+  cree_le: string;
+  maj_le: string;
+  widgets: Widget[];
+  /** Le moment ou les requetes ont ete rejouees. */
+  rejoue_le: string;
+}
+
+// --- Sante d'une source ------------------------------------------------------------
+
+export interface ColonneSante {
+  nom: string;
+  type: string;
+  pourcentage_nuls: number;
+  distinctes_echantillon: number;
+  modalites: string[] | null;
+}
+
+export interface TableSante {
+  nom: string;
+  nb_lignes: number;
+  colonnes: ColonneSante[];
+  alertes: string[];
+}
+
+export interface SanteSource {
+  derniere_sync_le: string | null;
+  lignes_synchronisees: number | null;
+  alertes: string[];
+  tables: TableSante[];
 }
 
 // --- FinOps ----------------------------------------------------------------------
@@ -547,6 +611,94 @@ export const api = {
       `${espace(espaceId)}/sources/${id}/tables/${encodeURIComponent(table)}/profil`,
       { headers: entete(jeton), delaiMax: DELAI_ENTREPOT }
     ),
+
+  // --- Sources : planification, sante, suppression ---
+  planifierSource: (jeton: string, espaceId: string, id: string, frequence: string) =>
+    requete<Source>(`${espace(espaceId)}/sources/${id}/planification`, {
+      ...json(jeton, "PUT", { frequence }),
+      delaiMax: DELAI_SYNCHRONISATION,
+    }),
+
+  santeSource: (jeton: string, espaceId: string, id: string) =>
+    requete<SanteSource>(`${espace(espaceId)}/sources/${id}/sante`, {
+      headers: entete(jeton),
+      delaiMax: DELAI_ENTREPOT,
+    }),
+
+  // Retire la source d'Airbyte et fait tomber ses tables : plusieurs appels reseau.
+  supprimerSource: (jeton: string, espaceId: string, id: string) =>
+    requete<void>(`${espace(espaceId)}/sources/${id}`, {
+      ...json(jeton, "DELETE"),
+      delaiMax: DELAI_CONNEXION_SOURCE,
+    }),
+
+  // --- Tableaux de bord ---
+  dashboards: (jeton: string, espaceId: string) =>
+    requete<Dashboard[]>(`${espace(espaceId)}/dashboards`, { headers: entete(jeton) }),
+
+  creerDashboard: (jeton: string, espaceId: string, nom: string) =>
+    requete<Dashboard>(`${espace(espaceId)}/dashboards`, json(jeton, "POST", { nom })),
+
+  // Chaque widget rejoue sa requete sur l'entrepot : quelques secondes.
+  detailDashboard: (jeton: string, espaceId: string, id: string) =>
+    requete<DashboardDetail>(`${espace(espaceId)}/dashboards/${id}`, {
+      headers: entete(jeton),
+      delaiMax: DELAI_ENTREPOT,
+    }),
+
+  renommerDashboard: (jeton: string, espaceId: string, id: string, nom: string) =>
+    requete<Dashboard>(`${espace(espaceId)}/dashboards/${id}`, json(jeton, "PATCH", { nom })),
+
+  supprimerDashboard: (jeton: string, espaceId: string, id: string) =>
+    requete<void>(`${espace(espaceId)}/dashboards/${id}`, json(jeton, "DELETE")),
+
+  epingler: (
+    jeton: string,
+    espaceId: string,
+    dashboardId: string,
+    questionId: string,
+    titre?: string
+  ) =>
+    requete<Widget>(
+      `${espace(espaceId)}/dashboards/${dashboardId}/widgets`,
+      json(jeton, "POST", { question_id: questionId, titre })
+    ),
+
+  modifierWidget: (
+    jeton: string,
+    espaceId: string,
+    dashboardId: string,
+    widgetId: string,
+    modification: { titre?: string; position?: number }
+  ) =>
+    requete<Widget>(
+      `${espace(espaceId)}/dashboards/${dashboardId}/widgets/${widgetId}`,
+      json(jeton, "PATCH", modification)
+    ),
+
+  retirerWidget: (jeton: string, espaceId: string, dashboardId: string, widgetId: string) =>
+    requete<void>(
+      `${espace(espaceId)}/dashboards/${dashboardId}/widgets/${widgetId}`,
+      json(jeton, "DELETE")
+    ),
+
+  exporterQuestionCsv: async (
+    jeton: string,
+    espaceId: string,
+    questionId: string
+  ): Promise<Blob> => {
+    const reponse = await fetch(
+      `${URL_BASE}${espace(espaceId)}/questions/${questionId}/export.csv`,
+      {
+        headers: entete(jeton),
+      }
+    );
+    if (!reponse.ok) {
+      const corps = await reponse.json().catch(() => null);
+      throw new ErreurApi(corps?.detail ?? "Export impossible.", reponse.status);
+    }
+    return reponse.blob();
+  },
 
   // --- Assistant ---
   conversations: (jeton: string, espaceId: string) =>
