@@ -1,4 +1,4 @@
-# MegLabs
+# MegsLab
 
 Plateforme d'analyse de donnees pilotee en francais. On connecte ses sources
 (bases de donnees, fichiers, connecteurs Airbyte), on pose ses questions en

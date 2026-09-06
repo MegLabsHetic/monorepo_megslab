@@ -23,7 +23,7 @@ DELAI_APPEL_SECONDES = 120
 
 @dataclass(frozen=True)
 class SourceAirbyte:
-    """Une source telle qu'Airbyte la connait, qu'elle vienne de MegLabs ou non."""
+    """Une source telle qu'Airbyte la connait, qu'elle vienne de MegsLab ou non."""
 
     id: str
     nom: str
@@ -77,7 +77,7 @@ class AirbyteClient:
         return corps["sourceId"]
 
     async def lister_sources(self, workspace_id: str) -> list[SourceAirbyte]:
-        """Toutes les sources d'un workspace, y compris celles creees hors MegLabs.
+        """Toutes les sources d'un workspace, y compris celles creees hors MegsLab.
 
         C'est ce qui permet d'adopter une source configuree directement dans
         Airbyte — et donc d'atteindre n'importe lequel de ses connecteurs, meme

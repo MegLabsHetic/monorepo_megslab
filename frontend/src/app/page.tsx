@@ -12,7 +12,7 @@ const ETAPES = [
     numero: "01",
     titre: "Connecter",
     description:
-      "Une base existante ou un fichier depose. MegLabs teste la connexion et lit le schema avant de copier quoi que ce soit.",
+      "Une base existante ou un fichier depose. MegsLab teste la connexion et lit le schema avant de copier quoi que ce soit.",
   },
   {
     numero: "02",
@@ -43,7 +43,7 @@ const GARANTIES = [
   {
     titre: "Aucun identifiant duplique",
     description:
-      "Les mots de passe de vos bases restent chiffres cote moteur d'ingestion. MegLabs ne les recopie jamais dans sa propre base.",
+      "Les mots de passe de vos bases restent chiffres cote moteur d'ingestion. MegsLab ne les recopie jamais dans sa propre base.",
   },
 ];
 
@@ -51,7 +51,9 @@ export default function Accueil() {
   return (
     <main className="min-h-screen bg-bg text-text">
       <header className="mx-auto flex max-w-6xl items-center justify-between px-6 py-5">
-        <Logo className="h-9" />
+        <Link href="/" aria-label="Accueil MegsLab" className="rounded-lg">
+          <Logo className="h-10" />
+        </Link>
         <nav className="flex items-center gap-2">
           <SelecteurTheme />
           <Link
@@ -175,7 +177,7 @@ export default function Accueil() {
       </section>
 
       <footer className="mx-auto flex max-w-6xl flex-col items-center gap-6 px-6 py-12 text-center">
-        <Logo className="h-8" />
+        <Logo className="h-10" />
         <a
           href="https://airbyte.com"
           target="_blank"
@@ -185,7 +187,7 @@ export default function Accueil() {
           <span className="text-xs text-zinc-500">Connecteurs propulses par</span>
           <Image src="/logos/airbyte.svg" alt="Airbyte" width={68} height={27} />
         </a>
-        <p className="text-xs text-muted">MegLabs — projet HETIC</p>
+        <p className="text-xs text-muted">MegsLab — projet HETIC</p>
       </footer>
     </main>
   );

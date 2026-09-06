@@ -147,7 +147,7 @@ export function FormulaireConnexionPostgres({ onSoumettre, erreur }: Props) {
       </div>
 
       <p className="text-xs text-muted">
-        Les identifiants sont transmis au connecteur Airbyte et ne sont pas conserves par MegLabs.
+        Les identifiants sont transmis au connecteur Airbyte et ne sont pas conserves par MegsLab.
       </p>
 
       {erreur && <Alert>{erreur}</Alert>}

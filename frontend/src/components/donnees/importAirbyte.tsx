@@ -19,7 +19,7 @@ interface Props {
  *
  * C'est ce qui rend accessible n'importe lequel des connecteurs Airbyte, y
  * compris ceux que notre formulaire ne sait pas remplir : les identifiants
- * restent chez Airbyte, MegLabs ne fait que referencer la source et decouvrir
+ * restent chez Airbyte, MegsLab ne fait que referencer la source et decouvrir
  * son schema.
  */
 export function ImportAirbyte({ lienAirbyte, onImportee }: Props) {
@@ -62,7 +62,7 @@ export function ImportAirbyte({ lienAirbyte, onImportee }: Props) {
     <div className="space-y-5">
       <p className="text-sm text-text-doux">
         Configurez n&apos;importe quel connecteur dans votre espace Airbyte, puis importez-le ici.
-        Ses identifiants restent chez Airbyte : MegLabs ne fait que le referencer et lire son
+        Ses identifiants restent chez Airbyte : MegsLab ne fait que le referencer et lire son
         schema.
       </p>
 

@@ -72,11 +72,11 @@ export function BarreNavigation() {
       <div className="mx-auto flex max-w-6xl items-center gap-4 px-6 py-3">
         <Link
           href="/dashboard"
-          aria-label="MegLabs, tableau de bord"
+          aria-label="MegsLab, tableau de bord"
           className="rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-marque"
         >
-          <Logo className="hidden h-8 sm:block" />
-          <Logo className="h-8 sm:hidden" monogramme />
+          <Logo className="hidden h-9 sm:block" />
+          <Logo className="h-9 sm:hidden" monogramme />
         </Link>
         <SelecteurEspace />
         <nav aria-label="Navigation principale" className="hidden gap-1 md:flex">

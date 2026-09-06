@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 
+import { Logo } from "@/components/marque/logo";
 import { useSession } from "@/components/session/contexteSession";
 import { api } from "@/lib/api";
 import { cn } from "@/lib/utils";
@@ -121,17 +122,20 @@ export function PaletteCommandes({ ouverte, onFermer }: Props) {
         onClick={(evenement) => evenement.stopPropagation()}
         onKeyDown={auClavier}
       >
-        <input
-          ref={champ}
-          value={recherche}
-          onChange={(evenement) => {
-            setRecherche(evenement.target.value);
-            setSurligne(0);
-          }}
-          placeholder="Aller a..."
-          aria-label="Rechercher une commande"
-          className="h-12 w-full border-b border-line bg-transparent px-4 text-sm text-text placeholder:text-muted focus:outline-none"
-        />
+        <div className="flex items-center gap-3 border-b border-line px-4">
+          <Logo className="h-6" monogramme />
+          <input
+            ref={champ}
+            value={recherche}
+            onChange={(evenement) => {
+              setRecherche(evenement.target.value);
+              setSurligne(0);
+            }}
+            placeholder="Aller a..."
+            aria-label="Rechercher une commande"
+            className="h-12 min-w-0 flex-1 bg-transparent text-sm text-text placeholder:text-muted focus:outline-none"
+          />
+        </div>
         <ul className="max-h-72 overflow-y-auto py-1">
           {resultats.length === 0 && (
             <li className="px-4 py-3 text-sm text-muted">Aucun resultat.</li>

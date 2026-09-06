@@ -47,7 +47,7 @@ export function EcranMotDePasseTemporaire({ jeton, onChange }: Props) {
 
   return (
     <main className="fond-lueur flex min-h-screen flex-col items-center justify-center gap-8 px-4">
-      <Logo className="h-9" />
+      <Logo className="h-10" />
       <Card className="max-w-sm">
         <h1 className="mb-1 font-display text-2xl font-semibold tracking-tight text-text">
           Choisissez votre mot de passe

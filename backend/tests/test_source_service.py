@@ -173,7 +173,7 @@ async def test_statut_sync_marque_la_source_prete_quand_le_job_reussit(
 async def test_seules_les_sources_inconnues_sont_proposees_a_l_import(
     db: AsyncSession, airbyte_client_factice: AirbyteClient
 ) -> None:
-    """Une source deja referencee par MegLabs ne doit pas etre proposee deux fois."""
+    """Une source deja referencee par MegsLab ne doit pas etre proposee deux fois."""
     espace = await _espace(db)
     service = SourceService(db, airbyte_client_factice)
     await service.connecter_base(

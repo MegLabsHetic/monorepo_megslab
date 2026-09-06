@@ -23,7 +23,7 @@ from app.core.errors import ErreurUtilisateur
 def create_app() -> FastAPI:
     """Construit l'application FastAPI, prete a etre servie par uvicorn."""
     reglages = get_settings()
-    app = FastAPI(title="MegLabs API")
+    app = FastAPI(title="MegsLab API")
 
     app.add_middleware(
         CORSMiddleware,

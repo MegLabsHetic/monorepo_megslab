@@ -135,7 +135,7 @@ export interface Source {
   lien_airbyte: string | null;
 }
 
-/** Une source presente dans l'espace Airbyte, que MegLabs ne reference pas encore. */
+/** Une source presente dans l'espace Airbyte, que MegsLab ne reference pas encore. */
 export interface SourceImportable {
   id: string;
   nom: string;

@@ -7,12 +7,12 @@ import { Card } from "@/components/ui/card";
 export default function PageInscription() {
   return (
     <main className="fond-lueur flex min-h-screen flex-col items-center justify-center gap-8 px-4">
-      <Link href="/" aria-label="Accueil MegLabs">
-        <Logo className="h-9" />
+      <Link href="/" aria-label="Accueil MegsLab">
+        <Logo className="h-10" />
       </Link>
       <Card className="max-w-sm">
         <h1 className="mb-1 font-display text-2xl font-semibold tracking-tight text-text">
-          Bienvenue dans MegLabs
+          Bienvenue dans MegsLab
         </h1>
         <p className="mb-6 text-sm text-muted">
           Votre espace est cree automatiquement avec votre compte.

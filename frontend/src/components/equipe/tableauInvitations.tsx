@@ -21,7 +21,7 @@ export function lienInvitation(invitation: Invitation): string {
 
 /**
  * Les invitations en attente, avec leur lien a transmettre. Aucun e-mail ne
- * part de MegLabs : c'est l'admin qui envoie le lien, par le canal qu'il veut.
+ * part de MegsLab : c'est l'admin qui envoie le lien, par le canal qu'il veut.
  */
 export function TableauInvitations({ invitations, onChange }: Props) {
   const { jeton, espaces } = useSession();
@@ -62,7 +62,7 @@ export function TableauInvitations({ invitations, onChange }: Props) {
       {invitations.length === 0 ? (
         <p className="rounded-xl border border-dashed border-line p-4 text-sm text-muted">
           Aucune invitation en attente. Le formulaire ci-dessous en genere une : le lien est a
-          transmettre vous-meme, MegLabs n&apos;envoie pas d&apos;e-mail.
+          transmettre vous-meme, MegsLab n&apos;envoie pas d&apos;e-mail.
         </p>
       ) : (
         <ul className="divide-y divide-line overflow-hidden rounded-xl border border-line bg-surface">

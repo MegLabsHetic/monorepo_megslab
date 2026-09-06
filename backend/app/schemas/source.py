@@ -12,7 +12,7 @@ class TypeConnecteurReponse(BaseModel):
 
 
 class SourceImportableReponse(BaseModel):
-    """Une source presente dans Airbyte mais pas encore referencee par MegLabs."""
+    """Une source presente dans Airbyte mais pas encore referencee par MegsLab."""
 
     id: str
     nom: str

@@ -1,4 +1,4 @@
-"""Les connecteurs de bases de donnees que MegLabs sait configurer.
+"""Les connecteurs de bases de donnees que MegsLab sait configurer.
 
 Chaque entree traduit un formulaire d'identifiants (hote, port, base, compte)
 en configuration Airbyte. Ces formes n'ont pas ete devinees : elles ont ete

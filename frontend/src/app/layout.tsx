@@ -7,8 +7,23 @@ const inter = Inter({ variable: "--font-body", subsets: ["latin"] });
 const jetbrainsMono = JetBrains_Mono({ variable: "--font-mono", subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "MegLabs",
+  title: "MegsLab",
   description: "Vos donnees, comprises. Connectez vos sources, explorez-les, decidez.",
+  applicationName: "MegsLab",
+  icons: {
+    icon: [{ url: "/marque/logo.png", type: "image/png" }],
+    apple: [{ url: "/marque/logo.png", type: "image/png" }],
+    shortcut: "/marque/logo.png",
+  },
+  appleWebApp: {
+    title: "MegsLab",
+    capable: true,
+  },
+  openGraph: {
+    title: "MegsLab",
+    description: "Vos donnees, comprises. Connectez vos sources, explorez-les, decidez.",
+    images: ["/marque/logo.png"],
+  },
 };
 
 /**

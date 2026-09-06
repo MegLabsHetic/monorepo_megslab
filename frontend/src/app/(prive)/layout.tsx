@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { ReactNode, useCallback, useEffect, useState } from "react";
 
 import { EcranMotDePasseTemporaire } from "@/components/compte/ecranMotDePasseTemporaire";
+import { Logo } from "@/components/marque/logo";
 import { BarreNavigation } from "@/components/nav/barreNavigation";
 import { FournisseurSession } from "@/components/session/contexteSession";
 import { Button } from "@/components/ui/button";
@@ -125,7 +126,8 @@ function EcranMessage({
   children: ReactNode;
 }) {
   return (
-    <main className="flex min-h-screen items-center justify-center bg-bg px-4">
+    <main className="flex min-h-screen flex-col items-center justify-center gap-8 bg-bg px-4">
+      <Logo className="h-10" />
       <Card className="max-w-sm text-center">
         <h1 className="mb-2 font-display text-lg font-semibold text-text">{titre}</h1>
         <p className="mb-6 text-sm text-muted">{texte}</p>
@@ -140,7 +142,7 @@ function EcranVerification() {
     <div className="min-h-screen bg-bg">
       <div className="border-b border-line px-6 py-3">
         <div className="mx-auto flex max-w-6xl items-center justify-between">
-          <Squelette className="h-5 w-24" />
+          <Logo className="h-9" />
           <Squelette className="h-5 w-32" />
         </div>
       </div>

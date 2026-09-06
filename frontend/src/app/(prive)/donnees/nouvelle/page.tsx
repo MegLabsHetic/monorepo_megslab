@@ -91,11 +91,11 @@ export default function PageNouvelleSource() {
         </h1>
         <p className="mt-2 text-sm text-muted">
           {mode === "postgres"
-            ? "MegLabs teste la connexion, lit le schema de votre base, puis copie les tables que vous choisissez dans votre entrepot."
+            ? "MegsLab teste la connexion, lit le schema de votre base, puis copie les tables que vous choisissez dans votre entrepot."
             : mode === "fichier"
               ? "Le fichier est lu, type, et ecrit directement dans votre entrepot. Aucun connecteur n'est necessaire."
               : mode === "airbyte"
-                ? "Reprenez une source configuree dans votre espace Airbyte : MegLabs la reference et la gere ensuite comme les autres."
+                ? "Reprenez une source configuree dans votre espace Airbyte : MegsLab la reference et la gere ensuite comme les autres."
                 : "Trois facons d'alimenter votre entrepot."}
         </p>
       </header>
@@ -104,7 +104,7 @@ export default function PageNouvelleSource() {
         <div className="grid gap-4 lg:grid-cols-3">
           <ChoixSource
             titre="Connecter une base"
-            description="PostgreSQL, MySQL ou SQL Server. MegLabs lit le schema et copie les tables choisies."
+            description="PostgreSQL, MySQL ou SQL Server. MegsLab lit le schema et copie les tables choisies."
             onClick={() => setMode("postgres")}
           />
           <ChoixSource
@@ -222,7 +222,7 @@ export default function PageNouvelleSource() {
             Un connecteur qui n&apos;est pas dans la liste ?
           </h2>
           <p className="mt-2 text-sm text-text-doux">
-            MegLabs s&apos;appuie sur Airbyte, qui en propose plusieurs centaines. Configurez-y la
+            MegsLab s&apos;appuie sur Airbyte, qui en propose plusieurs centaines. Configurez-y la
             source, puis reprenez-la ici : elle se gerera ensuite comme les autres.
           </p>
           <div className="mt-4 flex flex-wrap gap-3">

@@ -15,7 +15,7 @@ import { calculerTotaux, formaterNombre } from "@/lib/sources";
 
 const ETAPES = [
   "Vous saisissez les identifiants de votre base PostgreSQL.",
-  "MegLabs teste la connexion et lit la liste de vos tables.",
+  "MegsLab teste la connexion et lit la liste de vos tables.",
   "Vous choisissez les tables a copier dans votre entrepot.",
 ];
 
@@ -76,7 +76,7 @@ export default function PageCatalogue() {
       {sources && sources.length === 0 && (
         <EtatVide
           titre="Aucune source connectee"
-          description="Connectez votre premiere base de donnees pour que MegLabs en decouvre le schema et copie les tables qui vous interessent dans votre entrepot."
+          description="Connectez votre premiere base de donnees pour que MegsLab en decouvre le schema et copie les tables qui vous interessent dans votre entrepot."
           action={
             <Link href="/donnees/nouvelle" className={classesBouton("primaire", "w-auto px-6")}>
               Connecter une source PostgreSQL

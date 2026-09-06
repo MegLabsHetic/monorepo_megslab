@@ -41,7 +41,7 @@ export function DecouverteEnCours({ nom, hote }: Props) {
       <BarreActivite />
 
       <p className="text-sm text-muted">
-        MegLabs contacte <span className="font-mono text-text">{hote}</span>. Cette etape prend une
+        MegsLab contacte <span className="font-mono text-text">{hote}</span>. Cette etape prend une
         quinzaine de secondes : un conteneur dedie est demarre pour tester la connexion.
       </p>
 

@@ -159,7 +159,7 @@ class EntrepotWriter:
 
     def supprimer_tables(self, tables: list[str]) -> None:
         """Fait tomber les tables d'une source dans l'entrepot. Les noms viennent
-        de ce que MegLabs a lui-meme enregistre a la synchronisation, jamais
+        de ce que MegsLab a lui-meme enregistre a la synchronisation, jamais
         d'une saisie."""
         connexion = duckdb.connect(":memory:")
         try:

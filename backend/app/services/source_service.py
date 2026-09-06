@@ -103,7 +103,7 @@ class SourceService:
         return source, flux
 
     async def sources_airbyte_importables(self, espace: Workspace) -> list[SourceAirbyte]:
-        """Les sources presentes dans le workspace Airbyte mais inconnues de MegLabs.
+        """Les sources presentes dans le workspace Airbyte mais inconnues de MegsLab.
 
         Typiquement : celles configurees directement dans Airbyte, pour un
         connecteur que notre formulaire ne propose pas.
@@ -120,7 +120,7 @@ class SourceService:
     async def importer_depuis_airbyte(
         self, espace: Workspace, airbyte_source_id: str
     ) -> DataSource:
-        """Adopte une source existante d'Airbyte : MegLabs la reference et la gere ensuite.
+        """Adopte une source existante d'Airbyte : MegsLab la reference et la gere ensuite.
 
         Aucun identifiant n'est demande : ils sont deja chez Airbyte, chiffres.
         On ne fait que decouvrir son schema et l'enregistrer.
@@ -210,7 +210,7 @@ class SourceService:
         return source
 
     async def supprimer(self, source: DataSource) -> None:
-        """Retire la source de partout, dans l'ordre : Airbyte, l'entrepot, MegLabs.
+        """Retire la source de partout, dans l'ordre : Airbyte, l'entrepot, MegsLab.
 
         Si Airbyte ne repond pas, on s'arrete la : une source a moitie
         supprimee (tables tombees, connexion Airbyte encore active) serait

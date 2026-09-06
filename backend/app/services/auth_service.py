@@ -35,7 +35,7 @@ class AuthService:
         """Cree un compte, son organisation et son premier espace, dans une seule
         transaction.
 
-        Un utilisateur sans espace ne peut rien faire d'utile dans MegLabs
+        Un utilisateur sans espace ne peut rien faire d'utile dans MegsLab
         (aucune source n'existe hors d'un espace) : tout nait ensemble, ou rien.
         Si Airbyte ne repond pas, on annule tout plutot que de laisser un compte
         a moitie forme.

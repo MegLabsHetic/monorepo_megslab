@@ -12,7 +12,7 @@ import { cn } from "@/lib/utils";
  * Salesforce alors que non serait une promesse qu'on ne pourrait pas tenir en
  * demonstration.
  *
- * Les icones proviennent du depot Airbyte, dont MegLabs utilise les
+ * Les icones proviennent du depot Airbyte, dont MegsLab utilise les
  * connecteurs.
  */
 
@@ -77,8 +77,8 @@ export function MurConnecteurs() {
       </div>
 
       <p className="mt-3 max-w-2xl text-text-doux">
-        Quatre sources se branchent directement depuis MegLabs, en remplissant un formulaire. Les
-        autres se configurent dans Airbyte — sur lequel MegLabs s&apos;appuie — puis
+        Quatre sources se branchent directement depuis MegsLab, en remplissant un formulaire. Les
+        autres se configurent dans Airbyte — sur lequel MegsLab s&apos;appuie — puis
         s&apos;importent en un clic : elles se gerent ensuite exactement comme les premieres.
       </p>
 

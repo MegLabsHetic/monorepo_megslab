@@ -97,7 +97,7 @@ export function PanneauCycleDeVie({ source, onChange }: Props) {
                 }.`
               : estFichier
                 ? "Un fichier depose est copie une fois : deposez-en une nouvelle version pour le rafraichir."
-                : "Aucune synchronisation reussie enregistree depuis que MegLabs les trace."}
+                : "Aucune synchronisation reussie enregistree depuis que MegsLab les trace."}
           </p>
         </div>
 

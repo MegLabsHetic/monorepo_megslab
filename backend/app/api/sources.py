@@ -104,7 +104,7 @@ async def lister_importables(
     db: AsyncSession = Depends(get_db),
     airbyte_client: AirbyteClient = Depends(get_airbyte_client),
 ):
-    """Les sources de l'espace Airbyte que MegLabs ne reference pas encore."""
+    """Les sources de l'espace Airbyte que MegsLab ne reference pas encore."""
     sources = await SourceService(db, airbyte_client).sources_airbyte_importables(acces.espace)
     return [SourceImportableReponse(id=s.id, nom=s.nom, type_source=s.type_source) for s in sources]
 
