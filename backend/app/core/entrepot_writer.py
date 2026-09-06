@@ -18,6 +18,7 @@ from pathlib import Path
 import duckdb
 
 from app.core.config import get_settings
+from app.core.duckdb_engine import PREFIXE_TECHNIQUE
 
 logger = logging.getLogger(__name__)
 
@@ -127,18 +128,23 @@ class EntrepotWriter:
                 cible = f'"{self._schema}"."{prefixe}{table}"'
                 _executer_dans_postgres(connexion, f"DROP TABLE IF EXISTS {cible}")
                 _executer_dans_postgres(connexion, f"CREATE TABLE {cible} AS TABLE {origine}")
-            # Le catalogue attache ne voit pas les tables creees derriere son dos.
-            connexion.execute("CALL postgres_clear_cache()")
-            for table in tables:
+                # Les colonnes sont lues sur la table SOURCE, pas sur la copie :
+                # « CREATE TABLE ... AS TABLE » les reproduit a l'identique, et le
+                # catalogue attache ne voit pas les tables creees derriere son dos.
+                # Les colonnes techniques d'Airbyte ne sont pas du metier : une
+                # source connectee ne les montre pas non plus.
                 colonnes[table] = [
                     nom
                     for (nom,) in connexion.execute(
                         "select column_name from duckdb_columns() "
                         "where database_name = 'entrepot' and schema_name = ? and table_name = ? "
                         "order by column_index",
-                        [self._schema, f"{prefixe}{table}"],
+                        [schema_source, table],
                     ).fetchall()
+                    if not nom.startswith(PREFIXE_TECHNIQUE)
                 ]
+                if not colonnes[table]:
+                    raise ErreurImport(f"La table « {table} » est introuvable dans le jeu source.")
         except duckdb.Error as erreur:
             logger.error(
                 "Echec de copie du schema %s vers %s : %s",
