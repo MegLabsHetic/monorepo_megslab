@@ -14,6 +14,7 @@ from app.api.glossaire import router as glossaire_router
 from app.api.journal import router as journal_router
 from app.api.notifications import router as notifications_router
 from app.api.organisation import router as organisation_router
+from app.api.partage import router as partage_router
 from app.api.plateforme import router as plateforme_router
 from app.api.questions import router as questions_router
 from app.api.sources import router as sources_router
@@ -57,6 +58,7 @@ def create_app() -> FastAPI:
     app.include_router(plateforme_router)
     app.include_router(configuration_router)
     app.include_router(glossaire_router)
+    app.include_router(partage_router)
 
     return app
 

@@ -19,6 +19,7 @@ if TYPE_CHECKING:
     from app.models.workspace import Workspace
 
 NOM_MAX = 120
+JETON_LONGUEUR_MAX = 64
 
 
 class Dashboard(HorodatageMixin, Base):
@@ -27,6 +28,16 @@ class Dashboard(HorodatageMixin, Base):
     workspace_id: Mapped[str] = mapped_column(ForeignKey("workspaces.id"), index=True)
     user_id: Mapped[str] = mapped_column(ForeignKey("users.id"))
     nom: Mapped[str] = mapped_column(String(NOM_MAX))
+
+    # Jeton de partage en lecture seule. Nul tant que le tableau n'a jamais ete
+    # partage ; le retirer revoque instantanement tous les liens distribues.
+    #
+    # On ne reutilise pas l'identifiant du tableau : un identifiant sert a
+    # designer, un jeton sert a autoriser. Les confondre rendrait tout tableau
+    # devinable des lors qu'un seul lien a fuite.
+    jeton_partage: Mapped[str | None] = mapped_column(
+        String(JETON_LONGUEUR_MAX), unique=True, index=True, default=None
+    )
 
     workspace: Mapped["Workspace"] = relationship()
     user: Mapped["User"] = relationship()

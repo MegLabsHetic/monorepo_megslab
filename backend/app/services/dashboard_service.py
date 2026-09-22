@@ -1,6 +1,7 @@
 """Les tableaux de bord d'un espace : epingler une reponse, rejouer ses requetes."""
 
 import asyncio
+import secrets
 from dataclasses import dataclass
 from datetime import UTC, datetime
 
@@ -18,6 +19,10 @@ from app.models.user import User
 from app.models.workspace import Workspace
 
 WIDGETS_MAX = 24
+
+# 32 octets tires au hasard : un jeton reste inconnu meme si l'on en distribue
+# des milliers. Un identifiant sequentiel ou un UUID v1 se devinerait.
+OCTETS_JETON = 32
 
 
 @dataclass(frozen=True)
@@ -130,6 +135,37 @@ class DashboardService:
         return list(
             await asyncio.gather(*(asyncio.to_thread(_rejouer, moteur, w) for w in widgets))
         )
+
+    async def partager(self, dashboard: Dashboard) -> str:
+        """Ouvre un lien de lecture seule, ou en cree un nouveau s'il en existait un.
+
+        Regenerer revoque l'ancien : c'est la seule facon de reprendre la main
+        sur un lien qui a circule plus loin qu'on ne voulait.
+        """
+        dashboard.jeton_partage = secrets.token_urlsafe(OCTETS_JETON)
+        await self._db.commit()
+        return dashboard.jeton_partage
+
+    async def cesser_de_partager(self, dashboard: Dashboard) -> None:
+        dashboard.jeton_partage = None
+        await self._db.commit()
+
+    async def par_jeton(self, jeton: str) -> tuple[Dashboard, Workspace]:
+        """Le tableau designe par un jeton de partage, sans authentification.
+
+        Un jeton vide ou inconnu rend la meme erreur : on ne revele pas qu'un
+        lien a existe puis a ete revoque.
+        """
+        if not jeton:
+            raise ErreurUtilisateur("Ce lien de partage n'est pas valide.", code_http=404)
+        resultat = await self._db.execute(select(Dashboard).where(Dashboard.jeton_partage == jeton))
+        dashboard = resultat.scalar_one_or_none()
+        if dashboard is None:
+            raise ErreurUtilisateur("Ce lien de partage n'est pas valide.", code_http=404)
+        espace = await self._db.get(Workspace, dashboard.workspace_id)
+        if espace is None:
+            raise ErreurUtilisateur("Ce lien de partage n'est pas valide.", code_http=404)
+        return dashboard, espace
 
     async def _widgets(self, dashboard: Dashboard) -> list[Widget]:
         resultat = await self._db.execute(
