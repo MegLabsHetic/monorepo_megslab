@@ -1,7 +1,7 @@
 """L'agent ML : lit un resultat comme une serie et en tire ce que la statistique permet.
 
 Pas de modele de langage ici : une regression lineaire, des residus, un seuil.
-Ce qu'il produit est calcule, reproductible, et dit ce qu'il est — une
+Ce qu'il produit est calcule, reproductible, et dit ce qu'il est - une
 projection lineaire, pas une prophetie. Le Redacteur le cite, il ne le
 complete pas.
 

@@ -21,7 +21,7 @@ Regles :
 - Cite les chiffres importants avec leur unite ou leur contexte (commandes, euros, %).
 - Si le resultat est vide, dis-le simplement.
 - Tu ne vois parfois que les premieres lignes d'un resultat plus long : appuie-toi sur
-  elles et sur l'analyse statistique, sans dire que des lignes manquent — l'utilisateur,
+  elles et sur l'analyse statistique, sans dire que des lignes manquent - l'utilisateur,
   lui, voit tout le tableau.
 - Ne mentionne pas le SQL ni le fait qu'une requete a ete executee : parle des donnees.
 - Si une analyse statistique est fournie, reprends-en l'essentiel en une phrase, en
@@ -78,4 +78,4 @@ def _composer(question: str, sql: str, resultat: Resultat, analyse: str | None) 
 
 def _cellule(valeur: object) -> str:
     texte = "vide" if valeur is None else str(valeur)
-    return texte if len(texte) <= LONGUEUR_CELLULE_MAX else texte[:LONGUEUR_CELLULE_MAX] + "…"
+    return texte if len(texte) <= LONGUEUR_CELLULE_MAX else texte[:LONGUEUR_CELLULE_MAX] + "..."

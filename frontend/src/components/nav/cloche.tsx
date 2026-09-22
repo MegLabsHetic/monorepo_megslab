@@ -117,7 +117,7 @@ export function Cloche() {
                     )}
                   >
                     <span className="mt-0.5 font-mono text-xs text-marque" aria-hidden>
-                      {ICONES[n.type] ?? "•"}
+                      {ICONES[n.type] ?? "*"}
                     </span>
                     <span className="min-w-0 flex-1">
                       <span className={cn("block text-sm", n.lue ? "text-text-doux" : "text-text")}>

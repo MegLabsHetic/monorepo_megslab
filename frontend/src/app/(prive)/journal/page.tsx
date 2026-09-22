@@ -136,7 +136,7 @@ export default function PageJournal() {
                   </td>
                   <td className="px-4 py-2.5">
                     <span className="block max-w-md truncate text-text" title={e.cible_nom}>
-                      {e.cible_nom || e.cible_id || "—"}
+                      {e.cible_nom || e.cible_id || "-"}
                     </span>
                     {Object.keys(e.detail).length > 0 && (
                       <span className="block font-mono text-[11px] text-muted">
@@ -146,7 +146,7 @@ export default function PageJournal() {
                       </span>
                     )}
                   </td>
-                  <td className="px-4 py-2.5 text-muted">{e.espace ?? "—"}</td>
+                  <td className="px-4 py-2.5 text-muted">{e.espace ?? "-"}</td>
                 </tr>
               ))}
             </tbody>

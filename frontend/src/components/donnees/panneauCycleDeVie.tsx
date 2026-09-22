@@ -143,7 +143,7 @@ export function PanneauCycleDeVie({ source, onChange }: Props) {
             onClick={() => void analyser()}
             disabled={analyse}
           >
-            {analyse ? "Analyse…" : sante ? "Re-analyser" : "Analyser"}
+            {analyse ? "Analyse..." : sante ? "Re-analyser" : "Analyser"}
           </Button>
         </div>
         {sante && (
@@ -215,7 +215,7 @@ export function PanneauCycleDeVie({ source, onChange }: Props) {
             onClick={() => void supprimer()}
             disabled={enCours}
           >
-            {enCours ? "Suppression…" : "Supprimer definitivement"}
+            {enCours ? "Suppression..." : "Supprimer definitivement"}
           </Button>
         </div>
       )}

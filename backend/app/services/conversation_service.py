@@ -87,10 +87,10 @@ class ConversationService:
 
 def _titre(texte: str | None) -> str:
     propre = " ".join((texte or "").split())
-    return propre if len(propre) <= TITRE_MAX else propre[: TITRE_MAX - 1] + "…"
+    return propre if len(propre) <= TITRE_MAX else propre[: TITRE_MAX - 1] + "..."
 
 
 def titre_depuis_question(texte: str) -> str:
     """Le titre d'un fil neuf : sa premiere question, coupee proprement."""
     propre = " ".join(texte.split())
-    return propre if len(propre) <= 60 else propre[:59].rstrip() + "…"
+    return propre if len(propre) <= 60 else propre[:59].rstrip() + "..."

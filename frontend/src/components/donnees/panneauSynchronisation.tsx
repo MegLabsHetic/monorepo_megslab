@@ -162,7 +162,7 @@ function SuiviJob({
       <div className="flex flex-wrap items-center justify-between gap-3">
         <PastilleStatut ton={description.ton} libelle={description.libelle} />
         <span className="font-mono text-xs text-muted">
-          job {jobId} — {formaterDuree(secondes)}
+          job {jobId} - {formaterDuree(secondes)}
         </span>
       </div>
 
@@ -178,7 +178,7 @@ function SuiviJob({
           <dd className="mt-1 font-mono text-lg text-marque">
             {statut?.lignes_synchronisees != null
               ? formaterNombre(statut.lignes_synchronisees)
-              : "—"}
+              : "-"}
           </dd>
           {statut?.lignes_synchronisees == null && (
             <p className="mt-1 text-xs text-muted">

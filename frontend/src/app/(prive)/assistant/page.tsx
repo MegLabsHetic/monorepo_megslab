@@ -98,7 +98,7 @@ function Assistant() {
   useEffect(() => {
     // Lire le contexte des l'arrivee sert deux fois : afficher ce que
     // l'assistant peut interroger, et chauffer le profil que l'agent Data
-    // garde en memoire — la premiere question n'attend pas l'entrepot.
+    // garde en memoire - la premiere question n'attend pas l'entrepot.
     api
       .contexteAssistant(jeton, espace.id)
       .then(setEntrepot)
@@ -264,7 +264,7 @@ function Assistant() {
             <div className="space-y-4">
               <div className="flex justify-end">
                 <p className="max-w-[80%] rounded-2xl rounded-br-md bg-marque px-4 py-2.5 text-sm text-marque-contraste shadow-carte">
-                  {texte || "…"}
+                  {texte || "..."}
                 </p>
               </div>
               <PipelineEnCours />
@@ -328,7 +328,7 @@ function Assistant() {
                 disabled={enCours || !texte.trim()}
                 className={classesBouton("primaire", "w-auto px-5")}
               >
-                {enCours ? "En cours…" : "Demander"}
+                {enCours ? "En cours..." : "Demander"}
               </button>
             </div>
           </form>

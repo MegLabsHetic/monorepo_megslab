@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
  * Ce sont des evocations reconnaissables, pas les logos officiels.
  *
  * Chaque technologie garde en revanche SA couleur, celle par laquelle on la
- * reconnait — c'est ce qui rend un catalogue lisible d'un coup d'oeil.
+ * reconnait - c'est ce qui rend un catalogue lisible d'un coup d'oeil.
  */
 
 const COULEURS: Record<string, { texte: string; fond: string }> = {

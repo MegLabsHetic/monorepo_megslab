@@ -97,7 +97,7 @@ class ErreurRequete(Exception):
 
     `raison` est affichable a l'utilisateur. `detail` est le message brut du
     moteur : il ne s'affiche pas, mais l'Analyste en a besoin pour corriger sa
-    requete — « n'a pas pu etre executee » ne dit pas quoi changer.
+    requete - « n'a pas pu etre executee » ne dit pas quoi changer.
     """
 
     def __init__(self, raison: str, detail: str = "") -> None:
@@ -438,8 +438,8 @@ class DuckDBEngine:
     def _message_lisible(erreur: duckdb.Error) -> str:
         """Le detail technique reste dans les logs ; l'utilisateur recoit une phrase.
 
-        On distingue quand meme le cas le plus frequent — une colonne ou une
-        table qui n'existe pas — parce que la reponse utile n'est pas la meme.
+        On distingue quand meme le cas le plus frequent - une colonne ou une
+        table qui n'existe pas - parce que la reponse utile n'est pas la meme.
         """
         texte = str(erreur).lower()
         if "does not exist" in texte or "not found" in texte or "referenced column" in texte:

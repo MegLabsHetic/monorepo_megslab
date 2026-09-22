@@ -7,7 +7,7 @@ en deduit les types, et ecrit la table dans le schema de l'organisation.
 La connexion utilisee ici est volontairement DISTINCTE de celle de
 `DuckDBEngine` : ce moteur-la a l'acces fichier coupe et l'entrepot en lecture
 seule, ce qui est exactement l'inverse de ce dont un import a besoin. Les deux
-ne doivent jamais etre confondus — l'un execute du SQL venu d'un modele, celui-ci
+ne doivent jamais etre confondus - l'un execute du SQL venu d'un modele, celui-ci
 ne lit qu'un fichier que nous venons nous-memes d'ecrire sur disque.
 """
 
@@ -74,7 +74,7 @@ class EntrepotWriter:
         """Copie le fichier dans l'entrepot.
 
         Rend le nombre de lignes ecrites et les colonnes telles que le moteur
-        les a deduites — la fiche de la source en a besoin pour afficher son
+        les a deduites - la fiche de la source en a besoin pour afficher son
         schema, exactement comme pour une base connectee.
         """
         extension = fichier.suffix.lower()

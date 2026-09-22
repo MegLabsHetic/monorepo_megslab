@@ -8,7 +8,7 @@ import { formaterNombre } from "@/lib/sources";
 /**
  * Trace en SVG ce que l'agent Viz a choisi, a partir des lignes reelles du
  * resultat. Pas de bibliotheque : deux types de graphiques, des axes, une
- * legende, et — sur une courbe — les anomalies et la projection de l'agent ML.
+ * legende, et - sur une courbe - les anomalies et la projection de l'agent ML.
  *
  * Les couleurs viennent des variables du theme, le trace suit donc le mode
  * clair ou sombre sans code supplementaire.
@@ -180,7 +180,7 @@ function Barres({ donnees }: { donnees: Donnees }) {
                 rx={2}
                 fill={serie.couleur}
               >
-                <title>{`${donnees.affichage[i]} — ${serie.nom} : ${formaterTick(valeur)}`}</title>
+                <title>{`${donnees.affichage[i]} - ${serie.nom} : ${formaterTick(valeur)}`}</title>
               </rect>
             );
           })}
@@ -263,7 +263,7 @@ function Courbes({ donnees, analyse }: { donnees: Donnees; analyse: AnalyseSerie
                 stroke="var(--surface)"
                 strokeWidth={1}
               >
-                <title>{`${donnees.affichage[i]} — ${serie.nom} : ${formaterTick(valeur)}${
+                <title>{`${donnees.affichage[i]} - ${serie.nom} : ${formaterTick(valeur)}${
                   anomalies.has(donnees.libelles[i]) ? " (ecart notable)" : ""
                 }`}</title>
               </circle>
@@ -374,7 +374,7 @@ function LibelleX({
   discret?: boolean;
 }) {
   if (!afficher) return null;
-  const court = texte.length > 14 ? `${texte.slice(0, 13)}…` : texte;
+  const court = texte.length > 14 ? `${texte.slice(0, 13)}...` : texte;
   return (
     <text
       x={x}

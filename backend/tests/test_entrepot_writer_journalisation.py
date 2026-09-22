@@ -2,7 +2,7 @@
 
 Sans marqueur `integration` : l'echec provoque ici est justement l'incapacite a
 joindre l'entrepot, donc aucun service reel n'est necessaire. Le message que
-DuckDB produit alors cite le DSN complet, mot de passe compris — c'est ce que
+DuckDB produit alors cite le DSN complet, mot de passe compris - c'est ce que
 ces tests empechent de ressortir.
 """
 

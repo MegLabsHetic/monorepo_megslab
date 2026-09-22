@@ -142,7 +142,7 @@ export function TableauMembres({ membres, peutModifier, onChange }: Props) {
                           </select>
                         ) : (
                           <span className="text-xs text-muted">
-                            {acces ? libelleRoleEspace(acces.role) : "—"}
+                            {acces ? libelleRoleEspace(acces.role) : "-"}
                           </span>
                         )}
                       </td>

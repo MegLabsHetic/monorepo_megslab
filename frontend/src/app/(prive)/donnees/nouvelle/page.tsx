@@ -121,7 +121,7 @@ export default function PageNouvelleSource() {
             <ChoixSource
               titre={
                 demoEnCours
-                  ? "Chargement du jeu de demonstration…"
+                  ? "Chargement du jeu de demonstration..."
                   : "Charger le jeu de demonstration"
               }
               description="Les commandes, clients et produits d'Olist, copies dans votre entrepot en quelques secondes. De vraies tables, comme une source synchronisee."

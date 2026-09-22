@@ -2,7 +2,7 @@
 
 Il n'appelle jamais de modele, par design : ce qu'il produit est lu dans
 l'entrepot, et c'est exactement ce qui part ensuite a l'Analyste. Il n'y a
-donc rien a deviner ni a verifier — l'interface peut montrer ce texte tel quel.
+donc rien a deviner ni a verifier - l'interface peut montrer ce texte tel quel.
 
 Le profil coute plusieurs secondes (une ouverture d'entrepot, une requete par
 table, une par colonne categorielle). Il est garde en memoire un quart d'heure
@@ -92,7 +92,7 @@ def _decrire_table(table: TableProfil, glossaire: dict[tuple[str, str], str]) ->
     entete = f'- entrepot."{table.nom}" ({_nombre(table.nb_lignes)} lignes)'
     definition = glossaire.get((table.nom, ""))
     if definition:
-        entete = f"{entete} — {definition}"
+        entete = f"{entete} - {definition}"
     colonnes = "\n".join(
         f"    {_decrire_colonne(colonne, glossaire.get((table.nom, colonne.nom)))}"
         for colonne in table.colonnes
@@ -111,7 +111,7 @@ def _decrire_colonne(colonne: ColonneProfil, definition: str | None = None) -> s
     if colonne.pourcentage_nuls >= SEUIL_VIDES_SIGNALE:
         precisions.append(f"{colonne.pourcentage_nuls:.0f} % de vides")
     base = f"{colonne.nom} {colonne.type}"
-    return f"{base} — {' ; '.join(precisions)}" if precisions else base
+    return f"{base} - {' ; '.join(precisions)}" if precisions else base
 
 
 def _nombre(valeur: int) -> str:

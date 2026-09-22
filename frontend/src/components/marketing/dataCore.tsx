@@ -92,7 +92,7 @@ export function DataCore() {
 
     // Des noeuds lumineux aux 6 sommets du losange (rayon 2, comme la geometrie
     // ci-dessus) : un halo degrade en sprite additif, pas une vraie lumiere
-    // Three.js — le materiau du filaire ne reagit pas a l'eclairage, une
+    // Three.js - le materiau du filaire ne reagit pas a l'eclairage, une
     // PointLight resterait donc invisible ici.
     const RAYON_LOSANGE = 2;
     const positionsSommets: [number, number, number][] = [

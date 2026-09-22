@@ -151,7 +151,7 @@ function ChoixTableau({
         </p>
         {erreur && <p className="text-danger">{erreur}</p>}
         {tableaux === null ? (
-          <p className="text-muted">Chargement…</p>
+          <p className="text-muted">Chargement...</p>
         ) : tableaux.length > 0 ? (
           <ul className="max-h-48 space-y-1 overflow-y-auto">
             {tableaux.map((t) => (
@@ -175,7 +175,7 @@ function ChoixTableau({
         )}
         <form onSubmit={creerEtEpingler} className="flex gap-2">
           <Input
-            placeholder="Nouveau tableau…"
+            placeholder="Nouveau tableau..."
             value={nouveau}
             onChange={(e) => setNouveau(e.target.value)}
             aria-label="Nom du nouveau tableau"

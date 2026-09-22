@@ -168,7 +168,7 @@ function Pastille({ statut }: { statut: string }) {
   if (statut === "refusee") {
     return <span aria-hidden>×</span>;
   }
-  return <span aria-hidden>–</span>;
+  return <span aria-hidden>-</span>;
 }
 
 /** La chaine « en cours » : les memes agents, marques en attente. */
@@ -296,7 +296,7 @@ function BlocAnalyse({ analyse }: { analyse: AnalyseSerie }) {
   return (
     <div className="border-t border-line px-5 py-4">
       <p className="font-mono text-[11px] uppercase tracking-widest text-muted">
-        Agent ML — regression lineaire sur {analyse.nb_points} points
+        Agent ML - regression lineaire sur {analyse.nb_points} points
       </p>
       <ul className="mt-2 flex flex-wrap gap-x-5 gap-y-1 text-sm text-text">
         <li>

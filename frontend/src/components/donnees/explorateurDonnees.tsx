@@ -18,7 +18,7 @@ interface Props {
 /**
  * Lit reellement l'entrepot : tables synchronisees, echantillon de lignes,
  * profil des colonnes. Chaque appel ouvre une connexion analytique et prend
- * quelques secondes — d'ou des etats de chargement explicites plutot qu'un
+ * quelques secondes - d'ou des etats de chargement explicites plutot qu'un
  * simple spinner.
  */
 export function ExplorateurDonnees({ sourceId }: Props) {
@@ -172,7 +172,7 @@ function OngletBouton({
 function ChargementEntrepot() {
   return (
     <div className="space-y-3 p-5" role="status">
-      <p className="text-sm text-muted">Lecture de l&apos;entrepot…</p>
+      <p className="text-sm text-muted">Lecture de l&apos;entrepot...</p>
       {Array.from({ length: 5 }).map((_, index) => (
         <Squelette key={index} className="h-4 w-full" />
       ))}
@@ -297,7 +297,7 @@ function Cellule({ valeur, tronquer }: { valeur: string | null; tronquer?: boole
       )}
       title={tronquer && valeur ? valeur : undefined}
     >
-      {valeur ?? "—"}
+      {valeur ?? "-"}
     </td>
   );
 }

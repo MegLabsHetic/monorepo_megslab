@@ -100,7 +100,7 @@ export function ImportAirbyte({ lienAirbyte, onImportee }: Props) {
                 disabled={enCours !== null}
                 onClick={() => importer(source)}
               >
-                {enCours === source.id ? "Import…" : "Importer"}
+                {enCours === source.id ? "Import..." : "Importer"}
               </Button>
             </li>
           ))}

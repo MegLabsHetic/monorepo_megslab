@@ -5,7 +5,7 @@ Le SQL produit par le modele n'est jamais execute tel quel. Il passe par
 arbre syntaxique. Le modele propose ; le garde-fou dispose.
 
 Quand l'entrepot rejette la requete, l'Analyste a droit a une reprise : il voit
-l'erreur du moteur et repropose. Une seule — au-dela, insister couterait sans
+l'erreur du moteur et repropose. Une seule - au-dela, insister couterait sans
 garantie, et l'utilisateur merite de savoir que ca n'a pas marche.
 """
 
@@ -183,7 +183,7 @@ def _demande_correction(question: str, sql: str, erreur: ErreurRequete) -> str:
 def decrire_schema(tables: list[tuple[str, list[tuple[str, str]]]]) -> str:
     """Met le schema sous la forme la plus courte qui reste sans ambiguite.
 
-    Seuls les noms de tables, de colonnes et leurs types partent au modele —
+    Seuls les noms de tables, de colonnes et leurs types partent au modele -
     aucune donnee.
     """
     return "\n".join(

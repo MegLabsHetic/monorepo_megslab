@@ -76,7 +76,7 @@ export default function PageInvitation() {
             </p>
           </>
         )}
-        {!info && !erreur && <p className="text-sm text-muted">Verification du lien…</p>}
+        {!info && !erreur && <p className="text-sm text-muted">Verification du lien...</p>}
         {info && (
           <form onSubmit={accepter} className="flex flex-col gap-4">
             <div>

@@ -3,7 +3,7 @@
 Chemin volontairement distinct des connecteurs : un fichier n'a pas de systeme
 externe a interroger, donc pas de source ni de connexion Airbyte. Il est ecrit
 directement dans l'entrepot, et apparait ensuite comme n'importe quelle autre
-source — meme fiche, meme explorateur, memes profils.
+source - meme fiche, meme explorateur, memes profils.
 """
 
 import asyncio
@@ -31,7 +31,7 @@ logger = logging.getLogger(__name__)
 TAILLE_MAX_OCTETS = 500 * 1024 * 1024
 # Le fichier est ecrit sur disque par morceaux : un depot de 500 Mo ne doit pas
 # occuper 500 Mo de memoire, et surtout pas x fois cela en cas de depots
-# simultanes. A cette taille, l'import se compte en minutes — l'interface doit
+# simultanes. A cette taille, l'import se compte en minutes - l'interface doit
 # le dire, sinon l'attente passe pour une panne.
 TAILLE_MORCEAU = 1024 * 1024
 

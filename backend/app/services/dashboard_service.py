@@ -198,4 +198,4 @@ def _nom(texte: str) -> str:
     propre = " ".join(texte.split())
     if not propre:
         raise ErreurUtilisateur("Le nom ne peut pas etre vide.", code_http=422)
-    return propre if len(propre) <= NOM_MAX else propre[: NOM_MAX - 1] + "…"
+    return propre if len(propre) <= NOM_MAX else propre[: NOM_MAX - 1] + "..."

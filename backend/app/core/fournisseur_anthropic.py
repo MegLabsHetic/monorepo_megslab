@@ -2,7 +2,7 @@
 
 Ce fournisseur est le seul a exposer deux leviers qui n'existent pas ailleurs :
 la mise en cache des instructions, et un niveau d'effort par appel. Ils sont
-conserves ici plutot que hisses dans une abstraction commune — les autres
+conserves ici plutot que hisses dans une abstraction commune - les autres
 fournisseurs n'en ont pas d'equivalent, et une option qui ne veut rien dire
 pour la moitie des implementations est une option a ne pas creer.
 """
@@ -65,7 +65,7 @@ class FournisseurAnthropic:
         """Construit le client au premier appel, pas a l'import.
 
         Lire la cle a l'import figerait la configuration au demarrage du
-        processus, et ferait echouer l'import quand aucune cle n'est posee —
+        processus, et ferait echouer l'import quand aucune cle n'est posee -
         y compris dans les tests, qui n'en ont pas besoin.
         """
         if self._client is None:

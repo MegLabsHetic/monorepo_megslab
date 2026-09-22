@@ -78,7 +78,7 @@ export function MurConnecteurs() {
 
       <p className="mt-3 max-w-2xl text-text-doux">
         Quatre sources se branchent directement depuis MegsLab, en remplissant un formulaire. Les
-        autres se configurent dans Airbyte — sur lequel MegsLab s&apos;appuie — puis
+        autres se configurent dans Airbyte - sur lequel MegsLab s&apos;appuie - puis
         s&apos;importent en un clic : elles se gerent ensuite exactement comme les premieres.
       </p>
 
@@ -122,8 +122,8 @@ function Tuile({
       )}
       title={
         disponible
-          ? `${connecteur.nom} — formulaire integre`
-          : `${connecteur.nom} — a configurer dans Airbyte, puis a importer`
+          ? `${connecteur.nom} - formulaire integre`
+          : `${connecteur.nom} - a configurer dans Airbyte, puis a importer`
       }
     >
       <Image

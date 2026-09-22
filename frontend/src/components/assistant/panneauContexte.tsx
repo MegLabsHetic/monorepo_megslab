@@ -13,7 +13,7 @@ import { type ContexteAssistant, api } from "@/lib/api";
  * lu dans l'entrepot au moment ou on ouvre le panneau. Pas une reconstitution.
  *
  * L'interet est de constater qu'il n'y a que des noms de tables et de colonnes,
- * et des consignes — aucune ligne de donnees.
+ * et des consignes - aucune ligne de donnees.
  */
 export function PanneauContexte({ onFermer }: { onFermer: () => void }) {
   const { jeton, espace } = useSession();
@@ -71,7 +71,7 @@ export function PanneauContexte({ onFermer }: { onFermer: () => void }) {
             <>
               <section>
                 <h3 className="font-mono text-xs uppercase tracking-widest text-muted">
-                  Contexte transmis — {contexte.nb_tables} table(s), {contexte.nb_colonnes}{" "}
+                  Contexte transmis - {contexte.nb_tables} table(s), {contexte.nb_colonnes}{" "}
                   colonne(s)
                 </h3>
                 <pre className="mt-2 overflow-x-auto rounded-lg bg-surface-2 p-4 font-mono text-xs leading-relaxed text-text">

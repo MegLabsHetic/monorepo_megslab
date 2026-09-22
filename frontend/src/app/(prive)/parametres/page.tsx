@@ -133,7 +133,7 @@ export default function PageParametres() {
                 ils heritent de l&apos;acces. La gestion se fait depuis la page Equipe.
               </p>
               {acces === null ? (
-                <p className="text-sm text-muted">Chargement…</p>
+                <p className="text-sm text-muted">Chargement...</p>
               ) : acces.length === 0 ? (
                 <p className="text-sm text-muted">Aucun acces explicite.</p>
               ) : (
@@ -197,7 +197,7 @@ export default function PageParametres() {
               <Label htmlFor="nouvel-espace">Nouvel espace</Label>
               <Input
                 id="nouvel-espace"
-                placeholder="Finance, Marketing, Projet X…"
+                placeholder="Finance, Marketing, Projet X..."
                 value={nouvelEspace}
                 onChange={(e) => setNouvelEspace(e.target.value)}
                 required

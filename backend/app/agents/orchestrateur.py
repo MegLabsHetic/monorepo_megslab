@@ -1,13 +1,13 @@
 """L'Orchestrateur : fait travailler les agents dans l'ordre, et rend compte.
 
-Il ne choisit ni les modeles ni les prompts — ca appartient aux agents et au
+Il ne choisit ni les modeles ni les prompts - ca appartient aux agents et au
 client LLM. Il enchaine les etapes, mesure chacune, additionne ce qu'elles ont
 coute, et rend un compte-rendu que l'interface peut montrer tel quel : quel
 agent a fait quoi, en combien de temps, pour combien.
 
 L'ordre : Data decrit l'entrepot, l'Analyste ecrit et execute la requete, ML
 lit le resultat comme une serie, puis le Redacteur et Viz travaillent en meme
-temps — ils ne dependent que du resultat, pas l'un de l'autre.
+temps - ils ne dependent que du resultat, pas l'un de l'autre.
 """
 
 import asyncio
@@ -158,7 +158,7 @@ class Orchestrateur:
                 "synchronisez-la avant de poser une question.",
                 code_http=409,
             )
-        detail = contexte.resume() + (" — deja en memoire" if contexte.depuis_cache else "")
+        detail = contexte.resume() + (" - deja en memoire" if contexte.depuis_cache else "")
         etapes.append(Etape("data", "terminee", _ms(depart), detail))
         return contexte
 

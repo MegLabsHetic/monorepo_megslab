@@ -8,7 +8,7 @@ definition absente.
 
 Ces annotations sont ecrites par un administrateur et rejoignent le contexte
 envoye a l'Analyste. Le glossaire est donc **emergent** : il se construit a
-l'usage, a partir des corrections. Il n'est jamais un prealable — un espace
+l'usage, a partir des corrections. Il n'est jamais un prealable - un espace
 sans aucune annotation fonctionne exactement comme avant.
 """
 

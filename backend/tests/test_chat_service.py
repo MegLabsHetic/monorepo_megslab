@@ -2,7 +2,7 @@
 
 Ni modele ni entrepot reels : un faux LLM rend des reponses preparees, un faux
 moteur rend un schema et un resultat fixes. Ce qu'on verifie ici, c'est
-l'assemblage — pas la qualite du SQL du modele.
+l'assemblage - pas la qualite du SQL du modele.
 """
 
 import pytest

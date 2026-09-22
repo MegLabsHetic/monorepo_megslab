@@ -45,7 +45,7 @@ export function CarteSource({ source }: { source: Source }) {
         </p>
         <p>
           {source.flux_selectionnes.length > 0
-            ? `${source.flux_selectionnes.length} table(s) synchronisee(s) — connectee le ${formaterDate(source.cree_le)}`
+            ? `${source.flux_selectionnes.length} table(s) synchronisee(s) - connectee le ${formaterDate(source.cree_le)}`
             : `Connectee le ${formaterDate(source.cree_le)}`}
         </p>
       </div>

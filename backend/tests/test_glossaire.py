@@ -36,7 +36,7 @@ def test_sans_glossaire_le_texte_est_exactement_celui_d_avant() -> None:
 def test_une_definition_de_colonne_rejoint_la_description() -> None:
     contexte = _contexte()
     texte = contexte.texte({("o_head", "o_status"): "statut de la commande"})
-    assert "o_status VARCHAR — statut de la commande" in texte
+    assert "o_status VARCHAR - statut de la commande" in texte
 
 
 def test_la_definition_precede_les_modalites() -> None:
@@ -53,7 +53,7 @@ def test_la_definition_precede_les_modalites() -> None:
 def test_une_definition_de_table_rejoint_son_entete() -> None:
     contexte = _contexte()
     texte = contexte.texte({("o_head", ""): "en-tete de commande, une ligne par commande"})
-    assert 'entrepot."o_head" (99 441 lignes) — en-tete de commande' in texte
+    assert 'entrepot."o_head" (99 441 lignes) - en-tete de commande' in texte
 
 
 def test_une_definition_qui_vise_une_colonne_absente_est_ignoree() -> None:

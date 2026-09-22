@@ -72,7 +72,7 @@ export default function PageTableau() {
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
             <h1 className="font-display text-2xl font-semibold tracking-tight text-text lg:text-3xl">
-              {tableau?.nom ?? "…"}
+              {tableau?.nom ?? "..."}
             </h1>
             {tableau && (
               <p className="mt-2 font-mono text-xs text-muted">
@@ -101,7 +101,7 @@ export default function PageTableau() {
               onClick={charger}
               disabled={chargement}
             >
-              {chargement ? "Rejeu…" : "Rejouer"}
+              {chargement ? "Rejeu..." : "Rejouer"}
             </Button>
             {peutSupprimer && (
               <Button

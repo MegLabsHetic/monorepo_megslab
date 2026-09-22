@@ -277,7 +277,7 @@ class SourceService:
           lui-meme a la selection des flux) : la suivre vaut mieux qu'echouer ;
         - le verrou pose sur la connexion juste apres la selection des flux
           n'est pas encore relache. C'est transitoire, et la liste des jobs est
-          alors vide — d'ou une nouvelle tentative apres une courte pause.
+          alors vide - d'ou une nouvelle tentative apres une courte pause.
         """
         for tentative in range(TENTATIVES_DECLENCHEMENT):
             try:

@@ -71,7 +71,7 @@ export default function PageTableaux() {
         {peutAnalyser && (
           <form onSubmit={creer} className="flex gap-2">
             <Input
-              placeholder="Nouveau tableau…"
+              placeholder="Nouveau tableau..."
               value={nouveau}
               onChange={(e) => setNouveau(e.target.value)}
               aria-label="Nom du nouveau tableau"

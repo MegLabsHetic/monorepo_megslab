@@ -196,8 +196,8 @@ export default function PageFicheSource() {
           </h2>
           <div className="rounded-xl border border-line bg-surface p-5">
             <p className="text-sm text-muted">
-              MegsLab couvre la connexion, la decouverte et la synchronisation. Pour le reste —
-              frequence de synchronisation, mode incremental, reglages fins du connecteur — la
+              MegsLab couvre la connexion, la decouverte et la synchronisation. Pour le reste -
+              frequence de synchronisation, mode incremental, reglages fins du connecteur - la
               source s&apos;ouvre directement dans Airbyte, le moteur d&apos;ingestion utilise.
             </p>
             <a

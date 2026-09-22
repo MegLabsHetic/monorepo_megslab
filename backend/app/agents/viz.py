@@ -2,7 +2,7 @@
 
 Il ne dessine rien : il rend une specification (type, axes, titre) que
 l'interface trace elle-meme. Il ne voit qu'un echantillon du resultat, et sa
-proposition est verifiee contre les vraies colonnes avant d'etre acceptee —
+proposition est verifiee contre les vraies colonnes avant d'etre acceptee -
 un axe qui n'existe pas, et on se passe de graphique.
 
 Les cas ou un graphique n'a pas de sens (une seule ligne, aucune colonne
@@ -50,7 +50,7 @@ class AgentViz:
         self._llm = llm or LLMClient()
 
     def motif_de_refus(self, resultat: Resultat) -> str | None:
-        """Pourquoi on ne dessinera pas — ou None si ca vaut la peine de demander."""
+        """Pourquoi on ne dessinera pas - ou None si ca vaut la peine de demander."""
         if resultat.nb_lignes < 2:
             return "une seule ligne"
         if resultat.nb_lignes > LIGNES_MAX_GRAPHIQUE:

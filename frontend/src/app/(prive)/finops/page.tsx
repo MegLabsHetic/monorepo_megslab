@@ -147,7 +147,7 @@ export default function PageFinops() {
               valeur={
                 rapport.nb_questions > 0
                   ? `$${(rapport.total_dollars / rapport.nb_questions).toFixed(4)}`
-                  : "—"
+                  : "-"
               }
               precision={
                 rapport.nb_questions > 0
@@ -158,7 +158,7 @@ export default function PageFinops() {
             <TuileKpi
               libelle="prevision fin de mois"
               valeur={
-                rapport.budget ? `$${rapport.budget.prevision_fin_de_mois_dollars.toFixed(2)}` : "—"
+                rapport.budget ? `$${rapport.budget.prevision_fin_de_mois_dollars.toFixed(2)}` : "-"
               }
               precision={rapport.budget ? "Prorata des jours ecoules" : "Mois clos"}
             />
@@ -166,7 +166,7 @@ export default function PageFinops() {
               libelle="part servie par le cache"
               valeur={
                 rapport.jetons.taux_cache === null
-                  ? "—"
+                  ? "-"
                   : `${Math.round(rapport.jetons.taux_cache * 100)} %`
               }
               precision="Jetons d'entree lus dans le cache de prompt"
@@ -239,7 +239,7 @@ export default function PageFinops() {
             onClick={() => void mesurer()}
             disabled={mesure}
           >
-            {mesure ? "Mesure en cours…" : "Mesurer maintenant"}
+            {mesure ? "Mesure en cours..." : "Mesurer maintenant"}
           </Button>
         </div>
         {poids === null ? (

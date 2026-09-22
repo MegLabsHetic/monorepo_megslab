@@ -80,7 +80,7 @@ class AirbyteClient:
         """Toutes les sources d'un workspace, y compris celles creees hors MegsLab.
 
         C'est ce qui permet d'adopter une source configuree directement dans
-        Airbyte — et donc d'atteindre n'importe lequel de ses connecteurs, meme
+        Airbyte - et donc d'atteindre n'importe lequel de ses connecteurs, meme
         ceux que notre formulaire ne sait pas remplir.
         """
         corps = await self._appeler(

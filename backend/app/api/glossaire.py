@@ -2,7 +2,7 @@
 
 Ecrire est reserve aux administrateurs de l'espace : une definition fausse se
 propage a toutes les reponses suivantes, puisqu'elle rejoint le contexte envoye
-au modele. La lecture, elle, est ouverte a tout membre — savoir ce que
+au modele. La lecture, elle, est ouverte a tout membre - savoir ce que
 « chiffre d'affaires » recouvre ici n'est pas un privilege.
 """
 

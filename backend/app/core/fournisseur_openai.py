@@ -198,7 +198,7 @@ def _schema_strict(format_sortie: type[BaseModel]) -> dict[str, Any]:
     """Rend un schema Pydantic acceptable par le mode strict d'OpenAI.
 
     Le mode strict exige que chaque objet interdise les proprietes
-    supplementaires et declare toutes ses proprietes comme requises — y
+    supplementaires et declare toutes ses proprietes comme requises - y
     compris celles qui ont une valeur par defaut cote Pydantic, que le schema
     genere omet du tableau `required`.
     """

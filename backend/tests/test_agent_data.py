@@ -40,8 +40,8 @@ def test_le_texte_donne_types_effectifs_modalites_et_vides() -> None:
 
     texte = contexte.texte()
     assert 'entrepot."orders" (99 441 lignes)' in texte
-    assert "order_status VARCHAR — modalites : canceled, delivered, shipped" in texte
-    assert "freight DOUBLE — 12 % de vides" in texte
+    assert "order_status VARCHAR - modalites : canceled, delivered, shipped" in texte
+    assert "freight DOUBLE - 12 % de vides" in texte
     # 3 % de vides : sous le seuil, rien n'est ajoute.
     assert "order_delivered_customer_date VARCHAR\n" in texte
     assert contexte.resume() == "1 table(s), 4 colonne(s), 99 441 ligne(s)"
