@@ -19,6 +19,7 @@ from app.models import (  # noqa: F401
     notification,
     organization,
     question,
+    surveillance,
     user,
     workspace,
     workspace_access,
