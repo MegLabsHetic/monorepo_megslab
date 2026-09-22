@@ -80,7 +80,9 @@ class FauxLLM:
     def __init__(self) -> None:
         self.appels = 0
 
-    async def repondre(self, *, instructions, question, format_sortie: type[BaseModel], effort):
+    async def repondre(
+        self, *, instructions, question, format_sortie: type[BaseModel], effort, agent=""
+    ):
         self.appels += 1
         assert format_sortie is Suggestions and effort == "low"
         assert 'entrepot."orders"' in question

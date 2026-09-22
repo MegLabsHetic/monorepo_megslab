@@ -14,7 +14,7 @@ class FauxLLM:
         self.spec = spec
         self.appels = 0
 
-    async def repondre(self, *, instructions, question, format_sortie, effort):
+    async def repondre(self, *, instructions, question, format_sortie, effort, agent=""):
         self.appels += 1
         return Reponse(contenu=self.spec, consommation=CONSOMMATION)
 
