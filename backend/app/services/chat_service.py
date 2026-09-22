@@ -29,6 +29,7 @@ from app.models.workspace import Workspace
 from app.services.audit_service import AuditService
 from app.services.budget_service import BudgetService
 from app.services.conversation_service import TITRE_PAR_DEFAUT, titre_depuis_question
+from app.services.glossaire_service import GlossaireService
 from app.services.notification_service import NotificationService
 
 logger = logging.getLogger(__name__)
@@ -65,7 +66,8 @@ class ChatService:
 
         moteur = self._fabrique_moteur(espace.schema_entrepot)
         precedents = await self._derniers_echanges(conversation)
-        complete = await Orchestrateur(moteur, self._llm).repondre(texte, precedents)
+        glossaire = await GlossaireService(self._db).pour_le_contexte(espace)
+        complete = await Orchestrateur(moteur, self._llm).repondre(texte, precedents, glossaire)
 
         question = self._en_question(espace, utilisateur, conversation, complete)
         self._db.add(question)

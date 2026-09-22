@@ -6,7 +6,13 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.audit import journaliser
-from app.api.deps import AccesEspace, acces_analyste, acces_courant, utilisateur_courant
+from app.api.deps import (
+    AccesEspace,
+    acces_admin_espace,
+    acces_analyste,
+    acces_courant,
+    utilisateur_courant,
+)
 from app.core.database import get_db
 from app.core.errors import ErreurUtilisateur
 from app.models.dashboard import Dashboard
@@ -21,6 +27,7 @@ from app.schemas.dashboard import (
     WidgetModification,
     WidgetReponse,
 )
+from app.schemas.partage import PartageReponse
 from app.schemas.question import AnalyseReponse, GraphiqueReponse, ResultatReponse
 from app.services.chat_service import extrait_json
 from app.services.dashboard_service import DashboardService, WidgetVivant
@@ -77,6 +84,33 @@ async def detail(
         widgets=[await _widget(db, v) for v in vivants],
         rejoue_le=datetime.now(UTC),
     )
+
+
+@router.post("/{dashboard_id}/partage", response_model=PartageReponse, status_code=201)
+async def ouvrir_le_partage(
+    dashboard_id: str,
+    acces: AccesEspace = Depends(acces_admin_espace),
+    db: AsyncSession = Depends(get_db),
+):
+    """Ouvre un lien de lecture seule, ou en cree un nouveau.
+
+    Regenerer revoque l'ancien : c'est la seule facon de reprendre la main sur
+    un lien qui a circule plus loin qu'on ne voulait.
+    """
+    service = DashboardService(db)
+    dashboard = await service.charger(acces.espace, dashboard_id)
+    return PartageReponse(jeton=await service.partager(dashboard))
+
+
+@router.delete("/{dashboard_id}/partage", status_code=204)
+async def fermer_le_partage(
+    dashboard_id: str,
+    acces: AccesEspace = Depends(acces_admin_espace),
+    db: AsyncSession = Depends(get_db),
+):
+    service = DashboardService(db)
+    dashboard = await service.charger(acces.espace, dashboard_id)
+    await service.cesser_de_partager(dashboard)
 
 
 @router.patch("/{dashboard_id}", response_model=DashboardReponse)

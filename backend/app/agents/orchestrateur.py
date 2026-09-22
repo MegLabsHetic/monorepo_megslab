@@ -82,14 +82,17 @@ class Orchestrateur:
         self._viz = AgentViz(self._llm)
 
     async def repondre(
-        self, question: str, historique: list[Echange] | tuple[Echange, ...] = ()
+        self,
+        question: str,
+        historique: list[Echange] | tuple[Echange, ...] = (),
+        glossaire: dict[tuple[str, str], str] | None = None,
     ) -> ReponseComplete:
         depart = time.perf_counter()
         etapes: list[Etape] = []
         consommations: list[Consommation] = []
 
         contexte = await self._etape_data(etapes)
-        analyse = await self._etape_analyse(question, contexte.texte(), etapes, historique)
+        analyse = await self._etape_analyse(question, contexte.texte(glossaire), etapes, historique)
         consommations.extend(analyse.consommations)
 
         if analyse.resultat is None:

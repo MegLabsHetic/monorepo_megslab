@@ -48,9 +48,15 @@ class ContexteDonnees:
             f"{_nombre(self.nb_lignes)} ligne(s)"
         )
 
-    def texte(self) -> str:
-        """Le schema tel qu'il part au modele : noms, types, effectifs, modalites."""
-        return "\n".join(_decrire_table(table) for table in self.tables)
+    def texte(self, glossaire: dict[tuple[str, str], str] | None = None) -> str:
+        """Le schema tel qu'il part au modele : noms, types, effectifs, modalites.
+
+        `glossaire` ajoute les definitions metier de l'espace. Vide ou absent,
+        le texte produit est exactement celui d'avant : un espace qui n'a rien
+        annote ne voit aucun changement de comportement.
+        """
+        defs = glossaire or {}
+        return "\n".join(_decrire_table(table, defs) for table in self.tables)
 
 
 _CACHE: dict[str, tuple[float, ContexteDonnees]] = {}
@@ -82,14 +88,24 @@ class AgentData:
         _CACHE.clear()
 
 
-def _decrire_table(table: TableProfil) -> str:
+def _decrire_table(table: TableProfil, glossaire: dict[tuple[str, str], str]) -> str:
     entete = f'- entrepot."{table.nom}" ({_nombre(table.nb_lignes)} lignes)'
-    colonnes = "\n".join(f"    {_decrire_colonne(colonne)}" for colonne in table.colonnes)
+    definition = glossaire.get((table.nom, ""))
+    if definition:
+        entete = f"{entete} — {definition}"
+    colonnes = "\n".join(
+        f"    {_decrire_colonne(colonne, glossaire.get((table.nom, colonne.nom)))}"
+        for colonne in table.colonnes
+    )
     return f"{entete}\n{colonnes}" if colonnes else entete
 
 
-def _decrire_colonne(colonne: ColonneProfil) -> str:
+def _decrire_colonne(colonne: ColonneProfil, definition: str | None = None) -> str:
     precisions = []
+    # La definition metier passe en premier : c'est elle qui leve l'ambiguite
+    # d'un nom technique, et le modele lit ce qui vient en tete.
+    if definition:
+        precisions.append(definition)
     if colonne.modalites:
         precisions.append("modalites : " + ", ".join(colonne.modalites))
     if colonne.pourcentage_nuls >= SEUIL_VIDES_SIGNALE:

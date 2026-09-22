@@ -55,6 +55,12 @@ class Settings(BaseSettings):
     llm_chaine_redacteur: str = ""
     llm_chaine_viz: str = ""
 
+    # L'ordonnanceur qui execute les surveillances. Eteint par defaut : sans
+    # lui, le backend se comporte exactement comme avant. Avec plusieurs
+    # repliques, chacune executerait les memes surveillances — ne l'activer que
+    # sur une seule instance tant qu'aucun verrou partage n'existe.
+    ordonnanceur_actif: bool = False
+
     ovhcloud_api_key: str = ""
     scaleway_api_key: str = ""
     ionos_api_key: str = ""
