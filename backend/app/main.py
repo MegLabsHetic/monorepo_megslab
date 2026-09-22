@@ -25,12 +25,14 @@ from app.api.surveillances import router as surveillances_router
 from app.core.config import get_settings
 from app.core.errors import ErreurUtilisateur
 from app.core.ordonnanceur import Ordonnanceur
+from app.services.recharger_reglages import recharger_au_demarrage
 from app.services.tour_surveillances import executer_les_surveillances
 
 
 @asynccontextmanager
 async def _cycle_de_vie(app: FastAPI):
     """Demarre l'ordonnanceur avec l'application, et l'arrete avec elle."""
+    await recharger_au_demarrage()
     ordonnanceur = None
     if get_settings().ordonnanceur_actif:
         ordonnanceur = Ordonnanceur(executer_les_surveillances)

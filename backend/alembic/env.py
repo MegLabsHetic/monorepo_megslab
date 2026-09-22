@@ -11,6 +11,7 @@ from app.core.database import Base
 from app.models import (  # noqa: F401
     annotation,
     audit_log,
+    configuration_llm,
     conversation,
     dashboard,
     data_source,

@@ -2,7 +2,7 @@
 
 Les agents ne savent pas quel fournisseur repond, ni combien il y en a. Ils
 appellent `repondre` et recoivent une reponse structuree accompagnee de son
-cout reel — chez celui qui a effectivement repondu.
+cout reel - chez celui qui a effectivement repondu.
 
 La chaine de fournisseurs se declare dans la configuration, pas dans le code :
 
@@ -31,6 +31,27 @@ logger = logging.getLogger(__name__)
 __all__ = ["Consommation", "Reponse", "LLMClient", "get_llm_client"]
 
 CHAINE_PAR_DEFAUT = "anthropic:claude-opus-5"
+
+# Ce que l'interface a pose en base, applique par-dessus l'environnement.
+# Vit dans le module parce que la construction d'une chaine est synchrone et
+# n'a pas de session de base a sa disposition.
+#
+# Consequence a connaitre : avec plusieurs repliques du backend, une
+# modification faite sur l'une ne parvient aux autres qu'a leur redemarrage.
+# Il faudra une invalidation partagee avant de passer a l'echelle.
+_SURCHARGES: dict[str, str] = {}
+
+
+def appliquer_surcharges(valeurs: dict[str, str]) -> None:
+    """Remplace les surcharges et jette les chaines deja construites."""
+    _SURCHARGES.clear()
+    _SURCHARGES.update({k: v for k, v in valeurs.items() if v})
+    get_llm_client.cache_clear()
+    logger.info("Configuration des modeles rechargee (%s surcharge(s))", len(_SURCHARGES))
+
+
+def surcharge(cle: str) -> str:
+    return _SURCHARGES.get(cle, "")
 
 
 class LLMClient:
@@ -71,7 +92,7 @@ class LLMClient:
         """Construit la chaine de cet agent au premier appel, pas a l'import.
 
         Lire la configuration a l'import la figerait au demarrage du processus
-        et ferait echouer l'import quand aucune cle n'est posee — y compris
+        et ferait echouer l'import quand aucune cle n'est posee - y compris
         dans les tests, qui n'en ont pas besoin.
         """
         # Une chaine injectee au constructeur vaut pour tous les agents : c'est
@@ -100,7 +121,10 @@ def construire_la_chaine(agent: str = "") -> Rabattement:
     de comportement.
     """
     reglages = get_settings()
-    propre = getattr(reglages, CHAINES_PAR_AGENT.get(agent, ""), "") if agent else ""
+    # Base d'abord, environnement ensuite : vider une surcharge rend exactement
+    # le comportement du fichier de deploiement.
+    posee = surcharge(f"chaine:{agent}") if agent else ""
+    propre = posee or (getattr(reglages, CHAINES_PAR_AGENT.get(agent, ""), "") if agent else "")
     declaration = propre or reglages.llm_chaine or CHAINE_PAR_DEFAUT
     etapes = [e.strip() for e in declaration.split(",") if e.strip()]
     fournisseurs = [_fournisseur(etape, reglages) for etape in etapes]
@@ -129,6 +153,9 @@ def _fournisseur(etape: str, reglages):
 
 
 def _cle(nom: str, reglages) -> str:
+    posee = surcharge(f"cle:{nom}")
+    if posee:
+        return posee
     cles = {
         "ovhcloud": reglages.ovhcloud_api_key,
         "scaleway": reglages.scaleway_api_key,

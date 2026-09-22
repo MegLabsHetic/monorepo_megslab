@@ -57,9 +57,14 @@ class Settings(BaseSettings):
 
     # L'ordonnanceur qui execute les surveillances. Eteint par defaut : sans
     # lui, le backend se comporte exactement comme avant. Avec plusieurs
-    # repliques, chacune executerait les memes surveillances — ne l'activer que
+    # repliques, chacune executerait les memes surveillances - ne l'activer que
     # sur une seule instance tant qu'aucun verrou partage n'existe.
     ordonnanceur_actif: bool = False
+
+    # Chiffre les cles d'API posees depuis l'interface. A defaut, JWT_SECRET
+    # est utilise - acceptable en developpement, a separer en production pour
+    # qu'une rotation du secret de session ne rende pas les cles illisibles.
+    secret_chiffrement: str = ""
 
     ovhcloud_api_key: str = ""
     scaleway_api_key: str = ""
