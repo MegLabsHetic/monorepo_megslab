@@ -9,6 +9,7 @@ from app.core.database import Base
 # Importer chaque module de modele enregistre sa table sur Base.metadata.
 # Sans cet import, autogenerate ne verrait aucune table.
 from app.models import (  # noqa: F401
+    annotation,
     audit_log,
     conversation,
     dashboard,
