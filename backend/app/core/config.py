@@ -34,6 +34,31 @@ class Settings(BaseSettings):
     openai_api_key: str = ""
     groq_api_key: str = ""
 
+    # La chaine de fournisseurs de modele, du prefere au dernier recours, sous
+    # la forme « fournisseur:modele » separee par des virgules. Vide : le seul
+    # fournisseur historique, a l'identique.
+    #
+    # Rabattre suppose le MEME modele chez plusieurs hebergeurs, sans quoi une
+    # bascule ferait varier la qualite des reponses sans le dire :
+    #   LLM_CHAINE=ovhcloud:gpt-oss-120b,scaleway:gpt-oss-120b,ionos:gpt-oss-120b
+    llm_chaine: str = ""
+
+    # Routage par agent. Les trois agents qui appellent le modele n'ont pas la
+    # meme exigence : l'Analyste determine le score du produit, le Redacteur et
+    # le Viz produisent une phrase et un choix de graphique. Vide : l'agent
+    # utilise LLM_CHAINE.
+    #
+    # C'est un second axe, distinct du rabattement : celui-ci choisit QUEL
+    # MODELE pour quelle tache, celui-la choisit QUEL HEBERGEUR pour ce modele.
+    # Les confondre ferait varier la qualite au gre des pannes.
+    llm_chaine_analyste: str = ""
+    llm_chaine_redacteur: str = ""
+    llm_chaine_viz: str = ""
+
+    ovhcloud_api_key: str = ""
+    scaleway_api_key: str = ""
+    ionos_api_key: str = ""
+
     airbyte_base_url: str = ""
     # L'URL que le navigateur de l'utilisateur peut atteindre. Elle differe
     # de airbyte_base_url des que le backend passe par un reseau interne.

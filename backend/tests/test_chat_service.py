@@ -33,7 +33,9 @@ class FauxLLM:
         self.sql = sql
         self.appels: list[str] = []
 
-    async def repondre(self, *, instructions, question, format_sortie: type[BaseModel], effort):
+    async def repondre(
+        self, *, instructions, question, format_sortie: type[BaseModel], effort, agent=""
+    ):
         self.appels.append(format_sortie.__name__)
         if format_sortie is PlanRequete:
             contenu = PlanRequete(sql=self.sql, tables_utilisees=["ventes"], explication="compte")
@@ -149,7 +151,9 @@ class FauxLLMQuiCorrige(FauxLLM):
         super().__init__()
         self.questions: list[str] = []
 
-    async def repondre(self, *, instructions, question, format_sortie: type[BaseModel], effort):
+    async def repondre(
+        self, *, instructions, question, format_sortie: type[BaseModel], effort, agent=""
+    ):
         self.questions.append(question)
         if format_sortie is PlanRequete and "rejetee" in question:
             self.sql = (

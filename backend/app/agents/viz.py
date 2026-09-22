@@ -66,6 +66,7 @@ class AgentViz:
             format_sortie=SpecGraphique,
             # Choisir un type de graphique ne demande pas de raisonner longtemps.
             effort="low",
+            agent="viz",
         )
         return Reponse(
             contenu=_verifier(reponse.contenu, resultat), consommation=reponse.consommation

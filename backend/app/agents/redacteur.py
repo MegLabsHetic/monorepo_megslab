@@ -51,6 +51,7 @@ class Redacteur:
             # Formuler n'est pas raisonner : l'effort minimal suffit, et coute
             # moins cher.
             effort="low",
+            agent="redacteur",
         )
 
 
