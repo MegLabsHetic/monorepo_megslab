@@ -2,30 +2,30 @@
 
 import { useCallback, useEffect, useState } from "react";
 
-import { useSession, useTraduireErreur } from "@/components/session/contexteSession";
+import { DrapeauFrance } from "@/components/marque/badgeSouverainete";
+import { useDroits, useSession, useTraduireErreur } from "@/components/session/contexteSession";
 import { Alert } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 import { Squelette } from "@/components/ui/skeleton";
-import { type ChaineAgent, type ConfigurationModeles, api } from "@/lib/api";
+import {
+  type ChaineAgent,
+  type ConfigurationModeles,
+  type EtatCle,
+  type ModeleDisponible,
+  api,
+} from "@/lib/api";
 
-/** Ce que coute un millier de questions chez ce fournisseur, en dollars.
- *
- * Mesure du 6 septembre 2026 : une question consomme environ 5 400 jetons
- * d'entree et 830 de sortie, six agents compris. On garde ce profil pour
- * comparer les fournisseurs entre eux, pas pour etablir une facture. */
-const JETONS_ENTREE_PAR_QUESTION = 5_440;
-const JETONS_SORTIE_PAR_QUESTION = 832;
-
-function coutMilleQuestions(entree: number, sortie: number): number {
-  return (
-    ((JETONS_ENTREE_PAR_QUESTION * entree + JETONS_SORTIE_PAR_QUESTION * sortie) / 1_000_000) * 1000
-  );
-}
+const FOURNISSEURS = ["anthropic", "ovhcloud", "scaleway", "ionos"] as const;
 
 export default function PageModeles() {
   const { jeton } = useSession();
+  const { estSuperAdmin } = useDroits();
   const traduireErreur = useTraduireErreur();
   const [config, setConfig] = useState<ConfigurationModeles | null>(null);
+  const [catalogue, setCatalogue] = useState<ModeleDisponible[]>([]);
   const [erreur, setErreur] = useState<string | null>(null);
+  const [message, setMessage] = useState<string | null>(null);
+  const peutModifier = estSuperAdmin;
 
   const charger = useCallback(() => {
     setErreur(null);
@@ -33,112 +33,192 @@ export default function PageModeles() {
       .configurationModeles(jeton)
       .then(setConfig)
       .catch((probleme) => setErreur(traduireErreur(probleme)));
+    api
+      .modelesDisponibles(jeton)
+      .then(setCatalogue)
+      .catch(() => setCatalogue([]));
   }, [jeton, traduireErreur]);
 
   useEffect(charger, [charger]);
 
+  const appliquer = useCallback(
+    async (action: Promise<ConfigurationModeles>, confirmation: string) => {
+      setErreur(null);
+      setMessage(null);
+      try {
+        setConfig(await action);
+        setMessage(confirmation);
+      } catch (probleme) {
+        setErreur(traduireErreur(probleme));
+      }
+    },
+    [traduireErreur]
+  );
+
   return (
     <div className="space-y-6">
       <header className="space-y-1">
-        <h1 className="text-2xl font-semibold text-slate-900">Modèles et souveraineté</h1>
-        <p className="max-w-2xl text-sm text-slate-600">
-          La configuration réellement appliquée, agent par agent — et non ce qui est écrit dans le
-          fichier de configuration. Si les deux divergent, c&apos;est cet écran qui dit vrai.
+        <h1 className="text-2xl font-semibold text-text">Modèles et souveraineté</h1>
+        <p className="max-w-3xl text-sm text-muted">
+          La configuration réellement appliquée, agent par agent. Ce qui est posé ici l&apos;emporte
+          sur le fichier de déploiement ; vider un réglage rend exactement le comportement
+          précédent.
         </p>
       </header>
 
       {erreur && <Alert>{erreur}</Alert>}
+      {message && (
+        <p className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-900">
+          {message}
+        </p>
+      )}
 
       {!config && !erreur && <Squelette className="h-64 w-full" />}
 
       {config && (
         <>
-          <div className="grid gap-3 sm:grid-cols-2">
-            <Bandeau
-              actif={config.entierement_europeenne}
-              titreActif="Toute la chaîne est dans l'Union européenne"
-              titreInactif="Une partie de la chaîne sort de l'Union européenne"
-              detailActif="Aucun appel au modèle ne quitte l'espace juridique européen."
-              detailInactif="Le schéma et au plus vingt lignes de résultat sont transmis hors UE."
-            />
-            <Bandeau
-              actif={config.rabattement_actif}
-              titreActif="Rabattement actif"
-              titreInactif="Aucun rabattement configuré"
-              detailActif="Si un hébergeur est indisponible, le suivant répond — avec le même modèle."
-              detailInactif="Un seul fournisseur par agent : son indisponibilité interrompt le service."
-            />
-          </div>
+          <Souverainete config={config} />
 
-          <div className="space-y-4">
+          <section className="space-y-4">
+            <h2 className="text-sm font-semibold uppercase tracking-wide text-muted">
+              Chaîne par agent
+            </h2>
             {config.agents.map((agent) => (
-              <CarteAgent key={agent.agent} agent={agent} />
+              <CarteAgent
+                key={agent.agent}
+                agent={agent}
+                catalogue={catalogue}
+                modifiable={peutModifier}
+                onAppliquer={(chaine) =>
+                  appliquer(
+                    api.poserChaine(jeton, agent.agent, chaine),
+                    chaine
+                      ? `Chaîne de l'agent ${agent.agent} mise à jour.`
+                      : `L'agent ${agent.agent} suit de nouveau le déploiement.`
+                  )
+                }
+              />
             ))}
-          </div>
+          </section>
 
-          <p className="text-xs text-slate-500">
-            Cet écran est en lecture seule. Changer de modèle depuis le navigateur permettrait de
-            basculer la production sur un modèle dont la justesse n&apos;a jamais été mesurée — la
-            configuration passe donc par le déploiement, où elle laisse une trace.
-          </p>
+          <Cles
+            cles={config.cles}
+            modifiable={peutModifier}
+            onPoser={(fournisseur, cle) =>
+              appliquer(
+                api.poserCleFournisseur(jeton, fournisseur, cle),
+                cle ? `Clé ${fournisseur} enregistrée.` : `Clé ${fournisseur} retirée.`
+              )
+            }
+          />
+
+          {catalogue.length > 0 && <Catalogue modeles={catalogue} />}
+
+          {!peutModifier && (
+            <p className="text-xs text-muted">
+              Seul un opérateur de la plateforme peut modifier cette configuration : changer le
+              modèle de l&apos;Analyste change la justesse de toutes les réponses suivantes.
+            </p>
+          )}
         </>
       )}
     </div>
   );
 }
 
-function Bandeau({
-  actif,
-  titreActif,
-  titreInactif,
-  detailActif,
-  detailInactif,
-}: {
-  actif: boolean;
-  titreActif: string;
-  titreInactif: string;
-  detailActif: string;
-  detailInactif: string;
-}) {
+function Souverainete({ config }: { config: ConfigurationModeles }) {
+  const hors = config.agents
+    .flatMap((a) => a.fournisseurs)
+    .filter((f) => !f.dans_l_union_europeenne);
+
   return (
-    <div
-      className={`rounded-lg border p-4 ${
-        actif ? "border-emerald-200 bg-emerald-50" : "border-amber-200 bg-amber-50"
-      }`}
-    >
-      <p
-        className={`text-sm font-semibold ${actif ? "text-emerald-900" : "text-amber-900"}`}
-        data-etat={actif ? "actif" : "inactif"}
-      >
-        {actif ? titreActif : titreInactif}
-      </p>
-      <p className={`mt-1 text-xs ${actif ? "text-emerald-800" : "text-amber-800"}`}>
-        {actif ? detailActif : detailInactif}
-      </p>
+    <section className="rounded-lg border border-line bg-surface p-5">
+      <div className="flex flex-wrap items-center gap-3">
+        <DrapeauFrance className="h-5 w-[30px]" />
+        <div>
+          <p className="font-semibold text-text">
+            {config.entierement_europeenne
+              ? "Hébergé et calculé en France"
+              : "Infrastructure hébergée en France"}
+          </p>
+          <p className="text-sm text-muted">
+            Serveur, entrepôt, ingestion et base applicative : OVHcloud, Gravelines.
+          </p>
+        </div>
+      </div>
+
+      <dl className="mt-4 grid gap-3 sm:grid-cols-3">
+        <Fait titre="Infrastructure" valeur="France 🇫🇷" bon />
+        <Fait
+          titre="Inférence"
+          valeur={config.entierement_europeenne ? "Union européenne" : "sort de l'UE"}
+          bon={config.entierement_europeenne}
+        />
+        <Fait
+          titre="Rabattement"
+          valeur={config.rabattement_actif ? "actif" : "aucun"}
+          bon={config.rabattement_actif}
+        />
+      </dl>
+
+      {hors.length > 0 && (
+        <p className="mt-4 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+          <strong>Ce qui sort aujourd&apos;hui :</strong> le schéma des tables avec les modalités
+          des colonnes catégorielles, et au plus vingt lignes de résultat par question - vers{" "}
+          {[...new Set(hors.map((f) => `${f.fournisseur} (${f.pays})`))].join(", ")}. Aucune table
+          n&apos;est transmise.
+        </p>
+      )}
+    </section>
+  );
+}
+
+function Fait({ titre, valeur, bon }: { titre: string; valeur: string; bon: boolean }) {
+  return (
+    <div className="rounded-md border border-line px-3 py-2">
+      <dt className="text-xs uppercase tracking-wide text-muted">{titre}</dt>
+      <dd className={`text-sm font-medium ${bon ? "text-emerald-700" : "text-amber-700"}`}>
+        {valeur}
+      </dd>
     </div>
   );
 }
 
-function CarteAgent({ agent }: { agent: ChaineAgent }) {
+function CarteAgent({
+  agent,
+  catalogue,
+  modifiable,
+  onAppliquer,
+}: {
+  agent: ChaineAgent;
+  catalogue: ModeleDisponible[];
+  modifiable: boolean;
+  onAppliquer: (chaine: string) => void;
+}) {
+  const actuelle = agent.fournisseurs.map((f) => `${f.fournisseur}:${f.modele}`).join(",");
+  const [saisie, setSaisie] = useState(actuelle);
+  useEffect(() => setSaisie(actuelle), [actuelle]);
+
   return (
-    <section className="rounded-lg border border-slate-200 bg-white">
-      <header className="border-b border-slate-100 px-5 py-3">
-        <h2 className="text-sm font-semibold capitalize text-slate-900">{agent.agent}</h2>
-        <p className="text-xs text-slate-500">{agent.role}</p>
+    <section className="rounded-lg border border-line bg-surface">
+      <header className="border-b border-line px-5 py-3">
+        <h3 className="text-sm font-semibold capitalize text-text">{agent.agent}</h3>
+        <p className="text-xs text-muted">{agent.role}</p>
       </header>
-      <div className="divide-y divide-slate-100">
+
+      <div className="divide-y divide-line">
         {agent.fournisseurs.map((f) => (
           <div key={f.rang} className="flex flex-wrap items-center gap-x-4 gap-y-2 px-5 py-3">
-            <span className="w-16 shrink-0 text-xs uppercase tracking-wide text-slate-400">
+            <span className="w-20 shrink-0 text-xs uppercase tracking-wide text-muted">
               {f.rang === 1 ? "principal" : `secours ${f.rang - 1}`}
             </span>
             <span className="text-lg" aria-hidden="true">
               {f.drapeau}
             </span>
             <div className="min-w-0 flex-1">
-              <p className="truncate font-mono text-sm text-slate-900">{f.modele}</p>
-              <p className="text-xs text-slate-500">
-                {f.fournisseur} — {f.ville ? `${f.ville}, ` : ""}
+              <p className="truncate font-mono text-sm text-text">{f.modele}</p>
+              <p className="text-xs text-muted">
+                {f.fournisseur} - {f.ville ? `${f.ville}, ` : ""}
                 {f.pays}
                 {f.localisation_verifiee && (
                   <span className="ml-2 rounded bg-emerald-100 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-800">
@@ -147,18 +227,162 @@ function CarteAgent({ agent }: { agent: ChaineAgent }) {
                 )}
               </p>
             </div>
-            <div className="text-right tabular-nums">
-              <p className="text-sm text-slate-900">
-                {coutMilleQuestions(f.prix_entree_par_million, f.prix_sortie_par_million).toFixed(
-                  2
-                )}{" "}
-                $
-              </p>
-              <p className="text-xs text-slate-500">pour 1 000 questions</p>
-            </div>
           </div>
         ))}
       </div>
+
+      {modifiable && (
+        <div className="flex flex-wrap items-center gap-2 border-t border-line px-5 py-3">
+          <input
+            value={saisie}
+            onChange={(e) => setSaisie(e.target.value)}
+            placeholder="fournisseur:modele, fournisseur:modele..."
+            aria-label={`Chaîne de l'agent ${agent.agent}`}
+            className="min-w-0 flex-1 rounded-md border border-line bg-bg px-3 py-1.5 font-mono text-xs text-text"
+            list={`modeles-${agent.agent}`}
+          />
+          <datalist id={`modeles-${agent.agent}`}>
+            {catalogue.map((m) => (
+              <option key={`${m.fournisseur}:${m.modele}`} value={`${m.fournisseur}:${m.modele}`} />
+            ))}
+          </datalist>
+          <Button onClick={() => onAppliquer(saisie)} disabled={saisie === actuelle}>
+            Appliquer
+          </Button>
+          <Button variante="contour" onClick={() => onAppliquer("")}>
+            Suivre le déploiement
+          </Button>
+        </div>
+      )}
+    </section>
+  );
+}
+
+function Cles({
+  cles,
+  modifiable,
+  onPoser,
+}: {
+  cles: EtatCle[];
+  modifiable: boolean;
+  onPoser: (fournisseur: string, cle: string) => void;
+}) {
+  const [saisies, setSaisies] = useState<Record<string, string>>({});
+
+  return (
+    <section className="rounded-lg border border-line bg-surface">
+      <header className="border-b border-line px-5 py-3">
+        <h2 className="text-sm font-semibold text-text">Clés d&apos;API</h2>
+        <p className="text-xs text-muted">
+          Chiffrées en base. L&apos;interface n&apos;en reçoit qu&apos;une empreinte : elle ne peut
+          pas les réafficher, même à vous.
+        </p>
+      </header>
+
+      <div className="divide-y divide-line">
+        {FOURNISSEURS.map((fournisseur) => {
+          const etat = cles.find((c) => c.fournisseur === fournisseur);
+          return (
+            <div
+              key={fournisseur}
+              className="flex flex-wrap items-center gap-x-4 gap-y-2 px-5 py-3"
+            >
+              <span className="w-24 shrink-0 font-mono text-sm text-text">{fournisseur}</span>
+              <span className="w-32 shrink-0 text-xs text-muted">
+                {etat?.definie ? (
+                  <>
+                    <span className="font-mono">{etat.empreinte}</span>
+                    <span className="ml-2 opacity-70">({etat.origine})</span>
+                  </>
+                ) : (
+                  "aucune clé"
+                )}
+              </span>
+              {modifiable && (
+                <div className="flex min-w-0 flex-1 items-center gap-2">
+                  <input
+                    type="password"
+                    autoComplete="off"
+                    value={saisies[fournisseur] ?? ""}
+                    onChange={(e) => setSaisies({ ...saisies, [fournisseur]: e.target.value })}
+                    placeholder="coller une nouvelle clé"
+                    aria-label={`Clé ${fournisseur}`}
+                    className="min-w-0 flex-1 rounded-md border border-line bg-bg px-3 py-1.5 text-xs text-text"
+                  />
+                  <Button
+                    onClick={() => {
+                      onPoser(fournisseur, saisies[fournisseur] ?? "");
+                      setSaisies({ ...saisies, [fournisseur]: "" });
+                    }}
+                    disabled={!saisies[fournisseur]}
+                  >
+                    Enregistrer
+                  </Button>
+                  {etat?.origine === "base" && (
+                    <Button variante="contour" onClick={() => onPoser(fournisseur, "")}>
+                      Retirer
+                    </Button>
+                  )}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
+function Catalogue({ modeles }: { modeles: ModeleDisponible[] }) {
+  return (
+    <section className="rounded-lg border border-line bg-surface">
+      <header className="border-b border-line px-5 py-3">
+        <h2 className="text-sm font-semibold text-text">Modèles tarifés</h2>
+        <p className="text-xs text-muted">
+          Coût projeté pour mille questions, sur le profil de jetons mesuré le 6 septembre 2026.
+        </p>
+      </header>
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b border-line text-left text-xs uppercase tracking-wide text-muted">
+              <th className="px-5 py-2 font-medium">Modèle</th>
+              <th className="px-5 py-2 font-medium">Où</th>
+              <th className="px-5 py-2 text-right font-medium">1 000 questions</th>
+              <th className="px-5 py-2 font-medium">Justesse</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-line">
+            {modeles.map((m) => (
+              <tr key={`${m.fournisseur}:${m.modele}`}>
+                <td className="px-5 py-2">
+                  <span className="font-mono text-xs text-text">{m.modele}</span>
+                  <span className="ml-2 text-xs text-muted">{m.fournisseur}</span>
+                </td>
+                <td className="px-5 py-2 text-xs text-muted">
+                  <span aria-hidden="true">{m.drapeau}</span> {m.ville ? `${m.ville}, ` : ""}
+                  {m.pays}
+                </td>
+                <td className="px-5 py-2 text-right tabular-nums text-text">
+                  {m.cout_mille_questions.toFixed(2)} $
+                </td>
+                <td className="px-5 py-2 text-xs">
+                  {m.justesse_mesuree ? (
+                    <span className="text-emerald-700">{m.note}</span>
+                  ) : (
+                    <span className="text-amber-700">jamais mesurée</span>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <p className="border-t border-line px-5 py-3 text-xs text-muted">
+        Un tarif n&apos;est pas une justesse. Basculer l&apos;Analyste sur un modèle marqué
+        «&nbsp;jamais mesurée&nbsp;» revient à changer la qualité des réponses sans savoir de
+        combien : le jeu d&apos;évaluation existe pour ça.
+      </p>
     </section>
   );
 }

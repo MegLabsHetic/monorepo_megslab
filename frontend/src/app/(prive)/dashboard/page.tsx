@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 
-import { BlocAVenir } from "@/components/donnees/blocAVenir";
 import { PastilleStatut } from "@/components/donnees/pastilleStatut";
 import { SqueletteTuiles } from "@/components/donnees/squelettes";
 import { TuileKpi } from "@/components/donnees/tuileKpi";
@@ -124,7 +123,7 @@ export default function PageTableauDeBord() {
                       <span className="min-w-0 flex-1">
                         <span className="block truncate text-sm text-text">{source.nom}</span>
                         <span className="block font-mono text-xs text-muted">
-                          {source.nb_tables} tables — {source.nb_colonnes} colonnes — connectee le{" "}
+                          {source.nb_tables} tables - {source.nb_colonnes} colonnes - connectee le{" "}
                           {formaterDate(source.cree_le)}
                         </span>
                       </span>
@@ -168,7 +167,7 @@ export default function PageTableauDeBord() {
             />
             <TuileKpi
               libelle="duree moyenne"
-              valeur={usage.questions > 0 ? `${usage.dureeMoyenne.toFixed(1)} s` : "—"}
+              valeur={usage.questions > 0 ? `${usage.dureeMoyenne.toFixed(1)} s` : "-"}
               precision="Question → reponse"
             />
           </div>
@@ -200,10 +199,20 @@ export default function PageTableauDeBord() {
               Ouvrir l&apos;assistant
             </span>
           </Link>
-          <BlocAVenir
-            titre="Rapports et exports"
-            description="Rapports partageables et notebooks exportables a partir de vos analyses. Rien n'est genere aujourd'hui."
-          />
+          <Link
+            href="/tableaux"
+            className="group rounded-lg border border-line bg-surface p-5 transition hover:border-marque/40"
+          >
+            <h3 className="font-semibold text-text">Rapports partageables</h3>
+            <p className="mt-1 text-sm text-muted">
+              Un tableau de bord s&apos;ouvre par un lien en lecture seule, sans compte ni mot de
+              passe. Les requetes sont rejouees a chaque consultation : le destinataire voit
+              l&apos;etat actuel des donnees, pas une capture.
+            </p>
+            <span className="mt-4 inline-block text-sm text-marque underline-offset-4 group-hover:underline">
+              Ouvrir les tableaux de bord
+            </span>
+          </Link>
         </div>
       </section>
     </div>

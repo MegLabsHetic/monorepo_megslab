@@ -3,6 +3,7 @@ import Link from "next/link";
 
 import { DataCore } from "@/components/marketing/dataCore";
 import { MurConnecteurs } from "@/components/marketing/murConnecteurs";
+import { BadgeSouverainete } from "@/components/marque/badgeSouverainete";
 import { Logo } from "@/components/marque/logo";
 import { SelecteurTheme } from "@/components/marque/selecteurTheme";
 import { classesBouton } from "@/components/ui/button";
@@ -187,7 +188,8 @@ export default function Accueil() {
           <span className="text-xs text-zinc-500">Connecteurs propulses par</span>
           <Image src="/logos/airbyte.svg" alt="Airbyte" width={68} height={27} />
         </a>
-        <p className="text-xs text-muted">MegsLab — projet HETIC</p>
+        <BadgeSouverainete chaineEuropeenne={null} />
+        <p className="text-xs text-muted">MegsLab - projet HETIC</p>
       </footer>
     </main>
   );

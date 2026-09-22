@@ -497,10 +497,34 @@ export type ChaineAgent = {
   fournisseurs: FournisseurModele[];
 };
 
+export type EtatCle = {
+  fournisseur: string;
+  definie: boolean;
+  origine: string;
+  empreinte: string;
+};
+
+export type ModeleDisponible = {
+  fournisseur: string;
+  modele: string;
+  pays: string;
+  drapeau: string;
+  ville: string;
+  dans_l_union_europeenne: boolean;
+  localisation_verifiee: boolean;
+  prix_entree_par_million: number;
+  prix_sortie_par_million: number;
+  cout_mille_questions: number;
+  justesse_mesuree: boolean;
+  note: string;
+};
+
 export type ConfigurationModeles = {
   agents: ChaineAgent[];
+  cles: EtatCle[];
   rabattement_actif: boolean;
   entierement_europeenne: boolean;
+  infrastructure_en_france: boolean;
 };
 
 export const api = {
@@ -610,6 +634,23 @@ export const api = {
 
   configurationModeles: (jeton: string) =>
     requete<ConfigurationModeles>(`/configuration/modeles`, { headers: entete(jeton) }),
+
+  modelesDisponibles: (jeton: string) =>
+    requete<ModeleDisponible[]>(`/configuration/modeles/disponibles`, { headers: entete(jeton) }),
+
+  poserChaine: (jeton: string, agent: string, chaine: string) =>
+    requete<ConfigurationModeles>(`/configuration/chaine`, {
+      method: "PUT",
+      headers: entete(jeton),
+      body: JSON.stringify({ agent, chaine }),
+    }),
+
+  poserCleFournisseur: (jeton: string, fournisseur: string, cle: string) =>
+    requete<ConfigurationModeles>(`/configuration/cle`, {
+      method: "PUT",
+      headers: entete(jeton),
+      body: JSON.stringify({ fournisseur, cle }),
+    }),
 
   listerSources: (jeton: string, espaceId: string) =>
     requete<Source[]>(`${espace(espaceId)}/sources`, { headers: entete(jeton) }),

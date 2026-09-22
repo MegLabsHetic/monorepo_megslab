@@ -5,6 +5,7 @@ import { ReactNode, useCallback, useEffect, useState } from "react";
 
 import { EcranMotDePasseTemporaire } from "@/components/compte/ecranMotDePasseTemporaire";
 import { Logo } from "@/components/marque/logo";
+import { BandeauSouverainete } from "@/components/marque/bandeauSouverainete";
 import { BarreNavigation } from "@/components/nav/barreNavigation";
 import { FournisseurSession } from "@/components/session/contexteSession";
 import { Button } from "@/components/ui/button";
@@ -105,6 +106,10 @@ export default function LayoutPrive({ children }: { children: ReactNode }) {
         <main id="contenu" className="mx-auto max-w-6xl px-6 py-8 lg:py-12">
           {children}
         </main>
+        <footer className="mx-auto flex max-w-6xl items-center justify-between gap-4 border-t border-line px-6 py-6">
+          <BandeauSouverainete compact />
+          <p className="text-xs text-muted">MegsLab</p>
+        </footer>
       </div>
     </FournisseurSession>
   );
