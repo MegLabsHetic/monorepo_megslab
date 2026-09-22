@@ -19,6 +19,7 @@ const LIENS = [
   { href: "/assistant", libelle: "Assistant" },
   { href: "/tableaux", libelle: "Tableaux" },
   { href: "/finops", libelle: "FinOps" },
+  { href: "/modeles", libelle: "Modeles" },
 ];
 
 export function BarreNavigation() {
