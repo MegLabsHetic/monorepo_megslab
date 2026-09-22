@@ -18,6 +18,36 @@ EURO_EN_DOLLARS = 1.08
 
 
 @dataclass(frozen=True)
+class Localisation:
+    """Ou l'inference a lieu, et sous quel droit.
+
+    Ce n'est pas une declaration d'editeur : pour OVHcloud, le point de
+    terminaison a ete resolu et son adresse verifiee aupres du RIPE le
+    9 septembre 2026 (AS16276 OVH SAS, Dunkerque). Voir l'annexe du memoire.
+    """
+
+    pays: str
+    drapeau: str
+    ville: str = ""
+    dans_l_union_europeenne: bool = True
+    verifiee: bool = False
+
+    @property
+    def libelle(self) -> str:
+        return f"{self.ville}, {self.pays}" if self.ville else self.pays
+
+
+LOCALISATIONS: dict[str, Localisation] = {
+    "ovhcloud": Localisation("France", "🇫🇷", "Gravelines", True, verifiee=True),
+    "scaleway": Localisation("France", "🇫🇷", "Paris", True),
+    "ionos": Localisation("Allemagne", "🇩🇪", "", True),
+    "anthropic": Localisation("États-Unis", "🇺🇸", "", dans_l_union_europeenne=False),
+}
+
+INCONNUE = Localisation("inconnue", "🏳", "", dans_l_union_europeenne=False)
+
+
+@dataclass(frozen=True)
 class Tarif:
     """Le prix d'un modele chez un fournisseur, en dollars par million de jetons."""
 
@@ -33,6 +63,10 @@ class Tarif:
     @property
     def libelle(self) -> str:
         return f"{self.fournisseur}/{self.modele}"
+
+    @property
+    def localisation(self) -> Localisation:
+        return LOCALISATIONS.get(self.fournisseur, INCONNUE)
 
 
 def _euros(montant: float) -> float:

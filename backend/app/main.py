@@ -5,6 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from app.api.auth import router as auth_router
+from app.api.configuration import router as configuration_router
 from app.api.conversations import router as conversations_router
 from app.api.dashboards import router as dashboards_router
 from app.api.espaces import router as espaces_router
@@ -53,6 +54,7 @@ def create_app() -> FastAPI:
     app.include_router(dashboards_router)
     app.include_router(questions_router)
     app.include_router(plateforme_router)
+    app.include_router(configuration_router)
 
     return app
 

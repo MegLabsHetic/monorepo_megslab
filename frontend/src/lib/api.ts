@@ -478,6 +478,31 @@ const json = (jeton: string, method: string, corps?: unknown): Options => ({
 });
 const espace = (id: string) => `/espaces/${encodeURIComponent(id)}`;
 
+export type FournisseurModele = {
+  rang: number;
+  fournisseur: string;
+  modele: string;
+  pays: string;
+  drapeau: string;
+  ville: string;
+  dans_l_union_europeenne: boolean;
+  localisation_verifiee: boolean;
+  prix_entree_par_million: number;
+  prix_sortie_par_million: number;
+};
+
+export type ChaineAgent = {
+  agent: string;
+  role: string;
+  fournisseurs: FournisseurModele[];
+};
+
+export type ConfigurationModeles = {
+  agents: ChaineAgent[];
+  rabattement_actif: boolean;
+  entierement_europeenne: boolean;
+};
+
 export const api = {
   // --- Compte ---
   inscrire: (email: string, mot_de_passe: string, nom_complet: string) =>
@@ -582,6 +607,9 @@ export const api = {
       headers: entete(jeton),
       delaiMax: DELAI_CONNEXION_SOURCE,
     }),
+
+  configurationModeles: (jeton: string) =>
+    requete<ConfigurationModeles>(`/configuration/modeles`, { headers: entete(jeton) }),
 
   listerSources: (jeton: string, espaceId: string) =>
     requete<Source[]>(`${espace(espaceId)}/sources`, { headers: entete(jeton) }),
