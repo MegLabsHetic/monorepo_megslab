@@ -1,0 +1,2064 @@
+[
+ {
+  "question": "Combien de commandes avons-nous au total ?",
+  "famille": "agregats_simples",
+  "niveau": "facile",
+  "sql_reference": "SELECT COUNT(*) AS nombre_commandes FROM entrepot.orders;",
+  "piege": "",
+  "reference_verifiee": true,
+  "reference_nb_lignes": 1,
+  "reference_extrait": [
+   [
+    "99441"
+   ]
+  ]
+ },
+ {
+  "question": "Combien de clients distincts avons-nous ?",
+  "famille": "agregats_simples",
+  "niveau": "facile",
+  "sql_reference": "SELECT COUNT(DISTINCT customer_unique_id) AS clients FROM entrepot.customers;",
+  "piege": "customer_id est unique par commande ; le vrai client est customer_unique_id.",
+  "reference_verifiee": true,
+  "reference_nb_lignes": 1,
+  "reference_extrait": [
+   [
+    "96096"
+   ]
+  ]
+ },
+ {
+  "question": "Combien de vendeurs sont referencés ?",
+  "famille": "agregats_simples",
+  "niveau": "facile",
+  "sql_reference": "SELECT COUNT(*) AS vendeurs FROM entrepot.sellers;",
+  "piege": "",
+  "reference_verifiee": true,
+  "reference_nb_lignes": 1,
+  "reference_extrait": [
+   [
+    "3095"
+   ]
+  ]
+ },
+ {
+  "question": "Combien de produits differents vendons-nous ?",
+  "famille": "agregats_simples",
+  "niveau": "facile",
+  "sql_reference": "SELECT COUNT(*) AS produits FROM entrepot.products;",
+  "piege": "",
+  "reference_verifiee": true,
+  "reference_nb_lignes": 1,
+  "reference_extrait": [
+   [
+    "32951"
+   ]
+  ]
+ },
+ {
+  "question": "Quel est le montant total des paiements enregistres ?",
+  "famille": "agregats_simples",
+  "niveau": "facile",
+  "sql_reference": "SELECT ROUND(SUM(payment_value), 2) AS total_paiements FROM entrepot.order_payments;",
+  "piege": "",
+  "reference_verifiee": true,
+  "reference_nb_lignes": 1,
+  "reference_extrait": [
+   [
+    "16008872.12"
+   ]
+  ]
+ },
+ {
+  "question": "Quel est le panier moyen par commande, hors frais de port ?",
+  "famille": "agregats_simples",
+  "niveau": "moyen",
+  "sql_reference": "SELECT ROUND(AVG(total), 2) AS panier_moyen\nFROM (SELECT order_id, SUM(price) AS total\n      FROM entrepot.order_items GROUP BY order_id) AS t;",
+  "piege": "Moyenne des sommes par commande, pas moyenne des prix de ligne.",
+  "reference_verifiee": true,
+  "reference_nb_lignes": 1,
+  "reference_extrait": [
+   [
+    "137.75"
+   ]
+  ]
+ },
+ {
+  "question": "Quel est le prix moyen, median et maximum d'un article vendu ?",
+  "famille": "agregats_simples",
+  "niveau": "moyen",
+  "sql_reference": "SELECT ROUND(AVG(price), 2) AS prix_moyen,\n       ROUND(MEDIAN(price), 2) AS prix_median,\n       ROUND(MAX(price), 2) AS prix_max\nFROM entrepot.order_items;",
+  "piege": "",
+  "reference_verifiee": true,
+  "reference_nb_lignes": 1,
+  "reference_extrait": [
+   [
+    "120.65",
+    "74.99",
+    "6735.0"
+   ]
+  ]
+ },
+ {
+  "question": "Quelle est la note moyenne donnee par nos clients ?",
+  "famille": "agregats_simples",
+  "niveau": "moyen",
+  "sql_reference": "SELECT ROUND(AVG(review_score), 3) AS note_moyenne FROM entrepot.order_reviews;",
+  "piege": "",
+  "reference_verifiee": true,
+  "reference_nb_lignes": 1,
+  "reference_extrait": [
+   [
+    "4.086"
+   ]
+  ]
+ },
+ {
+  "question": "Combien d'articles vendons-nous en moyenne par commande ?",
+  "famille": "agregats_simples",
+  "niveau": "moyen",
+  "sql_reference": "SELECT ROUND(AVG(n), 3) AS articles_par_commande\nFROM (SELECT order_id, COUNT(*) AS n FROM entrepot.order_items GROUP BY order_id) AS t;",
+  "piege": "",
+  "reference_verifiee": true,
+  "reference_nb_lignes": 1,
+  "reference_extrait": [
+   [
+    "1.142"
+   ]
+  ]
+ },
+ {
+  "question": "Quel est le montant total des frais de port factures ?",
+  "famille": "agregats_simples",
+  "niveau": "moyen",
+  "sql_reference": "SELECT ROUND(SUM(freight_value), 2) AS total_frais_port FROM entrepot.order_items;",
+  "piege": "",
+  "reference_verifiee": true,
+  "reference_nb_lignes": 1,
+  "reference_extrait": [
+   [
+    "2251909.54"
+   ]
+  ]
+ },
+ {
+  "question": "Quel est le poids moyen d'un produit, en excluant ceux dont le poids est inconnu ?",
+  "famille": "agregats_simples",
+  "niveau": "difficile",
+  "sql_reference": "SELECT ROUND(AVG(product_weight_g), 1) AS poids_moyen_g\nFROM entrepot.products WHERE product_weight_g IS NOT NULL;",
+  "piege": "",
+  "reference_verifiee": true,
+  "reference_nb_lignes": 1,
+  "reference_extrait": [
+   [
+    "2276.5"
+   ]
+  ]
+ },
+ {
+  "question": "Combien de commandes comportent plus d'un article ?",
+  "famille": "agregats_simples",
+  "niveau": "difficile",
+  "sql_reference": "SELECT COUNT(*) AS commandes_multi_articles\nFROM (SELECT order_id FROM entrepot.order_items\n      GROUP BY order_id HAVING COUNT(*) > 1) AS t;",
+  "piege": "",
+  "reference_verifiee": true,
+  "reference_nb_lignes": 1,
+  "reference_extrait": [
+   [
+    "9803"
+   ]
+  ]
+ },
+ {
+  "question": "Quels sont les cinq etats bresiliens qui comptent le plus de clients ?",
+  "famille": "classements",
+  "niveau": "facile",
+  "sql_reference": "SELECT customer_state AS etat, COUNT(*) AS clients\nFROM entrepot.customers GROUP BY customer_state\nORDER BY clients DESC, etat ASC LIMIT 5;",
+  "piege": "",
+  "reference_verifiee": true,
+  "reference_nb_lignes": 5,
+  "reference_extrait": [
+   [
+    "SP",
+    "41746"
+   ],
+   [
+    "RJ",
+    "12852"
+   ],
+   [
+    "MG",
+    "11635"
+   ]
+  ]
+ },
+ {
+  "question": "Quels sont les dix produits les plus vendus, en nombre d'articles ?",
+  "famille": "classements",
+  "niveau": "facile",
+  "sql_reference": "SELECT product_id, COUNT(*) AS articles_vendus\nFROM entrepot.order_items GROUP BY product_id\nORDER BY articles_vendus DESC, product_id ASC LIMIT 10;",
+  "piege": "",
+  "reference_verifiee": true,
+  "reference_nb_lignes": 10,
+  "reference_extrait": [
+   [
+    "aca2eb7d00ea1a7b8ebd4e68314663af",
+    "527"
+   ],
+   [
+    "99a4788cb24856965c36a24e339b6058",
+    "488"
+   ],
+   [
+    "422879e10f46682990de24d770e7f83d",
+    "484"
+   ]
+  ]
+ },
+ {
+  "question": "Quelles sont les dix categories de produits qui rapportent le plus, en euros ?",
+  "famille": "classements",
+  "niveau": "moyen",
+  "sql_reference": "SELECT p.product_category_name AS categorie, ROUND(SUM(i.price), 2) AS chiffre_affaires\nFROM entrepot.order_items AS i\nJOIN entrepot.products AS p ON p.product_id = i.product_id\nWHERE p.product_category_name IS NOT NULL\nGROUP BY p.product_category_name\nORDER BY chiffre_affaires DESC LIMIT 10;",
+  "piege": "",
+  "reference_verifiee": true,
+  "reference_nb_lignes": 10,
+  "reference_extrait": [
+   [
+    "beleza_saude",
+    "1258681.34"
+   ],
+   [
+    "relogios_presentes",
+    "1205005.68"
+   ],
+   [
+    "cama_mesa_banho",
+    "1036988.68"
+   ]
+  ]
+ },
+ {
+  "question": "Quels sont les cinq vendeurs qui realisent le plus gros chiffre d'affaires ?",
+  "famille": "classements",
+  "niveau": "moyen",
+  "sql_reference": "SELECT seller_id, ROUND(SUM(price), 2) AS chiffre_affaires\nFROM entrepot.order_items GROUP BY seller_id\nORDER BY chiffre_affaires DESC LIMIT 5;",
+  "piege": "",
+  "reference_verifiee": true,
+  "reference_nb_lignes": 5,
+  "reference_extrait": [
+   [
+    "4869f7a5dfa277a7dca6462dcf3b52b2",
+    "229472.63"
+   ],
+   [
+    "53243585a1d6dc2643021fd1853d8905",
+    "222776.05"
+   ],
+   [
+    "4a3ca9315b744ce9f8e9374361493884",
+    "200472.92"
+   ]
+  ]
+ },
+ {
+  "question": "Quelles sont les dix villes qui commandent le plus ?",
+  "famille": "classements",
+  "niveau": "moyen",
+  "sql_reference": "SELECT c.customer_city AS ville, COUNT(*) AS commandes\nFROM entrepot.orders AS o\nJOIN entrepot.customers AS c ON c.customer_id = o.customer_id\nGROUP BY c.customer_city ORDER BY commandes DESC, ville ASC LIMIT 10;",
+  "piege": "",
+  "reference_verifiee": true,
+  "reference_nb_lignes": 10,
+  "reference_extrait": [
+   [
+    "sao paulo",
+    "15540"
+   ],
+   [
+    "rio de janeiro",
+    "6882"
+   ],
+   [
+    "belo horizonte",
+    "2773"
+   ]
+  ]
+ },
+ {
+  "question": "Quels sont les cinq moyens de paiement les plus utilises ?",
+  "famille": "classements",
+  "niveau": "moyen",
+  "sql_reference": "SELECT payment_type AS moyen_paiement, COUNT(*) AS utilisations\nFROM entrepot.order_payments GROUP BY payment_type\nORDER BY utilisations DESC LIMIT 5;",
+  "piege": "",
+  "reference_verifiee": true,
+  "reference_nb_lignes": 5,
+  "reference_extrait": [
+   [
+    "credit_card",
+    "76795"
+   ],
+   [
+    "boleto",
+    "19784"
+   ],
+   [
+    "voucher",
+    "5775"
+   ]
+  ]
+ },
+ {
+  "question": "Quelles sont les cinq categories dont le panier moyen par article est le plus eleve, parmi celles vendues au moins cent fois ?",
+  "famille": "classements",
+  "niveau": "difficile",
+  "sql_reference": "SELECT p.product_category_name AS categorie,\n       ROUND(AVG(i.price), 2) AS prix_moyen,\n       COUNT(*) AS articles\nFROM entrepot.order_items AS i\nJOIN entrepot.products AS p ON p.product_id = i.product_id\nWHERE p.product_category_name IS NOT NULL\nGROUP BY p.product_category_name\nHAVING COUNT(*) >= 100\nORDER BY prix_moyen DESC LIMIT 5;",
+  "piege": "Sans le seuil de cent ventes, le classement est domine par des categories marginales.",
+  "reference_verifiee": true,
+  "reference_nb_lignes": 5,
+  "reference_extrait": [
+   [
+    "pcs",
+    "1098.34",
+    "203"
+   ],
+   [
+    "eletrodomesticos_2",
+    "476.12",
+    "238"
+   ],
+   [
+    "agro_industria_e_comercio",
+    "342.12",
+    "212"
+   ]
+  ]
+ },
+ {
+  "question": "Quels sont les dix clients qui ont depense le plus au total ?",
+  "famille": "classements",
+  "niveau": "difficile",
+  "sql_reference": "SELECT c.customer_unique_id, ROUND(SUM(i.price), 2) AS depense_totale\nFROM entrepot.order_items AS i\nJOIN entrepot.orders AS o ON o.order_id = i.order_id\nJOIN entrepot.customers AS c ON c.customer_id = o.customer_id\nGROUP BY c.customer_unique_id ORDER BY depense_totale DESC LIMIT 10;",
+  "piege": "Regrouper sur customer_unique_id, pas customer_id.",
+  "reference_verifiee": true,
+  "reference_nb_lignes": 10,
+  "reference_extrait": [
+   [
+    "0a0a92112bd4c708ca5fde585afaa872",
+    "13440.0"
+   ],
+   [
+    "da122df9eeddfedc1dc1f5349a1a690c",
+    "7388.0"
+   ],
+   [
+    "763c8b1c9c68a0229c42c9fc6f662b93",
+    "7160.0"
+   ]
+  ]
+ },
+ {
+  "question": "Quelles sont les cinq categories qui recoivent les plus mauvaises notes, parmi celles evaluees au moins deux cents fois ?",
+  "famille": "classements",
+  "niveau": "difficile",
+  "sql_reference": "SELECT p.product_category_name AS categorie,\n       ROUND(AVG(r.review_score), 3) AS note_moyenne,\n       COUNT(*) AS avis\nFROM entrepot.order_reviews AS r\nJOIN entrepot.order_items AS i ON i.order_id = r.order_id\nJOIN entrepot.products AS p ON p.product_id = i.product_id\nWHERE p.product_category_name IS NOT NULL\nGROUP BY p.product_category_name\nHAVING COUNT(*) >= 200\nORDER BY note_moyenne ASC LIMIT 5;",
+  "piege": "",
+  "reference_verifiee": true,
+  "reference_nb_lignes": 5,
+  "reference_extrait": [
+   [
+    "moveis_escritorio",
+    "3.493",
+    "1687"
+   ],
+   [
+    "telefonia_fixa",
+    "3.683",
+    "262"
+   ],
+   [
+    "audio",
+    "3.825",
+    "361"
+   ]
+  ]
+ },
+ {
+  "question": "Quels sont les cinq etats ou le panier moyen est le plus eleve ?",
+  "famille": "classements",
+  "niveau": "difficile",
+  "sql_reference": "SELECT c.customer_state AS etat, ROUND(AVG(t.total), 2) AS panier_moyen\nFROM (SELECT order_id, SUM(price) AS total FROM entrepot.order_items GROUP BY order_id) AS t\nJOIN entrepot.orders AS o ON o.order_id = t.order_id\nJOIN entrepot.customers AS c ON c.customer_id = o.customer_id\nGROUP BY c.customer_state ORDER BY panier_moyen DESC LIMIT 5;",
+  "piege": "",
+  "reference_verifiee": true,
+  "reference_nb_lignes": 5,
+  "reference_extrait": [
+   [
+    "PB",
+    "216.67"
+   ],
+   [
+    "AP",
+    "198.15"
+   ],
+   [
+    "AC",
+    "197.32"
+   ]
+  ]
+ },
+ {
+  "question": "Quels sont les dix vendeurs qui expedient depuis le plus de villes differentes ?",
+  "famille": "classements",
+  "niveau": "moyen",
+  "sql_reference": "SELECT s.seller_id, COUNT(DISTINCT s.seller_city) AS villes\nFROM entrepot.sellers AS s GROUP BY s.seller_id\nORDER BY villes DESC, s.seller_id ASC LIMIT 10;",
+  "piege": "Un vendeur n'a qu'une ville dans ce schema : la reponse attendue est 1 partout.",
+  "reference_verifiee": true,
+  "reference_nb_lignes": 10,
+  "reference_extrait": [
+   [
+    "0015a82c2db000af6aaaf3ae2ecb0532",
+    "1"
+   ],
+   [
+    "001cca7ae9ae17fb1caed9dfb1094831",
+    "1"
+   ],
+   [
+    "001e6ad469a905060d959994f1b41e4f",
+    "1"
+   ]
+  ]
+ },
+ {
+  "question": "Quels sont les trois statuts de commande les plus frequents ?",
+  "famille": "classements",
+  "niveau": "facile",
+  "sql_reference": "SELECT order_status AS statut, COUNT(*) AS commandes\nFROM entrepot.orders GROUP BY order_status\nORDER BY commandes DESC LIMIT 3;",
+  "piege": "",
+  "reference_verifiee": true,
+  "reference_nb_lignes": 3,
+  "reference_extrait": [
+   [
+    "delivered",
+    "96478"
+   ],
+   [
+    "shipped",
+    "1107"
+   ],
+   [
+    "canceled",
+    "625"
+   ]
+  ]
+ },
+ {
+  "question": "Combien de commandes par mois en 2017 ?",
+  "famille": "series_temporelles",
+  "niveau": "moyen",
+  "sql_reference": "SELECT DATE_TRUNC('month', TRY_CAST(order_purchase_timestamp AS TIMESTAMP)) AS mois,\n       COUNT(*) AS commandes\nFROM entrepot.orders\nWHERE EXTRACT(year FROM TRY_CAST(order_purchase_timestamp AS TIMESTAMP)) = 2017\nGROUP BY 1 ORDER BY 1;",
+  "piege": "order_purchase_timestamp est un VARCHAR : conversion obligatoire.",
+  "reference_verifiee": true,
+  "reference_nb_lignes": 12,
+  "reference_extrait": [
+   [
+    "2017-01-01 00:00:00",
+    "800"
+   ],
+   [
+    "2017-02-01 00:00:00",
+    "1780"
+   ],
+   [
+    "2017-03-01 00:00:00",
+    "2682"
+   ]
+  ]
+ },
+ {
+  "question": "Quel est le chiffre d'affaires mois par mois en 2018 ?",
+  "famille": "series_temporelles",
+  "niveau": "moyen",
+  "sql_reference": "SELECT DATE_TRUNC('month', TRY_CAST(o.order_purchase_timestamp AS TIMESTAMP)) AS mois,\n       ROUND(SUM(i.price), 2) AS chiffre_affaires\nFROM entrepot.orders AS o\nJOIN entrepot.order_items AS i ON i.order_id = o.order_id\nWHERE EXTRACT(year FROM TRY_CAST(o.order_purchase_timestamp AS TIMESTAMP)) = 2018\nGROUP BY 1 ORDER BY 1;",
+  "piege": "",
+  "reference_verifiee": true,
+  "reference_nb_lignes": 9,
+  "reference_extrait": [
+   [
+    "2018-01-01 00:00:00",
+    "950030.36"
+   ],
+   [
+    "2018-02-01 00:00:00",
+    "844178.71"
+   ],
+   [
+    "2018-03-01 00:00:00",
+    "983213.44"
+   ]
+  ]
+ },
+ {
+  "question": "Combien de commandes par annee ?",
+  "famille": "series_temporelles",
+  "niveau": "facile",
+  "sql_reference": "SELECT EXTRACT(year FROM TRY_CAST(order_purchase_timestamp AS TIMESTAMP)) AS annee,\n       COUNT(*) AS commandes\nFROM entrepot.orders GROUP BY 1 ORDER BY 1;",
+  "piege": "",
+  "reference_verifiee": true,
+  "reference_nb_lignes": 3,
+  "reference_extrait": [
+   [
+    "2016",
+    "329"
+   ],
+   [
+    "2017",
+    "45101"
+   ],
+   [
+    "2018",
+    "54011"
+   ]
+  ]
+ },
+ {
+  "question": "Quel jour de la semaine recoit le plus de commandes ?",
+  "famille": "series_temporelles",
+  "niveau": "moyen",
+  "sql_reference": "SELECT EXTRACT(dow FROM TRY_CAST(order_purchase_timestamp AS TIMESTAMP)) AS jour_semaine,\n       COUNT(*) AS commandes\nFROM entrepot.orders GROUP BY 1 ORDER BY commandes DESC;",
+  "piege": "",
+  "reference_verifiee": true,
+  "reference_nb_lignes": 7,
+  "reference_extrait": [
+   [
+    "1",
+    "16196"
+   ],
+   [
+    "2",
+    "15963"
+   ],
+   [
+    "3",
+    "15552"
+   ]
+  ]
+ },
+ {
+  "question": "A quelle heure de la journee nos clients commandent-ils le plus ?",
+  "famille": "series_temporelles",
+  "niveau": "moyen",
+  "sql_reference": "SELECT EXTRACT(hour FROM TRY_CAST(order_purchase_timestamp AS TIMESTAMP)) AS heure,\n       COUNT(*) AS commandes\nFROM entrepot.orders GROUP BY 1 ORDER BY commandes DESC LIMIT 5;",
+  "piege": "",
+  "reference_verifiee": true,
+  "reference_nb_lignes": 5,
+  "reference_extrait": [
+   [
+    "16",
+    "6675"
+   ],
+   [
+    "11",
+    "6578"
+   ],
+   [
+    "14",
+    "6569"
+   ]
+  ]
+ },
+ {
+  "question": "Quelle a ete l'evolution du panier moyen trimestre par trimestre ?",
+  "famille": "series_temporelles",
+  "niveau": "difficile",
+  "sql_reference": "SELECT DATE_TRUNC('quarter', TRY_CAST(o.order_purchase_timestamp AS TIMESTAMP)) AS trimestre,\n       ROUND(AVG(t.total), 2) AS panier_moyen\nFROM (SELECT order_id, SUM(price) AS total FROM entrepot.order_items GROUP BY order_id) AS t\nJOIN entrepot.orders AS o ON o.order_id = t.order_id\nGROUP BY 1 ORDER BY 1;",
+  "piege": "",
+  "reference_verifiee": true,
+  "reference_nb_lignes": 9,
+  "reference_extrait": [
+   [
+    "2016-07-01 00:00:00",
+    "89.12"
+   ],
+   [
+    "2016-10-01 00:00:00",
+    "160.25"
+   ],
+   [
+    "2017-01-01 00:00:00",
+    "143.71"
+   ]
+  ]
+ },
+ {
+  "question": "Le delai de livraison s'est-il degrade au fil des mois de 2018 ?",
+  "famille": "series_temporelles",
+  "niveau": "difficile",
+  "sql_reference": "SELECT DATE_TRUNC('month', TRY_CAST(order_purchase_timestamp AS TIMESTAMP)) AS mois,\n       ROUND(AVG(DATE_DIFF('day',\n              TRY_CAST(order_purchase_timestamp AS TIMESTAMP),\n              TRY_CAST(order_delivered_customer_date AS TIMESTAMP))), 2) AS delai_moyen_jours\nFROM entrepot.orders\nWHERE order_delivered_customer_date IS NOT NULL\n  AND EXTRACT(year FROM TRY_CAST(order_purchase_timestamp AS TIMESTAMP)) = 2018\nGROUP BY 1 ORDER BY 1;",
+  "piege": "Les commandes sans date de livraison doivent etre exclues, pas comptees a zero.",
+  "reference_verifiee": true,
+  "reference_nb_lignes": 8,
+  "reference_extrait": [
+   [
+    "2018-01-01 00:00:00",
+    "14.01"
+   ],
+   [
+    "2018-02-01 00:00:00",
+    "16.88"
+   ],
+   [
+    "2018-03-01 00:00:00",
+    "16.24"
+   ]
+  ]
+ },
+ {
+  "question": "Quelle est la note moyenne mois par mois en 2018 ?",
+  "famille": "series_temporelles",
+  "niveau": "moyen",
+  "sql_reference": "SELECT DATE_TRUNC('month', TRY_CAST(r.review_creation_date AS TIMESTAMP)) AS mois,\n       ROUND(AVG(r.review_score), 3) AS note_moyenne\nFROM entrepot.order_reviews AS r\nWHERE EXTRACT(year FROM TRY_CAST(r.review_creation_date AS TIMESTAMP)) = 2018\nGROUP BY 1 ORDER BY 1;",
+  "piege": "",
+  "reference_verifiee": true,
+  "reference_nb_lignes": 8,
+  "reference_extrait": [
+   [
+    "2018-01-01 00:00:00",
+    "4.064"
+   ],
+   [
+    "2018-02-01 00:00:00",
+    "4.014"
+   ],
+   [
+    "2018-03-01 00:00:00",
+    "3.727"
+   ]
+  ]
+ },
+ {
+  "question": "Quel mois a enregistre le plus fort chiffre d'affaires, toutes annees confondues ?",
+  "famille": "series_temporelles",
+  "niveau": "difficile",
+  "sql_reference": "SELECT DATE_TRUNC('month', TRY_CAST(o.order_purchase_timestamp AS TIMESTAMP)) AS mois,\n       ROUND(SUM(i.price), 2) AS chiffre_affaires\nFROM entrepot.orders AS o\nJOIN entrepot.order_items AS i ON i.order_id = o.order_id\nGROUP BY 1 ORDER BY chiffre_affaires DESC LIMIT 1;",
+  "piege": "",
+  "reference_verifiee": true,
+  "reference_nb_lignes": 1,
+  "reference_extrait": [
+   [
+    "2017-11-01 00:00:00",
+    "1010271.37"
+   ]
+  ]
+ },
+ {
+  "question": "Combien de commandes ont ete passees le premier semestre 2018 ?",
+  "famille": "series_temporelles",
+  "niveau": "moyen",
+  "sql_reference": "SELECT COUNT(*) AS commandes\nFROM entrepot.orders\nWHERE TRY_CAST(order_purchase_timestamp AS TIMESTAMP) >= TIMESTAMP '2018-01-01'\n  AND TRY_CAST(order_purchase_timestamp AS TIMESTAMP) < TIMESTAMP '2018-07-01';",
+  "piege": "",
+  "reference_verifiee": true,
+  "reference_nb_lignes": 1,
+  "reference_extrait": [
+   [
+    "41187"
+   ]
+  ]
+ },
+ {
+  "question": "Quelle est la progression du nombre de commandes entre 2017 et 2018, en pourcentage ?",
+  "famille": "series_temporelles",
+  "niveau": "difficile",
+  "sql_reference": "SELECT\n  SUM(CASE WHEN EXTRACT(year FROM TRY_CAST(order_purchase_timestamp AS TIMESTAMP)) = 2017 THEN 1 ELSE 0 END) AS commandes_2017,\n  SUM(CASE WHEN EXTRACT(year FROM TRY_CAST(order_purchase_timestamp AS TIMESTAMP)) = 2018 THEN 1 ELSE 0 END) AS commandes_2018,\n  ROUND(100.0 * (SUM(CASE WHEN EXTRACT(year FROM TRY_CAST(order_purchase_timestamp AS TIMESTAMP)) = 2018 THEN 1 ELSE 0 END)\n       - SUM(CASE WHEN EXTRACT(year FROM TRY_CAST(order_purchase_timestamp AS TIMESTAMP)) = 2017 THEN 1 ELSE 0 END))\n       / NULLIF(SUM(CASE WHEN EXTRACT(year FROM TRY_CAST(order_purchase_timestamp AS TIMESTAMP)) = 2017 THEN 1 ELSE 0 END), 0), 2) AS progression_pct\nFROM entrepot.orders;",
+  "piege": "2018 est une annee tronquee : la comparaison brute est trompeuse.",
+  "reference_verifiee": true,
+  "reference_nb_lignes": 1,
+  "reference_extrait": [
+   [
+    "45101",
+    "54011",
+    "19.76"
+   ]
+  ]
+ },
+ {
+  "question": "Combien de commandes par mois en 2018, uniquement celles livrees ?",
+  "famille": "series_temporelles",
+  "niveau": "moyen",
+  "sql_reference": "SELECT DATE_TRUNC('month', TRY_CAST(order_purchase_timestamp AS TIMESTAMP)) AS mois,\n       COUNT(*) AS commandes_livrees\nFROM entrepot.orders\nWHERE order_status = 'delivered'\n  AND EXTRACT(year FROM TRY_CAST(order_purchase_timestamp AS TIMESTAMP)) = 2018\nGROUP BY 1 ORDER BY 1;",
+  "piege": "",
+  "reference_verifiee": true,
+  "reference_nb_lignes": 8,
+  "reference_extrait": [
+   [
+    "2018-01-01 00:00:00",
+    "7069"
+   ],
+   [
+    "2018-02-01 00:00:00",
+    "6555"
+   ],
+   [
+    "2018-03-01 00:00:00",
+    "7003"
+   ]
+  ]
+ },
+ {
+  "question": "Quel chiffre d'affaires par etat du client ?",
+  "famille": "jointures",
+  "niveau": "moyen",
+  "sql_reference": "SELECT c.customer_state AS etat, ROUND(SUM(i.price), 2) AS chiffre_affaires\nFROM entrepot.order_items AS i\nJOIN entrepot.orders AS o ON o.order_id = i.order_id\nJOIN entrepot.customers AS c ON c.customer_id = o.customer_id\nGROUP BY c.customer_state ORDER BY chiffre_affaires DESC;",
+  "piege": "",
+  "reference_verifiee": true,
+  "reference_nb_lignes": 27,
+  "reference_extrait": [
+   [
+    "SP",
+    "5202955.05"
+   ],
+   [
+    "RJ",
+    "1824092.67"
+   ],
+   [
+    "MG",
+    "1585308.03"
+   ]
+  ]
+ },
+ {
+  "question": "Quelles categories de produits ont le panier moyen le plus eleve, avec leur nom en anglais ?",
+  "famille": "jointures",
+  "niveau": "difficile",
+  "sql_reference": "SELECT COALESCE(t.product_category_name_english, p.product_category_name) AS categorie,\n       ROUND(AVG(i.price), 2) AS prix_moyen\nFROM entrepot.order_items AS i\nJOIN entrepot.products AS p ON p.product_id = i.product_id\nLEFT JOIN entrepot.product_category_name_translation AS t\n  ON t.product_category_name = p.product_category_name\nWHERE p.product_category_name IS NOT NULL\nGROUP BY 1 ORDER BY prix_moyen DESC LIMIT 10;",
+  "piege": "",
+  "reference_verifiee": true,
+  "reference_nb_lignes": 10,
+  "reference_extrait": [
+   [
+    "computers",
+    "1098.34"
+   ],
+   [
+    "small_appliances_home_oven_and_coffee",
+    "624.29"
+   ],
+   [
+    "home_appliances_2",
+    "476.12"
+   ]
+  ]
+ },
+ {
+  "question": "Les vendeurs de quels etats livrent le plus vite ?",
+  "famille": "jointures",
+  "niveau": "difficile",
+  "sql_reference": "SELECT s.seller_state AS etat_vendeur,\n       ROUND(AVG(DATE_DIFF('day',\n              TRY_CAST(o.order_purchase_timestamp AS TIMESTAMP),\n              TRY_CAST(o.order_delivered_customer_date AS TIMESTAMP))), 2) AS delai_moyen_jours,\n       COUNT(*) AS commandes\nFROM entrepot.order_items AS i\nJOIN entrepot.orders AS o ON o.order_id = i.order_id\nJOIN entrepot.sellers AS s ON s.seller_id = i.seller_id\nWHERE o.order_delivered_customer_date IS NOT NULL\nGROUP BY s.seller_state HAVING COUNT(*) >= 100\nORDER BY delai_moyen_jours ASC;",
+  "piege": "",
+  "reference_verifiee": true,
+  "reference_nb_lignes": 13,
+  "reference_extrait": [
+   [
+    "RS",
+    "11.49",
+    "2169"
+   ],
+   [
+    "RJ",
+    "11.94",
+    "4689"
+   ],
+   [
+    "SP",
+    "12.21",
+    "78600"
+   ]
+  ]
+ },
+ {
+  "question": "Quelle est la note moyenne par categorie de produit, en anglais, pour les categories evaluees au moins cinq cents fois ?",
+  "famille": "jointures",
+  "niveau": "difficile",
+  "sql_reference": "SELECT COALESCE(t.product_category_name_english, p.product_category_name) AS categorie,\n       ROUND(AVG(r.review_score), 3) AS note_moyenne, COUNT(*) AS avis\nFROM entrepot.order_reviews AS r\nJOIN entrepot.order_items AS i ON i.order_id = r.order_id\nJOIN entrepot.products AS p ON p.product_id = i.product_id\nLEFT JOIN entrepot.product_category_name_translation AS t\n  ON t.product_category_name = p.product_category_name\nWHERE p.product_category_name IS NOT NULL\nGROUP BY 1 HAVING COUNT(*) >= 500\nORDER BY note_moyenne DESC;",
+  "piege": "",
+  "reference_verifiee": true,
+  "reference_nb_lignes": 28,
+  "reference_extrait": [
+   [
+    "books_general_interest",
+    "4.446",
+    "549"
+   ],
+   [
+    "luggage_accessories",
+    "4.315",
+    "1088"
+   ],
+   [
+    "stationery",
+    "4.194",
+    "2507"
+   ]
+  ]
+ },
+ {
+  "question": "Quel est le montant moyen paye par type de paiement ?",
+  "famille": "jointures",
+  "niveau": "moyen",
+  "sql_reference": "SELECT payment_type AS moyen_paiement, ROUND(AVG(payment_value), 2) AS montant_moyen,\n       COUNT(*) AS paiements\nFROM entrepot.order_payments GROUP BY payment_type ORDER BY montant_moyen DESC;",
+  "piege": "",
+  "reference_verifiee": true,
+  "reference_nb_lignes": 5,
+  "reference_extrait": [
+   [
+    "credit_card",
+    "163.32",
+    "76795"
+   ],
+   [
+    "boleto",
+    "145.03",
+    "19784"
+   ],
+   [
+    "debit_card",
+    "142.57",
+    "1529"
+   ]
+  ]
+ },
+ {
+  "question": "Les commandes payees en plusieurs fois sont-elles plus cheres ?",
+  "famille": "jointures",
+  "niveau": "difficile",
+  "sql_reference": "SELECT CASE WHEN payment_installments > 1 THEN 'plusieurs fois' ELSE 'une fois' END AS modalite,\n       ROUND(AVG(payment_value), 2) AS montant_moyen, COUNT(*) AS paiements\nFROM entrepot.order_payments GROUP BY 1 ORDER BY montant_moyen DESC;",
+  "piege": "",
+  "reference_verifiee": true,
+  "reference_nb_lignes": 2,
+  "reference_extrait": [
+   [
+    "plusieurs fois",
+    "196.76",
+    "51338"
+   ],
+   [
+    "une fois",
+    "112.42",
+    "52548"
+   ]
+  ]
+ },
+ {
+  "question": "Quel est le chiffre d'affaires par etat du vendeur et par annee ?",
+  "famille": "jointures",
+  "niveau": "difficile",
+  "sql_reference": "SELECT s.seller_state AS etat_vendeur,\n       EXTRACT(year FROM TRY_CAST(o.order_purchase_timestamp AS TIMESTAMP)) AS annee,\n       ROUND(SUM(i.price), 2) AS chiffre_affaires\nFROM entrepot.order_items AS i\nJOIN entrepot.orders AS o ON o.order_id = i.order_id\nJOIN entrepot.sellers AS s ON s.seller_id = i.seller_id\nGROUP BY 1, 2 ORDER BY annee, chiffre_affaires DESC;",
+  "piege": "",
+  "reference_verifiee": true,
+  "reference_nb_lignes": 50,
+  "reference_extrait": [
+   [
+    "SP",
+    "2016",
+    "26405.93"
+   ],
+   [
+    "RJ",
+    "2016",
+    "8449.98"
+   ],
+   [
+    "PR",
+    "2016",
+    "7128.63"
+   ]
+  ]
+ },
+ {
+  "question": "Combien de commandes un vendeur traite-t-il en moyenne ?",
+  "famille": "jointures",
+  "niveau": "moyen",
+  "sql_reference": "SELECT ROUND(AVG(n), 2) AS commandes_par_vendeur\nFROM (SELECT seller_id, COUNT(DISTINCT order_id) AS n\n      FROM entrepot.order_items GROUP BY seller_id) AS t;",
+  "piege": "",
+  "reference_verifiee": true,
+  "reference_nb_lignes": 1,
+  "reference_extrait": [
+   [
+    "32.31"
+   ]
+  ]
+ },
+ {
+  "question": "Les clients qui achetent cher mettent-ils de meilleures notes ?",
+  "famille": "jointures",
+  "niveau": "difficile",
+  "sql_reference": "SELECT CASE WHEN t.total >= 200 THEN 'panier eleve' ELSE 'panier modeste' END AS segment,\n       ROUND(AVG(r.review_score), 3) AS note_moyenne, COUNT(*) AS avis\nFROM (SELECT order_id, SUM(price) AS total FROM entrepot.order_items GROUP BY order_id) AS t\nJOIN entrepot.order_reviews AS r ON r.order_id = t.order_id\nGROUP BY 1 ORDER BY note_moyenne DESC;",
+  "piege": "",
+  "reference_verifiee": true,
+  "reference_nb_lignes": 2,
+  "reference_extrait": [
+   [
+    "panier modeste",
+    "4.129",
+    "83429"
+   ],
+   [
+    "panier eleve",
+    "3.971",
+    "15036"
+   ]
+  ]
+ },
+ {
+  "question": "Quelle part du chiffre d'affaires les frais de port representent-ils, par etat ?",
+  "famille": "jointures",
+  "niveau": "moyen",
+  "sql_reference": "SELECT c.customer_state AS etat,\n       ROUND(100.0 * SUM(i.freight_value) / NULLIF(SUM(i.price + i.freight_value), 0), 2) AS part_frais_port_pct\nFROM entrepot.order_items AS i\nJOIN entrepot.orders AS o ON o.order_id = i.order_id\nJOIN entrepot.customers AS c ON c.customer_id = o.customer_id\nGROUP BY c.customer_state ORDER BY part_frais_port_pct DESC;",
+  "piege": "",
+  "reference_verifiee": true,
+  "reference_nb_lignes": 27,
+  "reference_extrait": [
+   [
+    "RR",
+    "22.21"
+   ],
+   [
+    "MA",
+    "20.85"
+   ],
+   [
+    "RO",
+    "19.84"
+   ]
+  ]
+ },
+ {
+  "question": "Quels vendeurs vendent dans le plus grand nombre de categories differentes ?",
+  "famille": "jointures",
+  "niveau": "difficile",
+  "sql_reference": "SELECT i.seller_id, COUNT(DISTINCT p.product_category_name) AS categories\nFROM entrepot.order_items AS i\nJOIN entrepot.products AS p ON p.product_id = i.product_id\nWHERE p.product_category_name IS NOT NULL\nGROUP BY i.seller_id ORDER BY categories DESC LIMIT 10;",
+  "piege": "",
+  "reference_verifiee": true,
+  "reference_nb_lignes": 10,
+  "reference_extrait": [
+   [
+    "b2ba3715d723d245138f291a6fe42594",
+    "27"
+   ],
+   [
+    "955fee9216a65b617aa5c0531780ce60",
+    "23"
+   ],
+   [
+    "4e922959ae960d389249c378d1c939f5",
+    "23"
+   ]
+  ]
+ },
+ {
+  "question": "Combien de commandes sont livrees dans un etat different de celui du vendeur ?",
+  "famille": "jointures",
+  "niveau": "moyen",
+  "sql_reference": "SELECT COUNT(DISTINCT o.order_id) AS commandes_inter_etats\nFROM entrepot.order_items AS i\nJOIN entrepot.orders AS o ON o.order_id = i.order_id\nJOIN entrepot.customers AS c ON c.customer_id = o.customer_id\nJOIN entrepot.sellers AS s ON s.seller_id = i.seller_id\nWHERE c.customer_state <> s.seller_state;",
+  "piege": "",
+  "reference_verifiee": true,
+  "reference_nb_lignes": 1,
+  "reference_extrait": [
+   [
+    "63313"
+   ]
+  ]
+ },
+ {
+  "question": "Combien de commandes n'ont pas de date de livraison renseignee ?",
+  "famille": "qualite_donnees",
+  "niveau": "moyen",
+  "sql_reference": "SELECT COUNT(*) AS commandes_sans_date_livraison\nFROM entrepot.orders WHERE order_delivered_customer_date IS NULL;",
+  "piege": "",
+  "reference_verifiee": true,
+  "reference_nb_lignes": 1,
+  "reference_extrait": [
+   [
+    "2965"
+   ]
+  ]
+ },
+ {
+  "question": "Quelle proportion des avis ne comporte aucun message ecrit ?",
+  "famille": "qualite_donnees",
+  "niveau": "moyen",
+  "sql_reference": "SELECT COUNT(*) AS total_avis,\n       SUM(CASE WHEN review_comment_message IS NULL THEN 1 ELSE 0 END) AS sans_message,\n       ROUND(100.0 * SUM(CASE WHEN review_comment_message IS NULL THEN 1 ELSE 0 END) / COUNT(*), 2) AS part_pct\nFROM entrepot.order_reviews;",
+  "piege": "Compter les NULL seuls : 9 avis supplementaires ne contiennent que des espaces, ce qui est un defaut distinct (question suivante).",
+  "reference_verifiee": true,
+  "reference_nb_lignes": 1,
+  "reference_extrait": [
+   [
+    "99224",
+    "58247",
+    "58.7"
+   ]
+  ]
+ },
+ {
+  "question": "Y a-t-il des avis dont le message ne contient que des espaces ?",
+  "famille": "qualite_donnees",
+  "niveau": "difficile",
+  "sql_reference": "SELECT COUNT(*) AS messages_blancs\nFROM entrepot.order_reviews\nWHERE review_comment_message IS NOT NULL AND TRIM(review_comment_message) = '';",
+  "piege": "Un champ rempli d'espaces n'est pas NULL : il passe les controles de completude et reste pourtant vide. Neuf occurrences ici.",
+  "reference_verifiee": true,
+  "reference_nb_lignes": 1,
+  "reference_extrait": [
+   [
+    "9"
+   ]
+  ]
+ },
+ {
+  "question": "Combien de produits n'ont pas de categorie renseignee ?",
+  "famille": "qualite_donnees",
+  "niveau": "moyen",
+  "sql_reference": "SELECT COUNT(*) AS produits_sans_categorie\nFROM entrepot.products WHERE product_category_name IS NULL;",
+  "piege": "",
+  "reference_verifiee": true,
+  "reference_nb_lignes": 1,
+  "reference_extrait": [
+   [
+    "610"
+   ]
+  ]
+ },
+ {
+  "question": "Y a-t-il des doublons dans la table de geolocalisation ?",
+  "famille": "qualite_donnees",
+  "niveau": "difficile",
+  "sql_reference": "SELECT COUNT(*) AS lignes_totales,\n       COUNT(DISTINCT geolocation_zip_code_prefix) AS codes_postaux_distincts\nFROM entrepot.geolocation;",
+  "piege": "La table contient un million de lignes pour bien moins de codes postaux.",
+  "reference_verifiee": true,
+  "reference_nb_lignes": 1,
+  "reference_extrait": [
+   [
+    "1000163",
+    "19015"
+   ]
+  ]
+ },
+ {
+  "question": "Combien de commandes ont ete annulees ou sont indisponibles ?",
+  "famille": "qualite_donnees",
+  "niveau": "moyen",
+  "sql_reference": "SELECT order_status AS statut, COUNT(*) AS commandes\nFROM entrepot.orders WHERE order_status IN ('canceled', 'unavailable')\nGROUP BY order_status ORDER BY commandes DESC;",
+  "piege": "",
+  "reference_verifiee": true,
+  "reference_nb_lignes": 2,
+  "reference_extrait": [
+   [
+    "canceled",
+    "625"
+   ],
+   [
+    "unavailable",
+    "609"
+   ]
+  ]
+ },
+ {
+  "question": "Combien de commandes ont ete livrees apres la date estimee ?",
+  "famille": "qualite_donnees",
+  "niveau": "difficile",
+  "sql_reference": "SELECT COUNT(*) AS livraisons_en_retard\nFROM entrepot.orders\nWHERE order_delivered_customer_date IS NOT NULL\n  AND TRY_CAST(order_delivered_customer_date AS TIMESTAMP)\n      > TRY_CAST(order_estimated_delivery_date AS TIMESTAMP);",
+  "piege": "",
+  "reference_verifiee": true,
+  "reference_nb_lignes": 1,
+  "reference_extrait": [
+   [
+    "7827"
+   ]
+  ]
+ },
+ {
+  "question": "Combien de produits ont des dimensions manquantes ?",
+  "famille": "qualite_donnees",
+  "niveau": "difficile",
+  "sql_reference": "SELECT COUNT(*) AS produits_dimensions_manquantes\nFROM entrepot.products\nWHERE product_weight_g IS NULL OR product_length_cm IS NULL\n   OR product_height_cm IS NULL OR product_width_cm IS NULL;",
+  "piege": "",
+  "reference_verifiee": true,
+  "reference_nb_lignes": 1,
+  "reference_extrait": [
+   [
+    "2"
+   ]
+  ]
+ },
+ {
+  "question": "Combien de commandes n'ont aucun article associe ?",
+  "famille": "qualite_donnees",
+  "niveau": "moyen",
+  "sql_reference": "SELECT COUNT(*) AS commandes_sans_article\nFROM entrepot.orders AS o\nLEFT JOIN entrepot.order_items AS i ON i.order_id = o.order_id\nWHERE i.order_id IS NULL;",
+  "piege": "",
+  "reference_verifiee": true,
+  "reference_nb_lignes": 1,
+  "reference_extrait": [
+   [
+    "775"
+   ]
+  ]
+ },
+ {
+  "question": "Combien de commandes n'ont recu aucun avis ?",
+  "famille": "qualite_donnees",
+  "niveau": "moyen",
+  "sql_reference": "SELECT COUNT(*) AS commandes_sans_avis\nFROM entrepot.orders AS o\nLEFT JOIN entrepot.order_reviews AS r ON r.order_id = o.order_id\nWHERE r.order_id IS NULL;",
+  "piege": "",
+  "reference_verifiee": true,
+  "reference_nb_lignes": 1,
+  "reference_extrait": [
+   [
+    "768"
+   ]
+  ]
+ },
+ {
+  "question": "Quel est le taux de valeurs manquantes sur la date de livraison au transporteur ?",
+  "famille": "qualite_donnees",
+  "niveau": "difficile",
+  "sql_reference": "SELECT ROUND(100.0 * SUM(CASE WHEN order_delivered_carrier_date IS NULL THEN 1 ELSE 0 END) / COUNT(*), 2) AS part_manquante_pct\nFROM entrepot.orders;",
+  "piege": "",
+  "reference_verifiee": true,
+  "reference_nb_lignes": 1,
+  "reference_extrait": [
+   [
+    "1.79"
+   ]
+  ]
+ },
+ {
+  "question": "Y a-t-il des paiements de montant nul ou negatif ?",
+  "famille": "qualite_donnees",
+  "niveau": "moyen",
+  "sql_reference": "SELECT COUNT(*) AS paiements_anormaux\nFROM entrepot.order_payments WHERE payment_value <= 0;",
+  "piege": "",
+  "reference_verifiee": true,
+  "reference_nb_lignes": 1,
+  "reference_extrait": [
+   [
+    "9"
+   ]
+  ]
+ },
+ {
+  "question": "Combien d'avis portent sur une commande qui n'existe pas dans la table des commandes ?",
+  "famille": "qualite_donnees",
+  "niveau": "difficile",
+  "sql_reference": "SELECT COUNT(*) AS avis_orphelins\nFROM entrepot.order_reviews AS r\nLEFT JOIN entrepot.orders AS o ON o.order_id = r.order_id\nWHERE o.order_id IS NULL;",
+  "piege": "",
+  "reference_verifiee": true,
+  "reference_nb_lignes": 1,
+  "reference_extrait": [
+   [
+    "0"
+   ]
+  ]
+ },
+ {
+  "question": "Combien d'avis contiennent un message ecrit par le client ?",
+  "famille": "texte_libre",
+  "niveau": "moyen",
+  "sql_reference": "SELECT COUNT(*) AS avis_avec_message\nFROM entrepot.order_reviews\nWHERE review_comment_message IS NOT NULL AND TRIM(review_comment_message) <> '';",
+  "piege": "",
+  "reference_verifiee": true,
+  "reference_nb_lignes": 1,
+  "reference_extrait": [
+   [
+    "40968"
+   ]
+  ]
+ },
+ {
+  "question": "Quelle est la longueur moyenne d'un commentaire client ?",
+  "famille": "texte_libre",
+  "niveau": "moyen",
+  "sql_reference": "SELECT ROUND(AVG(LENGTH(review_comment_message)), 1) AS longueur_moyenne\nFROM entrepot.order_reviews\nWHERE review_comment_message IS NOT NULL AND TRIM(review_comment_message) <> '';",
+  "piege": "",
+  "reference_verifiee": true,
+  "reference_nb_lignes": 1,
+  "reference_extrait": [
+   [
+    "68.7"
+   ]
+  ]
+ },
+ {
+  "question": "Combien de commentaires mentionnent un probleme de livraison ?",
+  "famille": "texte_libre",
+  "niveau": "difficile",
+  "sql_reference": "SELECT COUNT(*) AS commentaires_livraison\nFROM entrepot.order_reviews\nWHERE review_comment_message ILIKE '%entrega%' OR review_comment_message ILIKE '%atraso%';",
+  "piege": "Les avis sont en portugais bresilien : chercher des mots francais ne donnerait rien.",
+  "reference_verifiee": true,
+  "reference_nb_lignes": 1,
+  "reference_extrait": [
+   [
+    "7349"
+   ]
+  ]
+ },
+ {
+  "question": "Les commentaires des clients mecontents sont-ils plus longs que ceux des clients satisfaits ?",
+  "famille": "texte_libre",
+  "niveau": "difficile",
+  "sql_reference": "SELECT review_score AS note, ROUND(AVG(LENGTH(review_comment_message)), 1) AS longueur_moyenne,\n       COUNT(*) AS avis\nFROM entrepot.order_reviews\nWHERE review_comment_message IS NOT NULL AND TRIM(review_comment_message) <> ''\nGROUP BY review_score ORDER BY review_score;",
+  "piege": "",
+  "reference_verifiee": true,
+  "reference_nb_lignes": 5,
+  "reference_extrait": [
+   [
+    "1",
+    "99.9",
+    "8745"
+   ],
+   [
+    "2",
+    "96.8",
+    "2145"
+   ],
+   [
+    "3",
+    "83.3",
+    "3557"
+   ]
+  ]
+ },
+ {
+  "question": "Quels sont les dix titres d'avis les plus frequents ?",
+  "famille": "texte_libre",
+  "niveau": "moyen",
+  "sql_reference": "SELECT review_comment_title AS titre, COUNT(*) AS occurrences\nFROM entrepot.order_reviews\nWHERE review_comment_title IS NOT NULL AND TRIM(review_comment_title) <> ''\nGROUP BY review_comment_title ORDER BY occurrences DESC LIMIT 10;",
+  "piege": "",
+  "reference_verifiee": true,
+  "reference_nb_lignes": 10,
+  "reference_extrait": [
+   [
+    "Recomendo",
+    "423"
+   ],
+   [
+    "recomendo",
+    "345"
+   ],
+   [
+    "Bom",
+    "293"
+   ]
+  ]
+ },
+ {
+  "question": "Parmi les clients ayant mis une seule etoile, combien evoquent un produit non recu ?",
+  "famille": "texte_libre",
+  "niveau": "difficile",
+  "sql_reference": "SELECT COUNT(*) AS avis_produit_non_recu\nFROM entrepot.order_reviews\nWHERE review_score = 1\n  AND (review_comment_message ILIKE '%nao recebi%' OR review_comment_message ILIKE '%não recebi%');",
+  "piege": "",
+  "reference_verifiee": true,
+  "reference_nb_lignes": 1,
+  "reference_extrait": [
+   [
+    "1617"
+   ]
+  ]
+ },
+ {
+  "question": "Les clients qui laissent un commentaire mettent-ils de moins bonnes notes que ceux qui n'en laissent pas ?",
+  "famille": "texte_libre",
+  "niveau": "difficile",
+  "sql_reference": "SELECT CASE WHEN review_comment_message IS NULL OR TRIM(review_comment_message) = ''\n            THEN 'sans message' ELSE 'avec message' END AS groupe,\n       ROUND(AVG(review_score), 3) AS note_moyenne, COUNT(*) AS avis\nFROM entrepot.order_reviews GROUP BY 1 ORDER BY note_moyenne DESC;",
+  "piege": "",
+  "reference_verifiee": true,
+  "reference_nb_lignes": 2,
+  "reference_extrait": [
+   [
+    "sans message",
+    "4.38",
+    "58256"
+   ],
+   [
+    "avec message",
+    "3.67",
+    "40968"
+   ]
+  ]
+ },
+ {
+  "question": "Combien de commentaires font plus de deux cents caracteres ?",
+  "famille": "texte_libre",
+  "niveau": "moyen",
+  "sql_reference": "SELECT COUNT(*) AS commentaires_longs\nFROM entrepot.order_reviews WHERE LENGTH(review_comment_message) > 200;",
+  "piege": "",
+  "reference_verifiee": true,
+  "reference_nb_lignes": 1,
+  "reference_extrait": [
+   [
+    "77"
+   ]
+  ]
+ },
+ {
+  "question": "Combien d'avis mentionnent le mot « recommande » sous une forme ou une autre ?",
+  "famille": "texte_libre",
+  "niveau": "difficile",
+  "sql_reference": "SELECT COUNT(*) AS avis_recommandation\nFROM entrepot.order_reviews\nWHERE review_comment_message ILIKE '%recomend%';",
+  "piege": "",
+  "reference_verifiee": true,
+  "reference_nb_lignes": 1,
+  "reference_extrait": [
+   [
+    "4638"
+   ]
+  ]
+ },
+ {
+  "question": "Quelle note moyenne pour les avis qui mentionnent un retard de livraison ?",
+  "famille": "texte_libre",
+  "niveau": "difficile",
+  "sql_reference": "SELECT ROUND(AVG(review_score), 3) AS note_moyenne, COUNT(*) AS avis\nFROM entrepot.order_reviews\nWHERE review_comment_message ILIKE '%atraso%' OR review_comment_message ILIKE '%atrasad%';",
+  "piege": "",
+  "reference_verifiee": true,
+  "reference_nb_lignes": 1,
+  "reference_extrait": [
+   [
+    "2.275",
+    "432"
+   ]
+  ]
+ },
+ {
+  "question": "Combien d'avis ont un titre mais aucun message ?",
+  "famille": "texte_libre",
+  "niveau": "moyen",
+  "sql_reference": "SELECT COUNT(*) AS titre_sans_message\nFROM entrepot.order_reviews\nWHERE review_comment_title IS NOT NULL AND TRIM(review_comment_title) <> ''\n  AND (review_comment_message IS NULL OR TRIM(review_comment_message) = '');",
+  "piege": "",
+  "reference_verifiee": true,
+  "reference_nb_lignes": 1,
+  "reference_extrait": [
+   [
+    "1729"
+   ]
+  ]
+ },
+ {
+  "question": "Quels sont les cinq mots-cles de plainte les plus frequents dans les avis a une etoile ?",
+  "famille": "texte_libre",
+  "niveau": "difficile",
+  "sql_reference": "SELECT 'entrega' AS mot, COUNT(*) AS occurrences FROM entrepot.order_reviews\n  WHERE review_score = 1 AND review_comment_message ILIKE '%entrega%'\nUNION ALL\nSELECT 'produto', COUNT(*) FROM entrepot.order_reviews\n  WHERE review_score = 1 AND review_comment_message ILIKE '%produto%'\nUNION ALL\nSELECT 'nao recebi', COUNT(*) FROM entrepot.order_reviews\n  WHERE review_score = 1 AND review_comment_message ILIKE '%nao recebi%'\nUNION ALL\nSELECT 'atraso', COUNT(*) FROM entrepot.order_reviews\n  WHERE review_score = 1 AND review_comment_message ILIKE '%atraso%'\nUNION ALL\nSELECT 'cancelar', COUNT(*) FROM entrepot.order_reviews\n  WHERE review_score = 1 AND review_comment_message ILIKE '%cancelar%'\nORDER BY occurrences DESC;",
+  "piege": "Comptage par mot-cle fixe : ce n'est pas une extraction de themes, et il faut le dire.",
+  "reference_verifiee": true,
+  "reference_nb_lignes": 5,
+  "reference_extrait": [
+   [
+    "produto",
+    "4733"
+   ],
+   [
+    "entrega",
+    "1392"
+   ],
+   [
+    "nao recebi",
+    "221"
+   ]
+  ]
+ },
+ {
+  "question": "Quel est le taux de commandes livrees ?",
+  "famille": "ratios_taux",
+  "niveau": "moyen",
+  "sql_reference": "SELECT ROUND(100.0 * SUM(CASE WHEN order_status = 'delivered' THEN 1 ELSE 0 END) / COUNT(*), 2) AS taux_livraison_pct\nFROM entrepot.orders;",
+  "piege": "",
+  "reference_verifiee": true,
+  "reference_nb_lignes": 1,
+  "reference_extrait": [
+   [
+    "97.02"
+   ]
+  ]
+ },
+ {
+  "question": "Quel est le taux d'annulation ?",
+  "famille": "ratios_taux",
+  "niveau": "moyen",
+  "sql_reference": "SELECT ROUND(100.0 * SUM(CASE WHEN order_status = 'canceled' THEN 1 ELSE 0 END) / COUNT(*), 2) AS taux_annulation_pct\nFROM entrepot.orders;",
+  "piege": "",
+  "reference_verifiee": true,
+  "reference_nb_lignes": 1,
+  "reference_extrait": [
+   [
+    "0.63"
+   ]
+  ]
+ },
+ {
+  "question": "Quel pourcentage de commandes arrive en retard par rapport a la date estimee ?",
+  "famille": "ratios_taux",
+  "niveau": "difficile",
+  "sql_reference": "SELECT ROUND(100.0 * SUM(CASE WHEN TRY_CAST(order_delivered_customer_date AS TIMESTAMP)\n                              > TRY_CAST(order_estimated_delivery_date AS TIMESTAMP) THEN 1 ELSE 0 END)\n       / COUNT(*), 2) AS taux_retard_pct\nFROM entrepot.orders WHERE order_delivered_customer_date IS NOT NULL;",
+  "piege": "",
+  "reference_verifiee": true,
+  "reference_nb_lignes": 1,
+  "reference_extrait": [
+   [
+    "8.11"
+   ]
+  ]
+ },
+ {
+  "question": "Quelle part des avis est a cinq etoiles ?",
+  "famille": "ratios_taux",
+  "niveau": "moyen",
+  "sql_reference": "SELECT ROUND(100.0 * SUM(CASE WHEN review_score = 5 THEN 1 ELSE 0 END) / COUNT(*), 2) AS part_cinq_etoiles_pct\nFROM entrepot.order_reviews;",
+  "piege": "",
+  "reference_verifiee": true,
+  "reference_nb_lignes": 1,
+  "reference_extrait": [
+   [
+    "57.78"
+   ]
+  ]
+ },
+ {
+  "question": "Quelle part des avis est a une ou deux etoiles ?",
+  "famille": "ratios_taux",
+  "niveau": "moyen",
+  "sql_reference": "SELECT ROUND(100.0 * SUM(CASE WHEN review_score <= 2 THEN 1 ELSE 0 END) / COUNT(*), 2) AS part_mauvais_avis_pct\nFROM entrepot.order_reviews;",
+  "piege": "",
+  "reference_verifiee": true,
+  "reference_nb_lignes": 1,
+  "reference_extrait": [
+   [
+    "14.69"
+   ]
+  ]
+ },
+ {
+  "question": "Quelle proportion du chiffre d'affaires les dix premieres categories representent-elles ?",
+  "famille": "ratios_taux",
+  "niveau": "difficile",
+  "sql_reference": "WITH par_categorie AS (\n  SELECT p.product_category_name AS categorie, SUM(i.price) AS ca\n  FROM entrepot.order_items AS i\n  JOIN entrepot.products AS p ON p.product_id = i.product_id\n  WHERE p.product_category_name IS NOT NULL\n  GROUP BY p.product_category_name),\ntop10 AS (SELECT ca FROM par_categorie ORDER BY ca DESC LIMIT 10)\nSELECT ROUND(100.0 * (SELECT SUM(ca) FROM top10) / (SELECT SUM(ca) FROM par_categorie), 2) AS part_top10_pct;",
+  "piege": "",
+  "reference_verifiee": true,
+  "reference_nb_lignes": 1,
+  "reference_extrait": [
+   [
+    "63.2"
+   ]
+  ]
+ },
+ {
+  "question": "Quel est le taux de clients qui ont commande plus d'une fois ?",
+  "famille": "ratios_taux",
+  "niveau": "difficile",
+  "sql_reference": "WITH par_client AS (\n  SELECT c.customer_unique_id, COUNT(DISTINCT o.order_id) AS n\n  FROM entrepot.orders AS o\n  JOIN entrepot.customers AS c ON c.customer_id = o.customer_id\n  GROUP BY c.customer_unique_id)\nSELECT ROUND(100.0 * SUM(CASE WHEN n > 1 THEN 1 ELSE 0 END) / COUNT(*), 2) AS taux_reachat_pct\nFROM par_client;",
+  "piege": "",
+  "reference_verifiee": true,
+  "reference_nb_lignes": 1,
+  "reference_extrait": [
+   [
+    "3.12"
+   ]
+  ]
+ },
+ {
+  "question": "Quelle part des paiements se fait par carte de credit ?",
+  "famille": "ratios_taux",
+  "niveau": "moyen",
+  "sql_reference": "SELECT ROUND(100.0 * SUM(CASE WHEN payment_type = 'credit_card' THEN 1 ELSE 0 END) / COUNT(*), 2) AS part_carte_pct\nFROM entrepot.order_payments;",
+  "piege": "",
+  "reference_verifiee": true,
+  "reference_nb_lignes": 1,
+  "reference_extrait": [
+   [
+    "73.92"
+   ]
+  ]
+ },
+ {
+  "question": "Quel est le rapport entre frais de port et prix, par categorie ?",
+  "famille": "ratios_taux",
+  "niveau": "difficile",
+  "sql_reference": "SELECT p.product_category_name AS categorie,\n       ROUND(AVG(i.freight_value / NULLIF(i.price, 0)), 4) AS ratio_port_prix\nFROM entrepot.order_items AS i\nJOIN entrepot.products AS p ON p.product_id = i.product_id\nWHERE p.product_category_name IS NOT NULL AND i.price > 0\nGROUP BY p.product_category_name ORDER BY ratio_port_prix DESC LIMIT 10;",
+  "piege": "",
+  "reference_verifiee": true,
+  "reference_nb_lignes": 10,
+  "reference_extrait": [
+   [
+    "casa_conforto_2",
+    "0.9339"
+   ],
+   [
+    "dvds_blu_ray",
+    "0.833"
+   ],
+   [
+    "eletronicos",
+    "0.6835"
+   ]
+  ]
+ },
+ {
+  "question": "Quelle part des commandes comporte au moins deux articles ?",
+  "famille": "ratios_taux",
+  "niveau": "moyen",
+  "sql_reference": "WITH n_par_commande AS (\n  SELECT order_id, COUNT(*) AS n FROM entrepot.order_items GROUP BY order_id)\nSELECT ROUND(100.0 * SUM(CASE WHEN n >= 2 THEN 1 ELSE 0 END) / COUNT(*), 2) AS part_multi_articles_pct\nFROM n_par_commande;",
+  "piege": "",
+  "reference_verifiee": true,
+  "reference_nb_lignes": 1,
+  "reference_extrait": [
+   [
+    "9.94"
+   ]
+  ]
+ },
+ {
+  "question": "Quel est le taux de paiement en plusieurs fois, par etat du client ?",
+  "famille": "ratios_taux",
+  "niveau": "difficile",
+  "sql_reference": "SELECT c.customer_state AS etat,\n       ROUND(100.0 * SUM(CASE WHEN pa.payment_installments > 1 THEN 1 ELSE 0 END) / COUNT(*), 2) AS taux_plusieurs_fois_pct\nFROM entrepot.order_payments AS pa\nJOIN entrepot.orders AS o ON o.order_id = pa.order_id\nJOIN entrepot.customers AS c ON c.customer_id = o.customer_id\nGROUP BY c.customer_state ORDER BY taux_plusieurs_fois_pct DESC LIMIT 10;",
+  "piege": "",
+  "reference_verifiee": true,
+  "reference_nb_lignes": 10,
+  "reference_extrait": [
+   [
+    "AL",
+    "64.4"
+   ],
+   [
+    "AC",
+    "61.9"
+   ],
+   [
+    "RN",
+    "60.54"
+   ]
+  ]
+ },
+ {
+  "question": "Combien d'etats bresiliens differents comptent des clients ?",
+  "famille": "geographie",
+  "niveau": "facile",
+  "sql_reference": "SELECT COUNT(DISTINCT customer_state) AS etats FROM entrepot.customers;",
+  "piege": "",
+  "reference_verifiee": true,
+  "reference_nb_lignes": 1,
+  "reference_extrait": [
+   [
+    "27"
+   ]
+  ]
+ },
+ {
+  "question": "Combien de villes differentes comptent des vendeurs ?",
+  "famille": "geographie",
+  "niveau": "facile",
+  "sql_reference": "SELECT COUNT(DISTINCT seller_city) AS villes FROM entrepot.sellers;",
+  "piege": "",
+  "reference_verifiee": true,
+  "reference_nb_lignes": 1,
+  "reference_extrait": [
+   [
+    "611"
+   ]
+  ]
+ },
+ {
+  "question": "Quels sont les cinq etats qui comptent le plus de vendeurs ?",
+  "famille": "geographie",
+  "niveau": "moyen",
+  "sql_reference": "SELECT seller_state AS etat, COUNT(*) AS vendeurs\nFROM entrepot.sellers GROUP BY seller_state ORDER BY vendeurs DESC LIMIT 5;",
+  "piege": "",
+  "reference_verifiee": true,
+  "reference_nb_lignes": 5,
+  "reference_extrait": [
+   [
+    "SP",
+    "1849"
+   ],
+   [
+    "PR",
+    "349"
+   ],
+   [
+    "MG",
+    "244"
+   ]
+  ]
+ },
+ {
+  "question": "Le delai de livraison depend-il de l'etat du client ?",
+  "famille": "geographie",
+  "niveau": "difficile",
+  "sql_reference": "SELECT c.customer_state AS etat,\n       ROUND(AVG(DATE_DIFF('day',\n              TRY_CAST(o.order_purchase_timestamp AS TIMESTAMP),\n              TRY_CAST(o.order_delivered_customer_date AS TIMESTAMP))), 2) AS delai_moyen_jours,\n       COUNT(*) AS commandes\nFROM entrepot.orders AS o\nJOIN entrepot.customers AS c ON c.customer_id = o.customer_id\nWHERE o.order_delivered_customer_date IS NOT NULL\nGROUP BY c.customer_state ORDER BY delai_moyen_jours DESC;",
+  "piege": "",
+  "reference_verifiee": true,
+  "reference_nb_lignes": 27,
+  "reference_extrait": [
+   [
+    "RR",
+    "29.34",
+    "41"
+   ],
+   [
+    "AP",
+    "27.18",
+    "67"
+   ],
+   [
+    "AM",
+    "26.36",
+    "145"
+   ]
+  ]
+ },
+ {
+  "question": "Quelle est la repartition des clients entre Sao Paulo et le reste du pays ?",
+  "famille": "geographie",
+  "niveau": "moyen",
+  "sql_reference": "SELECT CASE WHEN customer_state = 'SP' THEN 'Sao Paulo' ELSE 'autres etats' END AS zone,\n       COUNT(*) AS clients\nFROM entrepot.customers GROUP BY 1 ORDER BY clients DESC;",
+  "piege": "",
+  "reference_verifiee": true,
+  "reference_nb_lignes": 2,
+  "reference_extrait": [
+   [
+    "autres etats",
+    "57695"
+   ],
+   [
+    "Sao Paulo",
+    "41746"
+   ]
+  ]
+ },
+ {
+  "question": "Quels etats ont le plus gros ecart entre nombre de clients et nombre de vendeurs ?",
+  "famille": "geographie",
+  "niveau": "difficile",
+  "sql_reference": "SELECT COALESCE(c.customer_state, s.seller_state) AS etat,\n       COALESCE(c.n, 0) AS clients, COALESCE(s.n, 0) AS vendeurs,\n       COALESCE(c.n, 0) - COALESCE(s.n, 0) AS ecart\nFROM (SELECT customer_state, COUNT(*) AS n FROM entrepot.customers GROUP BY customer_state) AS c\nFULL OUTER JOIN (SELECT seller_state, COUNT(*) AS n FROM entrepot.sellers GROUP BY seller_state) AS s\n  ON s.seller_state = c.customer_state\nORDER BY ecart DESC LIMIT 10;",
+  "piege": "",
+  "reference_verifiee": true,
+  "reference_nb_lignes": 10,
+  "reference_extrait": [
+   [
+    "SP",
+    "41746",
+    "1849",
+    "39897"
+   ],
+   [
+    "RJ",
+    "12852",
+    "171",
+    "12681"
+   ],
+   [
+    "MG",
+    "11635",
+    "244",
+    "11391"
+   ]
+  ]
+ },
+ {
+  "question": "Combien de codes postaux distincts la table de geolocalisation couvre-t-elle ?",
+  "famille": "geographie",
+  "niveau": "moyen",
+  "sql_reference": "SELECT COUNT(DISTINCT geolocation_zip_code_prefix) AS codes_postaux FROM entrepot.geolocation;",
+  "piege": "",
+  "reference_verifiee": true,
+  "reference_nb_lignes": 1,
+  "reference_extrait": [
+   [
+    "19015"
+   ]
+  ]
+ },
+ {
+  "question": "Quel est le chiffre d'affaires moyen par client, par etat ?",
+  "famille": "geographie",
+  "niveau": "difficile",
+  "sql_reference": "SELECT c.customer_state AS etat,\n       ROUND(SUM(i.price) / COUNT(DISTINCT c.customer_unique_id), 2) AS ca_moyen_par_client\nFROM entrepot.order_items AS i\nJOIN entrepot.orders AS o ON o.order_id = i.order_id\nJOIN entrepot.customers AS c ON c.customer_id = o.customer_id\nGROUP BY c.customer_state ORDER BY ca_moyen_par_client DESC LIMIT 10;",
+  "piege": "",
+  "reference_verifiee": true,
+  "reference_nb_lignes": 10,
+  "reference_extrait": [
+   [
+    "PB",
+    "223.39"
+   ],
+   [
+    "AC",
+    "207.57"
+   ],
+   [
+    "AL",
+    "201.29"
+   ]
+  ]
+ },
+ {
+  "question": "Quels sont les dix etats ou les frais de port moyens sont les plus eleves ?",
+  "famille": "geographie",
+  "niveau": "moyen",
+  "sql_reference": "SELECT c.customer_state AS etat, ROUND(AVG(i.freight_value), 2) AS frais_port_moyen\nFROM entrepot.order_items AS i\nJOIN entrepot.orders AS o ON o.order_id = i.order_id\nJOIN entrepot.customers AS c ON c.customer_id = o.customer_id\nGROUP BY c.customer_state ORDER BY frais_port_moyen DESC LIMIT 10;",
+  "piege": "",
+  "reference_verifiee": true,
+  "reference_nb_lignes": 10,
+  "reference_extrait": [
+   [
+    "RR",
+    "42.98"
+   ],
+   [
+    "PB",
+    "42.72"
+   ],
+   [
+    "RO",
+    "41.07"
+   ]
+  ]
+ },
+ {
+  "question": "La satisfaction varie-t-elle selon l'etat du client ?",
+  "famille": "geographie",
+  "niveau": "difficile",
+  "sql_reference": "SELECT c.customer_state AS etat, ROUND(AVG(r.review_score), 3) AS note_moyenne, COUNT(*) AS avis\nFROM entrepot.order_reviews AS r\nJOIN entrepot.orders AS o ON o.order_id = r.order_id\nJOIN entrepot.customers AS c ON c.customer_id = o.customer_id\nGROUP BY c.customer_state HAVING COUNT(*) >= 100\nORDER BY note_moyenne ASC LIMIT 10;",
+  "piege": "",
+  "reference_verifiee": true,
+  "reference_nb_lignes": 10,
+  "reference_extrait": [
+   [
+    "AL",
+    "3.751",
+    "414"
+   ],
+   [
+    "MA",
+    "3.764",
+    "746"
+   ],
+   [
+    "SE",
+    "3.808",
+    "349"
+   ]
+  ]
+ },
+ {
+  "question": "Quelle est la ville qui compte le plus de vendeurs ?",
+  "famille": "geographie",
+  "niveau": "moyen",
+  "sql_reference": "SELECT seller_city AS ville, COUNT(*) AS vendeurs\nFROM entrepot.sellers GROUP BY seller_city ORDER BY vendeurs DESC LIMIT 1;",
+  "piege": "",
+  "reference_verifiee": true,
+  "reference_nb_lignes": 1,
+  "reference_extrait": [
+   [
+    "sao paulo",
+    "694"
+   ]
+  ]
+ },
+ {
+  "question": "Le chiffre d'affaires du second semestre 2017 est-il superieur a celui du premier ?",
+  "famille": "comparaisons_periodes",
+  "niveau": "difficile",
+  "sql_reference": "SELECT CASE WHEN TRY_CAST(o.order_purchase_timestamp AS TIMESTAMP) < TIMESTAMP '2017-07-01'\n            THEN 'S1 2017' ELSE 'S2 2017' END AS semestre,\n       ROUND(SUM(i.price), 2) AS chiffre_affaires\nFROM entrepot.orders AS o\nJOIN entrepot.order_items AS i ON i.order_id = o.order_id\nWHERE TRY_CAST(o.order_purchase_timestamp AS TIMESTAMP) >= TIMESTAMP '2017-01-01'\n  AND TRY_CAST(o.order_purchase_timestamp AS TIMESTAMP) < TIMESTAMP '2018-01-01'\nGROUP BY 1 ORDER BY semestre;",
+  "piege": "",
+  "reference_verifiee": true,
+  "reference_nb_lignes": 2,
+  "reference_extrait": [
+   [
+    "S1 2017",
+    "2040997.16"
+   ],
+   [
+    "S2 2017",
+    "4114809.82"
+   ]
+  ]
+ },
+ {
+  "question": "Combien de commandes en janvier 2018 contre janvier 2017 ?",
+  "famille": "comparaisons_periodes",
+  "niveau": "moyen",
+  "sql_reference": "SELECT EXTRACT(year FROM TRY_CAST(order_purchase_timestamp AS TIMESTAMP)) AS annee,\n       COUNT(*) AS commandes\nFROM entrepot.orders\nWHERE EXTRACT(month FROM TRY_CAST(order_purchase_timestamp AS TIMESTAMP)) = 1\n  AND EXTRACT(year FROM TRY_CAST(order_purchase_timestamp AS TIMESTAMP)) IN (2017, 2018)\nGROUP BY 1 ORDER BY 1;",
+  "piege": "",
+  "reference_verifiee": true,
+  "reference_nb_lignes": 2,
+  "reference_extrait": [
+   [
+    "2017",
+    "800"
+   ],
+   [
+    "2018",
+    "7269"
+   ]
+  ]
+ },
+ {
+  "question": "La note moyenne s'est-elle amelioree entre 2017 et 2018 ?",
+  "famille": "comparaisons_periodes",
+  "niveau": "difficile",
+  "sql_reference": "SELECT EXTRACT(year FROM TRY_CAST(review_creation_date AS TIMESTAMP)) AS annee,\n       ROUND(AVG(review_score), 3) AS note_moyenne, COUNT(*) AS avis\nFROM entrepot.order_reviews\nWHERE EXTRACT(year FROM TRY_CAST(review_creation_date AS TIMESTAMP)) IN (2017, 2018)\nGROUP BY 1 ORDER BY 1;",
+  "piege": "",
+  "reference_verifiee": true,
+  "reference_nb_lignes": 2,
+  "reference_extrait": [
+   [
+    "2017",
+    "4.109",
+    "42735"
+   ],
+   [
+    "2018",
+    "4.072",
+    "56164"
+   ]
+  ]
+ },
+ {
+  "question": "Le delai de livraison moyen a-t-il change entre 2017 et 2018 ?",
+  "famille": "comparaisons_periodes",
+  "niveau": "difficile",
+  "sql_reference": "SELECT EXTRACT(year FROM TRY_CAST(order_purchase_timestamp AS TIMESTAMP)) AS annee,\n       ROUND(AVG(DATE_DIFF('day',\n              TRY_CAST(order_purchase_timestamp AS TIMESTAMP),\n              TRY_CAST(order_delivered_customer_date AS TIMESTAMP))), 2) AS delai_moyen_jours\nFROM entrepot.orders\nWHERE order_delivered_customer_date IS NOT NULL\n  AND EXTRACT(year FROM TRY_CAST(order_purchase_timestamp AS TIMESTAMP)) IN (2017, 2018)\nGROUP BY 1 ORDER BY 1;",
+  "piege": "",
+  "reference_verifiee": true,
+  "reference_nb_lignes": 2,
+  "reference_extrait": [
+   [
+    "2017",
+    "12.98"
+   ],
+   [
+    "2018",
+    "12.06"
+   ]
+  ]
+ },
+ {
+  "question": "Quel trimestre de 2018 a le mieux marche en volume ?",
+  "famille": "comparaisons_periodes",
+  "niveau": "moyen",
+  "sql_reference": "SELECT EXTRACT(quarter FROM TRY_CAST(order_purchase_timestamp AS TIMESTAMP)) AS trimestre,\n       COUNT(*) AS commandes\nFROM entrepot.orders\nWHERE EXTRACT(year FROM TRY_CAST(order_purchase_timestamp AS TIMESTAMP)) = 2018\nGROUP BY 1 ORDER BY commandes DESC;",
+  "piege": "",
+  "reference_verifiee": true,
+  "reference_nb_lignes": 4,
+  "reference_extrait": [
+   [
+    "1",
+    "21208"
+   ],
+   [
+    "2",
+    "19979"
+   ],
+   [
+    "3",
+    "12820"
+   ]
+  ]
+ },
+ {
+  "question": "Le panier moyen a-t-il progresse entre 2017 et 2018 ?",
+  "famille": "comparaisons_periodes",
+  "niveau": "difficile",
+  "sql_reference": "SELECT EXTRACT(year FROM TRY_CAST(o.order_purchase_timestamp AS TIMESTAMP)) AS annee,\n       ROUND(AVG(t.total), 2) AS panier_moyen\nFROM (SELECT order_id, SUM(price) AS total FROM entrepot.order_items GROUP BY order_id) AS t\nJOIN entrepot.orders AS o ON o.order_id = t.order_id\nWHERE EXTRACT(year FROM TRY_CAST(o.order_purchase_timestamp AS TIMESTAMP)) IN (2017, 2018)\nGROUP BY 1 ORDER BY 1;",
+  "piege": "",
+  "reference_verifiee": true,
+  "reference_nb_lignes": 2,
+  "reference_extrait": [
+   [
+    "2017",
+    "138.09"
+   ],
+   [
+    "2018",
+    "137.35"
+   ]
+  ]
+ },
+ {
+  "question": "Quelle categorie a le plus progresse en chiffre d'affaires entre 2017 et 2018 ?",
+  "famille": "comparaisons_periodes",
+  "niveau": "difficile",
+  "sql_reference": "WITH ca AS (\n  SELECT p.product_category_name AS categorie,\n         EXTRACT(year FROM TRY_CAST(o.order_purchase_timestamp AS TIMESTAMP)) AS annee,\n         SUM(i.price) AS montant\n  FROM entrepot.order_items AS i\n  JOIN entrepot.orders AS o ON o.order_id = i.order_id\n  JOIN entrepot.products AS p ON p.product_id = i.product_id\n  WHERE p.product_category_name IS NOT NULL\n    AND EXTRACT(year FROM TRY_CAST(o.order_purchase_timestamp AS TIMESTAMP)) IN (2017, 2018)\n  GROUP BY 1, 2)\nSELECT categorie,\n       ROUND(SUM(CASE WHEN annee = 2017 THEN montant ELSE 0 END), 2) AS ca_2017,\n       ROUND(SUM(CASE WHEN annee = 2018 THEN montant ELSE 0 END), 2) AS ca_2018,\n       ROUND(SUM(CASE WHEN annee = 2018 THEN montant ELSE -montant END), 2) AS progression\nFROM ca GROUP BY categorie ORDER BY progression DESC LIMIT 5;",
+  "piege": "",
+  "reference_verifiee": true,
+  "reference_nb_lignes": 5,
+  "reference_extrait": [
+   [
+    "beleza_saude",
+    "481755.71",
+    "772238.15",
+    "290482.44"
+   ],
+   [
+    "relogios_presentes",
+    "492794.5",
+    "708850.94",
+    "216056.44"
+   ],
+   [
+    "utilidades_domesticas",
+    "231073.49",
+    "399888.1",
+    "168814.61"
+   ]
+  ]
+ },
+ {
+  "question": "Combien de commandes au dernier trimestre disponible ?",
+  "famille": "comparaisons_periodes",
+  "niveau": "moyen",
+  "sql_reference": "SELECT DATE_TRUNC('quarter', TRY_CAST(order_purchase_timestamp AS TIMESTAMP)) AS trimestre,\n       COUNT(*) AS commandes\nFROM entrepot.orders GROUP BY 1 ORDER BY trimestre DESC LIMIT 1;",
+  "piege": "",
+  "reference_verifiee": true,
+  "reference_nb_lignes": 1,
+  "reference_extrait": [
+   [
+    "2018-10-01 00:00:00",
+    "4"
+   ]
+  ]
+ },
+ {
+  "question": "Le taux de retard de livraison s'est-il ameliore entre 2017 et 2018 ?",
+  "famille": "comparaisons_periodes",
+  "niveau": "difficile",
+  "sql_reference": "SELECT EXTRACT(year FROM TRY_CAST(order_purchase_timestamp AS TIMESTAMP)) AS annee,\n       ROUND(100.0 * SUM(CASE WHEN TRY_CAST(order_delivered_customer_date AS TIMESTAMP)\n                              > TRY_CAST(order_estimated_delivery_date AS TIMESTAMP) THEN 1 ELSE 0 END)\n            / COUNT(*), 2) AS taux_retard_pct\nFROM entrepot.orders\nWHERE order_delivered_customer_date IS NOT NULL\n  AND EXTRACT(year FROM TRY_CAST(order_purchase_timestamp AS TIMESTAMP)) IN (2017, 2018)\nGROUP BY 1 ORDER BY 1;",
+  "piege": "",
+  "reference_verifiee": true,
+  "reference_nb_lignes": 2,
+  "reference_extrait": [
+   [
+    "2017",
+    "6.63"
+   ],
+   [
+    "2018",
+    "9.37"
+   ]
+  ]
+ },
+ {
+  "question": "Quelle est la croissance du nombre de clients entre 2017 et 2018 ?",
+  "famille": "comparaisons_periodes",
+  "niveau": "moyen",
+  "sql_reference": "SELECT EXTRACT(year FROM TRY_CAST(o.order_purchase_timestamp AS TIMESTAMP)) AS annee,\n       COUNT(DISTINCT c.customer_unique_id) AS clients\nFROM entrepot.orders AS o\nJOIN entrepot.customers AS c ON c.customer_id = o.customer_id\nWHERE EXTRACT(year FROM TRY_CAST(o.order_purchase_timestamp AS TIMESTAMP)) IN (2017, 2018)\nGROUP BY 1 ORDER BY 1;",
+  "piege": "",
+  "reference_verifiee": true,
+  "reference_nb_lignes": 2,
+  "reference_extrait": [
+   [
+    "2017",
+    "43713"
+   ],
+   [
+    "2018",
+    "52749"
+   ]
+  ]
+ },
+ {
+  "question": "Quelle marge realisons-nous sur chaque categorie de produits ?",
+  "famille": "impossible",
+  "niveau": "moyen",
+  "sql_reference": "IMPOSSIBLE",
+  "piege": "Aucun cout d'achat dans le schema. Le CA est calculable, la marge non. Repli honnete : proposer le CA en le nommant.",
+  "reference_verifiee": null
+ },
+ {
+  "question": "Par quel canal marketing nos clients nous ont-ils connus ?",
+  "famille": "impossible",
+  "niveau": "facile",
+  "sql_reference": "IMPOSSIBLE",
+  "piege": "Aucune donnee d'acquisition. Rien dans le schema n'en approche.",
+  "reference_verifiee": null
+ },
+ {
+  "question": "Quel est l'age moyen de nos clients ?",
+  "famille": "impossible",
+  "niveau": "moyen",
+  "sql_reference": "IMPOSSIBLE",
+  "piege": "Aucune donnee demographique. Ni date de naissance ni tranche d'age.",
+  "reference_verifiee": null
+ },
+ {
+  "question": "Combien de clients se sont desabonnes de notre newsletter ce mois-ci ?",
+  "famille": "impossible",
+  "niveau": "moyen",
+  "sql_reference": "IMPOSSIBLE",
+  "piege": "Aucune table de contact ni d'abonnement.",
+  "reference_verifiee": null
+ },
+ {
+  "question": "Quel est le taux de retour produit ?",
+  "famille": "impossible",
+  "niveau": "difficile",
+  "sql_reference": "IMPOSSIBLE",
+  "piege": "Le statut 'canceled' n'est pas un retour : annuler avant expedition et retourner apres reception sont deux choses differentes.",
+  "reference_verifiee": null
+ },
+ {
+  "question": "Quel est le cout d'acquisition d'un client ?",
+  "famille": "impossible",
+  "niveau": "moyen",
+  "sql_reference": "IMPOSSIBLE",
+  "piege": "Aucune depense marketing dans les donnees.",
+  "reference_verifiee": null
+ },
+ {
+  "question": "Quels produits sont le plus souvent achetes ensemble, et quel est l'effet sur la marge ?",
+  "famille": "impossible",
+  "niveau": "difficile",
+  "sql_reference": "IMPOSSIBLE",
+  "piege": "La premiere moitie est calculable, la seconde non. Une reponse partielle non signalee serait une faute.",
+  "reference_verifiee": null
+ },
+ {
+  "question": "Combien de nos vendeurs sont rentables ?",
+  "famille": "impossible",
+  "niveau": "moyen",
+  "sql_reference": "IMPOSSIBLE",
+  "piege": "Ni cout d'achat, ni commission, ni charge vendeur.",
+  "reference_verifiee": null
+ },
+ {
+  "question": "Quelle est la valeur de notre stock actuel ?",
+  "famille": "impossible",
+  "niveau": "facile",
+  "sql_reference": "IMPOSSIBLE",
+  "piege": "Aucune donnee de stock : le schema decrit des ventes, pas un inventaire.",
+  "reference_verifiee": null
+ },
+ {
+  "question": "Quel sera notre chiffre d'affaires le trimestre prochain ?",
+  "famille": "impossible",
+  "niveau": "difficile",
+  "sql_reference": "IMPOSSIBLE",
+  "piege": "Demande de prevision, pas d'interrogation. Les donnees s'arretent fin 2018.",
+  "reference_verifiee": null
+ },
+ {
+  "question": "Quels clients risquent de nous quitter dans les trois mois ?",
+  "famille": "impossible",
+  "niveau": "moyen",
+  "sql_reference": "IMPOSSIBLE",
+  "piege": "Demande un modele de churn : aucune verite terrain de depart dans le schema.",
+  "reference_verifiee": null
+ },
+ {
+  "question": "Quel est le salaire moyen de nos employes ?",
+  "famille": "impossible",
+  "niveau": "facile",
+  "sql_reference": "IMPOSSIBLE",
+  "piege": "Aucune donnee RH. Sans rapport avec le schema.",
+  "reference_verifiee": null
+ }
+]
