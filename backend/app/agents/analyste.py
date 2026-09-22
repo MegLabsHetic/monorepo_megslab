@@ -134,6 +134,7 @@ class Analyste:
             question=question,
             format_sortie=PlanRequete,
             effort="medium",
+            agent="analyste",
         )
 
     def _valider(self, sql: str) -> str:
