@@ -33,6 +33,7 @@ from app.agents.analyste import (  # noqa: E402
 from app.agents.data import AgentData  # noqa: E402
 from app.core.duckdb_engine import DuckDBEngine  # noqa: E402
 from app.core.errors import ErreurUtilisateur, FournisseurIndisponible  # noqa: E402
+from app.core.fournisseur_anthropic import FournisseurAnthropic  # noqa: E402
 from app.core.fournisseur_openai import FournisseurOpenAICompatible  # noqa: E402
 from app.core.sql_guard import SqlRefuse, valider  # noqa: E402
 from app.core.tarifs import CATALOGUE  # noqa: E402
@@ -237,6 +238,10 @@ async def une_question(llm, vivier, verrou, schema_texte, entree, references) ->
         "raison": "",
         "corrigee": False,
     }
+    # Une question exclue par l'audit du jeu n'est pas posee : son verdict ne
+    # serait pas automatisable, et le dire coute moins qu'un faux « faux ».
+    if entree.get("exclue"):
+        return {**base, "verdict": "exclue", "raison": entree["exclue"][:120]}
 
     # Le schema va dans les INSTRUCTIONS, pas dans la question : c'est ce que
     # fait l'agent Analyste, et un modele ne traite pas de la meme facon ce
@@ -328,7 +333,7 @@ async def un_modele(
     fournisseur, modele, cle, vivier, verrou, schema_texte, entrees, refs, avancement
 ) -> dict:
     depart = time.perf_counter()
-    llm = FournisseurOpenAICompatible(nom=fournisseur, modele=modele, cle_api=cle)
+    llm = _fournisseur(fournisseur, modele, cle)
 
     async def suivie(entree):
         ligne = await une_question(llm, vivier, verrou, schema_texte, entree, refs)
@@ -336,7 +341,7 @@ async def un_modele(
         return ligne
 
     lignes = await asyncio.gather(*(suivie(e) for e in entrees))
-    possibles = [r for r in lignes if not r["impossible"]]
+    possibles = [r for r in lignes if not r["impossible"] and r["verdict"] != "exclue"]
     impossibles = [r for r in lignes if r["impossible"]]
     synthese = {
         "fournisseur": fournisseur,
@@ -366,6 +371,19 @@ async def un_modele(
         flush=True,
     )
     return synthese
+
+
+def _fournisseur(nom: str, modele: str, cle: str):
+    """Le fournisseur historique n'expose pas d'API compatible OpenAI.
+
+    Le mesurer ici, sous le meme protocole et sur les memes questions que les
+    modeles ouverts, est la seule facon de rendre les taux comparables : un
+    chiffre obtenu sur quinze questions via l'API du produit ne se compare pas
+    a un chiffre obtenu sur cinquante via ce banc.
+    """
+    if nom == "anthropic":
+        return FournisseurAnthropic(cle_api=cle, modele=modele)
+    return FournisseurOpenAICompatible(nom=nom, modele=modele, cle_api=cle)
 
 
 def references(vivier_moteur, entrees) -> dict:
