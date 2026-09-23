@@ -90,6 +90,20 @@ OVH_GPT_OSS_20B = Tarif("ovhcloud", "gpt-oss-20b", entree=0.050, sortie=0.180)
 OVH_QWEN3_CODER_30B = Tarif("ovhcloud", "Qwen3-Coder-30B-A3B-Instruct", entree=0.070, sortie=0.260)
 OVH_QWEN35_397B = Tarif("ovhcloud", "Qwen3.5-397B-A17B", entree=0.710, sortie=4.250)
 
+# Le reste du catalogue OVHcloud, releve le 22 septembre 2026 sur /v1/models.
+# Tous sous licence Apache 2.0 sauf Llama (Llama 3.3 Community) et Qwen2.5-VL
+# (licence Qwen) : ces deux-la portent des obligations pour un usage commercial.
+AUTRES_OVH = (
+    Tarif("ovhcloud", "Mistral-7B-Instruct-v0.3", entree=0.110, sortie=0.110),
+    Tarif("ovhcloud", "Mistral-Nemo-Instruct-2407", entree=0.140, sortie=0.140),
+    Tarif("ovhcloud", "Mistral-Small-3.2-24B-Instruct-2506", entree=0.100, sortie=0.310),
+    Tarif("ovhcloud", "Qwen3.5-9B", entree=0.120, sortie=0.180),
+    Tarif("ovhcloud", "Qwen3.6-27B", entree=0.470, sortie=3.190),
+    Tarif("ovhcloud", "Qwen3.8-27B", entree=0.470, sortie=3.190),
+    Tarif("ovhcloud", "Meta-Llama-3_3-70B-Instruct", entree=0.740, sortie=0.740),
+    Tarif("ovhcloud", "Qwen2.5-VL-72B-Instruct", entree=1.010, sortie=1.010),
+)
+
 # Releve du 9 septembre 2026, grilles publiees en euros, converties ci-dessus.
 SCALEWAY_GPT_OSS_120B = Tarif("scaleway", "gpt-oss-120b", entree=_euros(0.15), sortie=_euros(0.60))
 SCALEWAY_QWEN35_397B = Tarif(
@@ -111,6 +125,7 @@ CATALOGUE: dict[tuple[str, str], Tarif] = {
         SCALEWAY_QWEN35_397B,
         IONOS_GPT_OSS_120B,
         IONOS_QWEN35_397B,
+        *AUTRES_OVH,
     )
 }
 
