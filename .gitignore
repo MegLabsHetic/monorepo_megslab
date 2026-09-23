@@ -36,3 +36,6 @@ Thumbs.db
 .vscode/
 .idea/
 backend/data/*.db.bak
+
+# Caches du banc de mesure (derives de l entrepot, regeneres a la demande)
+backend/evaluation/.cache-references*.json

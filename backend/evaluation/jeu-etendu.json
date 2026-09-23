@@ -541,7 +541,8 @@
     "3",
     "15552"
    ]
-  ]
+  ],
+  "sommet": true
  },
  {
   "question": "A quelle heure de la journee nos clients commandent-ils le plus ?",
@@ -648,7 +649,8 @@
     "2017-11-01 00:00:00",
     "1010271.37"
    ]
-  ]
+  ],
+  "sommet": true
  },
  {
   "question": "Combien de commandes ont ete passees le premier semestre 2018 ?",
@@ -1761,7 +1763,8 @@
     "sao paulo",
     "694"
    ]
-  ]
+  ],
+  "sommet": true
  },
  {
   "question": "Le chiffre d'affaires du second semestre 2017 est-il superieur a celui du premier ?",
@@ -1862,7 +1865,8 @@
     "3",
     "12820"
    ]
-  ]
+  ],
+  "sommet": true
  },
  {
   "question": "Le panier moyen a-t-il progresse entre 2017 et 2018 ?",
@@ -1910,7 +1914,8 @@
     "399888.1",
     "168814.61"
    ]
-  ]
+  ],
+  "sommet": true
  },
  {
   "question": "Combien de commandes au dernier trimestre disponible ?",
