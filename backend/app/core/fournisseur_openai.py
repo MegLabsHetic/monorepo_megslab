@@ -22,8 +22,15 @@ from app.core.tarifs import Tarif, tarif_de
 
 logger = logging.getLogger(__name__)
 
-MAX_JETONS_SORTIE = 8000
-DELAI_SECONDES = 45.0
+# 8 000 suffisaient au fournisseur historique, dont le raisonnement adaptatif
+# est econome. Les modeles a poids ouverts emettent un raisonnement bien plus
+# long, facture parmi les jetons de sortie : avec 8 000, un tiers des reponses
+# etait tronque avant meme le debut du JSON. Ce plafond n'est preleve que s'il
+# est atteint.
+MAX_JETONS_SORTIE = 24000
+# Les modeles a raisonnement emettent des jetons de reflexion avant de
+# repondre : 45 secondes suffisaient au fournisseur historique, pas a eux.
+DELAI_SECONDES = 180.0
 
 # Les URL de base relevees le 9 septembre 2026. Le chemin /v1 est inclus :
 # les trois fournisseurs le placent au meme endroit.
@@ -154,6 +161,14 @@ class FournisseurOpenAICompatible:
             ) from erreur
         try:
             return format_sortie.model_validate_json(brut)
+        except ValidationError:
+            pass
+        # Les modeles a poids ouverts respectent le schema mais pas toujours son
+        # enveloppe : cloture Markdown autour du JSON, apostrophe inverse egaree
+        # avant l'accolade fermante. Le contenu est bon, la ponctuation non.
+        # Refuser pour cela mesurerait notre analyseur, pas leur competence.
+        try:
+            return format_sortie.model_validate_json(_reparer(brut))
         except ValidationError as erreur:
             logger.error("Sortie non conforme au schema chez %s : %s", self._nom, str(brut)[:300])
             raise ErreurUtilisateur(
@@ -192,6 +207,28 @@ class FournisseurOpenAICompatible:
             jetons_cache_ecrits=0,
             tarif=self._tarif,
         )
+
+
+def _reparer(brut: str) -> str:
+    """Retire ce qui entoure le JSON sans en faire partie.
+
+    Trois defauts constates en reel le 23 septembre 2026 : une cloture Markdown
+    autour de l'objet, une apostrophe inverse egaree juste avant l'accolade
+    fermante, et du texte avant ou apres l'objet. Aucun ne touche au contenu.
+    """
+    texte = brut.strip()
+    if texte.startswith("```"):
+        texte = texte.split("\n", 1)[-1] if "\n" in texte else texte[3:]
+        texte = texte.rsplit("```", 1)[0]
+    debut, fin = texte.find("{"), texte.rfind("}")
+    if debut != -1 and fin > debut:
+        texte = texte[debut : fin + 1]
+    # Constate en reel : le modele ecrit une apostrophe inverse A LA PLACE du
+    # guillemet qui ferme la chaine, ce qui laisse le JSON non termine. On la
+    # remet en guillemet plutot que de la supprimer.
+    for faux, vrai in (("`}", '"}'), ("`,", '",'), ("`]", '"]'), ('`"', '"')):
+        texte = texte.replace(faux, vrai)
+    return texte
 
 
 def _schema_strict(format_sortie: type[BaseModel]) -> dict[str, Any]:
