@@ -31,7 +31,7 @@ from app.agents.analyste import (  # noqa: E402
     _demande_correction,
 )
 from app.agents.data import AgentData  # noqa: E402
-from app.core.duckdb_engine import DuckDBEngine  # noqa: E402
+from app.core.duckdb_engine import DuckDBEngine, _sans_secret  # noqa: E402
 from app.core.errors import ErreurUtilisateur, FournisseurIndisponible  # noqa: E402
 from app.core.fournisseur_anthropic import FournisseurAnthropic  # noqa: E402
 from app.core.fournisseur_openai import FournisseurOpenAICompatible  # noqa: E402
@@ -299,7 +299,7 @@ async def une_question(llm, vivier, verrou, schema_texte, entree, references) ->
         # L'agent Analyste a droit a UNE reprise : il voit l'erreur du moteur
         # et repropose. Ne pas la reproduire ici mesurerait un produit ampute,
         # et penaliserait precisement les modeles qui savent se corriger.
-        detail = str(erreur).splitlines()[0][:200] if str(erreur) else "echec"
+        detail = _sans_secret(str(erreur).splitlines()[0][:200]) if str(erreur) else "echec"
         try:
             reponse = await proposer(_demande_correction(texte, sql, _Erreur(detail)))
         except (FournisseurIndisponible, ErreurUtilisateur) as echec:
@@ -313,7 +313,10 @@ async def une_question(llm, vivier, verrou, schema_texte, entree, references) ->
             sql = valider(base["sql_produit"])
             _, lignes = await vivier.executer(sql)
         except Exception as encore:  # noqa: BLE001
-            raison = str(encore).splitlines()[0][:110] if str(encore) else "echec"
+            # Une panne du tunnel fait citer le DSN par DuckDB, mot de passe
+            # compris. Ces fichiers sont versionnes : le filtrer ici, comme le
+            # produit le fait dans ses journaux.
+            raison = _sans_secret(str(encore).splitlines()[0][:110]) if str(encore) else "echec"
             return {**base, "verdict": "erreur_moteur", "raison": raison}
 
     attendu = references.get(entree["question"])
