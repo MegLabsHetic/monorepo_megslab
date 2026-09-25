@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-import { BadgeSouverainete } from "@/components/marque/badgeSouverainete";
+import { BadgeSouverainete, type Inference } from "@/components/marque/badgeSouverainete";
 import { useSession } from "@/components/session/contexteSession";
 import { api } from "@/lib/api";
 
@@ -15,14 +15,21 @@ import { api } from "@/lib/api";
  */
 export function BandeauSouverainete({ compact = false }: { compact?: boolean }) {
   const { jeton } = useSession();
-  const [europeenne, setEuropeenne] = useState<boolean | null>(null);
+  const [inference, setInference] = useState<Inference | null>(null);
 
   useEffect(() => {
     let vivant = true;
     api
       .configurationModeles(jeton)
       .then((config) => {
-        if (vivant) setEuropeenne(config.entierement_europeenne);
+        if (!vivant) return;
+        setInference(
+          config.entierement_en_france
+            ? "france"
+            : config.entierement_europeenne
+              ? "europe"
+              : "hors_ue"
+        );
       })
       .catch(() => {
         // La souveraineté de l'infrastructure ne dépend pas de cet appel :
@@ -33,5 +40,5 @@ export function BandeauSouverainete({ compact = false }: { compact?: boolean }) 
     };
   }, [jeton]);
 
-  return <BadgeSouverainete chaineEuropeenne={europeenne} compact={compact} />;
+  return <BadgeSouverainete inference={inference} compact={compact} />;
 }

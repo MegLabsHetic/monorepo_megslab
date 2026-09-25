@@ -618,6 +618,7 @@ export type ConfigurationModeles = {
   cles: EtatCle[];
   rabattement_actif: boolean;
   entierement_europeenne: boolean;
+  entierement_en_france: boolean;
   infrastructure_en_france: boolean;
 };
 

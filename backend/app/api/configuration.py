@@ -72,6 +72,7 @@ async def modeles(_: User = Depends(utilisateur_courant), db: AsyncSession = Dep
         cles=[CleReponse(fournisseur=f, **etat[f]) for f in FOURNISSEURS],
         rabattement_actif=any(len(a.fournisseurs) > 1 for a in agents),
         entierement_europeenne=bool(tous) and all(f.dans_l_union_europeenne for f in tous),
+        entierement_en_france=bool(tous) and all(f.pays == "France" for f in tous),
     )
 
 

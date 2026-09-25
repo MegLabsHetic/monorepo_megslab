@@ -10,30 +10,42 @@ import Link from "next/link";
  * - L'INFÉRENCE, elle, part où la configuration l'envoie. Tant qu'un agent
  *   appelle un fournisseur hors UE, écrire « 100 % France » serait faux.
  *
- * Le badge est donc piloté par la configuration réelle : il passe tout seul à
- * son état complet le jour où toute la chaîne est européenne. Un produit qui
+ * Le badge est donc piloté par la configuration réelle, et distingue trois
+ * cas : toute l'inférence en France, toute l'inférence dans l'Union
+ * européenne mais pas seulement en France (IONOS est allemand), ou une
+ * inférence qui sort de l'UE. Confondre les deux premiers écrirait « calculé
+ * en France » pour une chaîne qui passe par l'Allemagne. Un produit qui
  * affiche une garantie qu'il ne tient pas vaut moins qu'un produit qui n'en
  * affiche aucune.
  */
+export type Inference = "france" | "europe" | "hors_ue";
+
 export function BadgeSouverainete({
-  chaineEuropeenne,
+  inference,
   compact = false,
 }: {
-  chaineEuropeenne: boolean | null;
+  inference: Inference | null;
   compact?: boolean;
 }) {
-  const complet = chaineEuropeenne === true;
-  const titre = complet ? "Hébergé et calculé en France" : "Infrastructure hébergée en France";
+  const complet = inference === "france";
+  const europeen = inference === "europe";
+  const titre = complet
+    ? "Hébergé et calculé en France"
+    : europeen
+      ? "Hébergé en France, calculé dans l'UE"
+      : "Infrastructure hébergée en France";
   const detail = complet
-    ? "Ingestion, entrepôt, calcul et inférence : aucune donnée ne quitte l'Union européenne."
-    : "Ingestion, entrepôt et calcul restent en France. Seul l'appel au modèle sort : le schéma et au plus vingt lignes de résultat.";
+    ? "Ingestion, entrepôt, calcul et inférence restent en France."
+    : europeen
+      ? "Ingestion, entrepôt et calcul restent en France ; l'inférence reste dans l'Union européenne."
+      : "Ingestion, entrepôt et calcul restent en France. Seul l'appel au modèle sort : le schéma et au plus vingt lignes de résultat.";
 
   return (
     <Link
       href="/modeles"
       title={detail}
       className={`inline-flex items-center gap-2 rounded-full border transition ${
-        complet
+        complet || europeen
           ? "border-emerald-300 bg-emerald-50 text-emerald-900 hover:border-emerald-400"
           : "border-slate-200 bg-white text-slate-700 hover:border-slate-300"
       } ${compact ? "px-2.5 py-1 text-xs" : "px-3 py-1.5 text-sm"}`}

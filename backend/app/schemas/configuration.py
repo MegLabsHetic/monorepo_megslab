@@ -45,6 +45,10 @@ class ConfigurationModelesReponse(BaseModel):
     rabattement_actif: bool
     # Vrai quand toute la chaine, pour tous les agents, reste dans l'UE.
     entierement_europeenne: bool
+    # Vrai quand tous les fournisseurs de tous les agents calculent en France.
+    # Distinct du precedent : IONOS est europeen mais allemand, et le badge ne
+    # doit pas ecrire « calcule en France » pour une chaine qui passe par lui.
+    entierement_en_france: bool = False
     # L'infrastructure - serveur, entrepot, ingestion - est en France quoi
     # qu'il arrive. Seul l'appel au modele peut en sortir.
     infrastructure_en_france: bool = True

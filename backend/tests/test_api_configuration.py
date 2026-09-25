@@ -58,13 +58,22 @@ async def test_une_chaine_entierement_francaise_est_signalee_comme_europeenne(re
     reglages(commune="ovhcloud:gpt-oss-120b,scaleway:gpt-oss-120b")
     rapport = await modeles(_=None, db=db)
     assert rapport.entierement_europeenne is True
+    assert rapport.entierement_en_france is True
     assert rapport.rabattement_actif is True
+
+
+async def test_une_chaine_europeenne_passant_par_l_allemagne_n_est_pas_dite_francaise(reglages, db):
+    reglages(commune="ovhcloud:gpt-oss-120b,ionos:gpt-oss-120b")
+    rapport = await modeles(_=None, db=db)
+    assert rapport.entierement_europeenne is True
+    assert rapport.entierement_en_france is False
 
 
 async def test_le_fournisseur_historique_ne_passe_pas_pour_europeen(reglages, db):
     reglages()
     rapport = await modeles(_=None, db=db)
     assert rapport.entierement_europeenne is False
+    assert rapport.entierement_en_france is False
     assert rapport.rabattement_actif is False
 
 

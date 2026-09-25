@@ -188,7 +188,7 @@ export default function Accueil() {
           <span className="text-xs text-zinc-500">Connecteurs propulses par</span>
           <Image src="/logos/airbyte.svg" alt="Airbyte" width={68} height={27} />
         </a>
-        <BadgeSouverainete chaineEuropeenne={null} />
+        <BadgeSouverainete inference={null} />
         <p className="text-xs text-muted">MegsLab - projet HETIC</p>
       </footer>
     </main>
