@@ -69,10 +69,12 @@ class SurveillanceService:
             raise ErreurUtilisateur(
                 "Indiquez le seuil a partir duquel vous voulez etre prevenu.", code_http=422
             )
+        # Le comptage ignore `active` : mettre en pause ne libere donc pas de
+        # place, et le message ne doit pas envoyer l'utilisateur le croire.
         if len(await self.lister(espace)) >= SURVEILLANCES_MAX:
             raise ErreurUtilisateur(
-                f"Cet espace a atteint {SURVEILLANCES_MAX} surveillances. "
-                "Desactivez-en avant d'en ajouter.",
+                f"Cet espace a atteint {SURVEILLANCES_MAX} surveillances, le maximum. "
+                "Supprimez-en une avant d'en creer une nouvelle.",
                 code_http=409,
             )
 
@@ -149,8 +151,9 @@ def _juger(surveillance: Surveillance, resultat) -> Verdict:
 
     Le declencheur par anomalie s'appuie sur l'agent ML, donc sur de la
     statistique. Les declencheurs par seuil lisent la premiere valeur numerique
-    de la premiere ligne : c'est volontairement simple, et le titre de la
-    surveillance doit dire ce que cette valeur represente.
+    rencontree en parcourant le resultat ligne par ligne : c'est volontairement
+    simple, et le titre de la surveillance doit dire ce que cette valeur
+    represente.
     """
     if surveillance.declencheur is Declencheur.TOUJOURS:
         return Verdict(surveillance, True, _resume(resultat))
