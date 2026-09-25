@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 
+import { BlocPartage } from "@/components/partage/blocPartage";
 import { useDroits, useSession, useTraduireErreur } from "@/components/session/contexteSession";
 import { WidgetTableau } from "@/components/tableaux/widgetTableau";
 import { Alert } from "@/components/ui/alert";
@@ -151,6 +152,8 @@ export default function PageTableau() {
           ))}
         </div>
       )}
+
+      {tableau && <BlocPartage dashboardId={id} />}
     </div>
   );
 }
