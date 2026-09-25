@@ -332,6 +332,100 @@ export interface DashboardDetail {
   rejoue_le: string;
 }
 
+// --- Partage public d'un tableau ---------------------------------------------------
+
+/** Le jeton seul : c'est au client de construire l'URL publique (/partage/{jeton}). */
+export interface Partage {
+  jeton: string;
+}
+
+/**
+ * Un widget tel qu'un visiteur sans compte le voit : ni identifiant, ni espace,
+ * ni conversation d'origine. Le SQL reste visible, c'est la promesse du produit.
+ */
+export interface WidgetPartage {
+  titre: string;
+  sql: string;
+  position: number;
+  graphique: SpecGraphique | null;
+  resultat: Apercu | null;
+  analyse: AnalyseSerie | null;
+  erreur: string | null;
+}
+
+export interface TableauPartage {
+  nom: string;
+  widgets: WidgetPartage[];
+  /** Le moment du rejeu : la page est vraie a cet instant, pas a la creation du lien. */
+  rejoue_le: string;
+}
+
+// --- Glossaire metier --------------------------------------------------------------
+
+export interface Annotation {
+  id: string;
+  /** Le nom de la table tel que l'entrepot le liste (TableEntrepot.nom), sans schema. */
+  table_nom: string;
+  /** Vide : la definition porte sur la table elle-meme. */
+  colonne_nom: string;
+  description: string;
+  porte_sur_la_table: boolean;
+}
+
+export interface AnnotationDemande {
+  table_nom: string;
+  /** Omise ou vide : la definition porte sur la table elle-meme. */
+  colonne_nom?: string;
+  description: string;
+}
+
+export interface Glossaire {
+  total: number;
+  annotations: Annotation[];
+}
+
+// --- Surveillances -----------------------------------------------------------------
+
+/**
+ * Reprend exactement l'enum Declencheur du backend. anomalie : l'agent ML
+ * signale un point aberrant ou une rupture de tendance ; seuil_depasse et
+ * seuil_sous : la premiere valeur de la premiere ligne comparee au seuil ;
+ * toujours : notifier a chaque execution, un rapport plutot qu'une alerte.
+ */
+export type Declencheur = "anomalie" | "seuil_depasse" | "seuil_sous" | "toujours";
+
+export interface Surveillance {
+  id: string;
+  titre: string;
+  /** Le SQL deja valide par le garde-fou : ce qui tourne chaque jour est ce qui a ete approuve. */
+  sql: string;
+  declencheur: Declencheur;
+  seuil: number | null;
+  /** Heure locale d'execution, de 0 a 23 : une surveillance tourne une fois par jour. */
+  heure: number;
+  active: boolean;
+  derniere_execution: string | null;
+  /** Vide tant que la surveillance n'a jamais tourne. */
+  dernier_etat: string;
+}
+
+export interface SurveillanceDemande {
+  titre: string;
+  sql: string;
+  declencheur: Declencheur;
+  /** Exige pour seuil_depasse et seuil_sous, ignore pour les autres. */
+  seuil?: number | null;
+  /** De 0 a 23 ; 8 si omise. */
+  heure?: number;
+}
+
+/** Le resultat d'une execution declenchee a la main, pour essayer sans attendre le lendemain. */
+export interface VerdictSurveillance {
+  notifier: boolean;
+  message: string;
+  erreur: string | null;
+}
+
 // --- Sante d'une source ------------------------------------------------------------
 
 export interface ColonneSante {
@@ -797,6 +891,22 @@ export const api = {
     return reponse.blob();
   },
 
+  // --- Partage public d'un tableau ---
+  // Rappeler cet appel regenere le jeton et revoque l'ancien : c'est la seule
+  // facon de reprendre la main sur un lien qui a circule plus loin que prevu.
+  ouvrirPartage: (jeton: string, espaceId: string, dashboardId: string) =>
+    requete<Partage>(`${espace(espaceId)}/dashboards/${dashboardId}/partage`, json(jeton, "POST")),
+
+  fermerPartage: (jeton: string, espaceId: string, dashboardId: string) =>
+    requete<void>(`${espace(espaceId)}/dashboards/${dashboardId}/partage`, json(jeton, "DELETE")),
+
+  // Aucun en-tete d'autorisation : c'est la seule route publique du produit.
+  // Chaque widget rejoue sa requete sur l'entrepot, d'ou le delai large.
+  consulterPartage: (jetonPartage: string) =>
+    requete<TableauPartage>(`/partage/${encodeURIComponent(jetonPartage)}`, {
+      delaiMax: DELAI_ENTREPOT,
+    }),
+
   // --- Assistant ---
   conversations: (jeton: string, espaceId: string) =>
     requete<Conversation[]>(`${espace(espaceId)}/conversations`, { headers: entete(jeton) }),
@@ -903,6 +1013,45 @@ export const api = {
       ...json(jeton, "POST"),
       delaiMax: DELAI_CONNEXION_SOURCE,
     }),
+
+  // --- Glossaire ---
+  listerGlossaire: (jeton: string, espaceId: string) =>
+    requete<Glossaire>(`${espace(espaceId)}/glossaire`, { headers: entete(jeton) }),
+
+  // Un PUT sans identifiant : la cible (table, colonne) est la cle, reecrire remplace.
+  definirAnnotation: (jeton: string, espaceId: string, annotation: AnnotationDemande) =>
+    requete<Annotation>(`${espace(espaceId)}/glossaire`, json(jeton, "PUT", annotation)),
+
+  // La cible voyage en query string : un DELETE ne porte pas de corps.
+  retirerAnnotation: (jeton: string, espaceId: string, tableNom: string, colonneNom = "") =>
+    requete<void>(
+      `${espace(espaceId)}/glossaire?${new URLSearchParams({ table_nom: tableNom, colonne_nom: colonneNom })}`,
+      json(jeton, "DELETE")
+    ),
+
+  // --- Surveillances ---
+  listerSurveillances: (jeton: string, espaceId: string) =>
+    requete<Surveillance[]>(`${espace(espaceId)}/surveillances`, { headers: entete(jeton) }),
+
+  creerSurveillance: (jeton: string, espaceId: string, demande: SurveillanceDemande) =>
+    requete<Surveillance>(`${espace(espaceId)}/surveillances`, json(jeton, "POST", demande)),
+
+  // Rejoue le SQL sur l'entrepot, sans appel au modele : quelques secondes.
+  executerSurveillance: (jeton: string, espaceId: string, id: string) =>
+    requete<VerdictSurveillance>(`${espace(espaceId)}/surveillances/${id}/executer`, {
+      ...json(jeton, "POST"),
+      delaiMax: DELAI_ENTREPOT,
+    }),
+
+  // `active` voyage en query string : c'est ainsi que la route le lit, pas dans un corps.
+  basculerSurveillance: (jeton: string, espaceId: string, id: string, active: boolean) =>
+    requete<Surveillance>(
+      `${espace(espaceId)}/surveillances/${id}?active=${active}`,
+      json(jeton, "PATCH")
+    ),
+
+  supprimerSurveillance: (jeton: string, espaceId: string, id: string) =>
+    requete<void>(`${espace(espaceId)}/surveillances/${id}`, json(jeton, "DELETE")),
 
   // --- Notifications et journal ---
   notifications: (jeton: string) =>

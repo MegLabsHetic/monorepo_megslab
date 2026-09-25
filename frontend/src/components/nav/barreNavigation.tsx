@@ -13,11 +13,15 @@ import { useDroits, useSession } from "@/components/session/contexteSession";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
+// Glossaire et Surveillances sont des ecrans d'espace, lisibles par tout membre
+// (lecteur compris) : ils vont ici, pas dans le bloc reserve a l'organisation.
 const LIENS = [
   { href: "/dashboard", libelle: "Tableau de bord" },
   { href: "/donnees", libelle: "Donnees" },
+  { href: "/glossaire", libelle: "Glossaire" },
   { href: "/assistant", libelle: "Assistant" },
   { href: "/tableaux", libelle: "Tableaux" },
+  { href: "/surveillances", libelle: "Surveillances" },
   { href: "/finops", libelle: "FinOps" },
   { href: "/modeles", libelle: "Modeles" },
 ];
