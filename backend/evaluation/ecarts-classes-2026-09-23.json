@@ -1,0 +1,6834 @@
+[
+ {
+  "modele": "claude-opus-5",
+  "question": "Quelles sont les dix categories de produits qui rapportent le plus, en euros ?",
+  "famille": "classements",
+  "piege": "",
+  "impossible": false,
+  "verdict": "faux",
+  "raison": "10 ligne(s) differente(s)",
+  "sql_reference": "SELECT p.product_category_name AS categorie, ROUND(SUM(i.price), 2) AS chiffre_affaires\nFROM entrepot.order_items AS i\nJOIN entrepot.products AS p ON p.product_id = i.product_id\nWHERE p.product_category_name IS NOT NULL\nGROUP BY p.product_category_name\nORDER BY chiffre_affaires DESC LIMIT 10;",
+  "reference_lignes": [
+   [
+    "beleza_saude",
+    "1258681.34"
+   ],
+   [
+    "relogios_presentes",
+    "1205005.68"
+   ],
+   [
+    "cama_mesa_banho",
+    "1036988.68"
+   ],
+   [
+    "esporte_lazer",
+    "988048.97"
+   ],
+   [
+    "informatica_acessorios",
+    "911954.32"
+   ],
+   [
+    "moveis_decoracao",
+    "729762.49"
+   ],
+   [
+    "cool_stuff",
+    "635290.85"
+   ],
+   [
+    "utilidades_domesticas",
+    "632248.66"
+   ],
+   [
+    "automotivo",
+    "592720.11"
+   ],
+   [
+    "ferramentas_jardim",
+    "485256.46"
+   ]
+  ],
+  "reference_nb_lignes": 10,
+  "reference_nombres": {
+   "1258681.34": 1,
+   "1205005.68": 1,
+   "1036988.68": 1,
+   "988048.97": 1,
+   "911954.32": 1,
+   "729762.49": 1,
+   "635290.85": 1,
+   "632248.66": 1,
+   "592720.11": 1,
+   "485256.46": 1
+  },
+  "sql_produit": "SELECT\n    COALESCE(t.product_category_name_english, p.product_category_name) AS categorie,\n    ROUND(SUM(oi.price), 2) AS chiffre_affaires,\n    COUNT(*) AS nombre_articles_vendus\nFROM entrepot.\"order_items\" AS oi\nJOIN entrepot.\"products\" AS p\n    ON p.product_id = oi.product_id\nLEFT JOIN entrepot.\"product_category_name_translation\" AS t\n    ON t.product_category_name = p.product_category_name\nJOIN entrepot.\"orders\" AS o\n    ON o.order_id = oi.order_id\nWHERE o.order_status <> 'canceled'\nGROUP BY 1\nORDER BY chiffre_affaires DESC\nLIMIT 10",
+  "produit_colonnes": [
+   "categorie",
+   "chiffre_affaires",
+   "nombre_articles_vendus"
+  ],
+  "produit_lignes": [
+   [
+    "health_beauty",
+    "1255695.13",
+    "9634.00"
+   ],
+   [
+    "watches_gifts",
+    "1198185.21",
+    "5970.00"
+   ],
+   [
+    "bed_bath_table",
+    "1035964.06",
+    "11097.00"
+   ],
+   [
+    "sports_leisure",
+    "979740.92",
+    "8590.00"
+   ],
+   [
+    "computers_accessories",
+    "904322.02",
+    "7781.00"
+   ],
+   [
+    "furniture_decor",
+    "727465.05",
+    "8298.00"
+   ],
+   [
+    "housewares",
+    "626825.80",
+    "6915.00"
+   ],
+   [
+    "cool_stuff",
+    "620835.39",
+    "3780.00"
+   ],
+   [
+    "auto",
+    "586620.73",
+    "4205.00"
+   ],
+   [
+    "garden_tools",
+    "481009.94",
+    "4328.00"
+   ]
+  ],
+  "produit_nb_lignes": 10,
+  "produit_nombres": {
+   "1255695.13": 1,
+   "9634.00": 1,
+   "1198185.21": 1,
+   "5970.00": 1,
+   "1035964.06": 1,
+   "11097.00": 1,
+   "979740.92": 1,
+   "8590.00": 1,
+   "904322.02": 1,
+   "7781.00": 1,
+   "727465.05": 1,
+   "8298.00": 1,
+   "626825.80": 1,
+   "6915.00": 1,
+   "620835.39": 1,
+   "3780.00": 1,
+   "586620.73": 1,
+   "4205.00": 1,
+   "481009.94": 1,
+   "4328.00": 1
+  },
+  "produit_erreur": "",
+  "categorie": "a_lire",
+  "preuve": "0 valeur(s) commune(s) sur 10 attendues : le chiffre differe, la cause demande une lecture"
+ },
+ {
+  "modele": "claude-opus-5",
+  "question": "Quel est le chiffre d'affaires mois par mois en 2018 ?",
+  "famille": "series_temporelles",
+  "piege": "",
+  "impossible": false,
+  "verdict": "faux",
+  "raison": "9 ligne(s) differente(s)",
+  "sql_reference": "SELECT DATE_TRUNC('month', TRY_CAST(o.order_purchase_timestamp AS TIMESTAMP)) AS mois,\n       ROUND(SUM(i.price), 2) AS chiffre_affaires\nFROM entrepot.orders AS o\nJOIN entrepot.order_items AS i ON i.order_id = o.order_id\nWHERE EXTRACT(year FROM TRY_CAST(o.order_purchase_timestamp AS TIMESTAMP)) = 2018\nGROUP BY 1 ORDER BY 1;",
+  "reference_lignes": [
+   [
+    "2018-01-01 00:00:00",
+    "950030.36"
+   ],
+   [
+    "2018-02-01 00:00:00",
+    "844178.71"
+   ],
+   [
+    "2018-03-01 00:00:00",
+    "983213.44"
+   ],
+   [
+    "2018-04-01 00:00:00",
+    "996647.75"
+   ],
+   [
+    "2018-05-01 00:00:00",
+    "996517.68"
+   ],
+   [
+    "2018-06-01 00:00:00",
+    "865124.31"
+   ],
+   [
+    "2018-07-01 00:00:00",
+    "895507.22"
+   ],
+   [
+    "2018-08-01 00:00:00",
+    "854686.33"
+   ],
+   [
+    "2018-09-01 00:00:00",
+    "145.00"
+   ]
+  ],
+  "reference_nb_lignes": 9,
+  "reference_nombres": {
+   "950030.36": 1,
+   "844178.71": 1,
+   "983213.44": 1,
+   "996647.75": 1,
+   "996517.68": 1,
+   "865124.31": 1,
+   "895507.22": 1,
+   "854686.33": 1,
+   "145.00": 1
+  },
+  "sql_produit": "SELECT\n    strftime(TRY_CAST(o.order_purchase_timestamp AS TIMESTAMP), '%Y-%m') AS mois,\n    ROUND(SUM(oi.price), 2) AS chiffre_affaires,\n    ROUND(SUM(oi.freight_value), 2) AS frais_de_port,\n    COUNT(DISTINCT o.order_id) AS nb_commandes\nFROM entrepot.\"orders\" AS o\nJOIN entrepot.\"order_items\" AS oi\n  ON oi.order_id = o.order_id\nWHERE TRY_CAST(o.order_purchase_timestamp AS TIMESTAMP) >= TIMESTAMP '2018-01-01'\n  AND TRY_CAST(o.order_purchase_timestamp AS TIMESTAMP) <  TIMESTAMP '2019-01-01'\n  AND o.order_status <> 'canceled'\nGROUP BY 1\nORDER BY 1\nLIMIT 1000",
+  "produit_colonnes": [
+   "mois",
+   "chiffre_affaires",
+   "frais_de_port",
+   "nb_commandes"
+  ],
+  "produit_lignes": [
+   [
+    "2018-01-01 00:00:00",
+    "945456.29",
+    "156463.72",
+    "7187.00"
+   ],
+   [
+    "2018-02-01 00:00:00",
+    "837895.43",
+    "141590.73",
+    "6624.00"
+   ],
+   [
+    "2018-03-01 00:00:00",
+    "981051.06",
+    "171605.93",
+    "7168.00"
+   ],
+   [
+    "2018-04-01 00:00:00",
+    "993592.98",
+    "162655.91",
+    "6919.00"
+   ],
+   [
+    "2018-05-01 00:00:00",
+    "992871.75",
+    "152814.71",
+    "6833.00"
+   ],
+   [
+    "2018-06-01 00:00:00",
+    "863265.53",
+    "157116.37",
+    "6145.00"
+   ],
+   [
+    "2018-07-01 00:00:00",
+    "878044.27",
+    "161739.31",
+    "6233.00"
+   ],
+   [
+    "2018-08-01 00:00:00",
+    "848860.10",
+    "148113.41",
+    "6421.00"
+   ],
+   [
+    "2018-09-01 00:00:00",
+    "145.00",
+    "21.46",
+    "1.00"
+   ]
+  ],
+  "produit_nb_lignes": 9,
+  "produit_nombres": {
+   "945456.29": 1,
+   "156463.72": 1,
+   "7187.00": 1,
+   "837895.43": 1,
+   "141590.73": 1,
+   "6624.00": 1,
+   "981051.06": 1,
+   "171605.93": 1,
+   "7168.00": 1,
+   "993592.98": 1,
+   "162655.91": 1,
+   "6919.00": 1,
+   "992871.75": 1,
+   "152814.71": 1,
+   "6833.00": 1,
+   "863265.53": 1,
+   "157116.37": 1,
+   "6145.00": 1,
+   "878044.27": 1,
+   "161739.31": 1,
+   "6233.00": 1,
+   "848860.10": 1,
+   "148113.41": 1,
+   "6421.00": 1,
+   "145.00": 1,
+   "21.46": 1,
+   "1.00": 1
+  },
+  "produit_erreur": "",
+  "categorie": "a_lire",
+  "preuve": "1 valeur(s) commune(s) sur 9 attendues : le chiffre differe, la cause demande une lecture"
+ },
+ {
+  "modele": "claude-opus-5",
+  "question": "Quel jour de la semaine recoit le plus de commandes ?",
+  "famille": "series_temporelles",
+  "piege": "",
+  "impossible": false,
+  "verdict": "faux",
+  "raison": "7 ligne(s) differente(s)",
+  "sql_reference": "SELECT dayname(TRY_CAST(order_purchase_timestamp AS TIMESTAMP)) AS jour_semaine,\n       COUNT(*) AS commandes\nFROM entrepot.orders GROUP BY 1 ORDER BY commandes DESC;",
+  "reference_lignes": [
+   [
+    "Monday",
+    "16196.00"
+   ],
+   [
+    "Tuesday",
+    "15963.00"
+   ],
+   [
+    "Wednesday",
+    "15552.00"
+   ],
+   [
+    "Thursday",
+    "14761.00"
+   ],
+   [
+    "Friday",
+    "14122.00"
+   ],
+   [
+    "Sunday",
+    "11960.00"
+   ],
+   [
+    "Saturday",
+    "10887.00"
+   ]
+  ],
+  "reference_nb_lignes": 7,
+  "reference_nombres": {
+   "16196.00": 1,
+   "15963.00": 1,
+   "15552.00": 1,
+   "14761.00": 1,
+   "14122.00": 1,
+   "11960.00": 1,
+   "10887.00": 1
+  },
+  "sql_produit": "SELECT\n    CASE date_part('dow', TRY_CAST(o.order_purchase_timestamp AS TIMESTAMP))\n        WHEN 0 THEN 'Dimanche'\n        WHEN 1 THEN 'Lundi'\n        WHEN 2 THEN 'Mardi'\n        WHEN 3 THEN 'Mercredi'\n        WHEN 4 THEN 'Jeudi'\n        WHEN 5 THEN 'Vendredi'\n        WHEN 6 THEN 'Samedi'\n    END AS jour_de_semaine,\n    COUNT(*) AS nombre_de_commandes\nFROM entrepot.\"orders\" AS o\nWHERE TRY_CAST(o.order_purchase_timestamp AS TIMESTAMP) IS NOT NULL\nGROUP BY 1, date_part('dow', TRY_CAST(o.order_purchase_timestamp AS TIMESTAMP))\nORDER BY nombre_de_commandes DESC\nLIMIT 1000",
+  "produit_colonnes": [
+   "jour_de_semaine",
+   "nombre_de_commandes"
+  ],
+  "produit_lignes": [
+   [
+    "Lundi",
+    "16196.00"
+   ],
+   [
+    "Mardi",
+    "15963.00"
+   ],
+   [
+    "Mercredi",
+    "15552.00"
+   ],
+   [
+    "Jeudi",
+    "14761.00"
+   ],
+   [
+    "Vendredi",
+    "14122.00"
+   ],
+   [
+    "Dimanche",
+    "11960.00"
+   ],
+   [
+    "Samedi",
+    "10887.00"
+   ]
+  ],
+  "produit_nb_lignes": 7,
+  "produit_nombres": {
+   "16196.00": 1,
+   "15963.00": 1,
+   "15552.00": 1,
+   "14761.00": 1,
+   "14122.00": 1,
+   "11960.00": 1,
+   "10887.00": 1
+  },
+  "produit_erreur": "",
+  "categorie": "libelle",
+  "preuve": "les 7 valeurs de la reference sont rendues a l'identique ; libelles differents, par exemple « Friday »"
+ },
+ {
+  "modele": "claude-opus-5",
+  "question": "Quelles categories de produits ont le panier moyen le plus eleve, avec leur nom en anglais ?",
+  "famille": "jointures",
+  "piege": "",
+  "impossible": false,
+  "verdict": "faux",
+  "raison": "73 ligne(s) contre 10",
+  "sql_reference": "SELECT COALESCE(t.product_category_name_english, p.product_category_name) AS categorie,\n       ROUND(AVG(i.price), 2) AS prix_moyen\nFROM entrepot.order_items AS i\nJOIN entrepot.products AS p ON p.product_id = i.product_id\nLEFT JOIN entrepot.product_category_name_translation AS t\n  ON t.product_category_name = p.product_category_name\nWHERE p.product_category_name IS NOT NULL\nGROUP BY 1 ORDER BY prix_moyen DESC;",
+  "reference_lignes": [
+   [
+    "computers",
+    "1098.34"
+   ],
+   [
+    "small_appliances_home_oven_and_coffee",
+    "624.29"
+   ],
+   [
+    "home_appliances_2",
+    "476.12"
+   ],
+   [
+    "agro_industry_and_commerce",
+    "342.12"
+   ],
+   [
+    "musical_instruments",
+    "281.62"
+   ],
+   [
+    "small_appliances",
+    "280.78"
+   ],
+   [
+    "portateis_cozinha_e_preparadores_de_alimentos",
+    "264.57"
+   ],
+   [
+    "fixed_telephony",
+    "225.69"
+   ],
+   [
+    "construction_tools_safety",
+    "208.99"
+   ],
+   [
+    "watches_gifts",
+    "201.14"
+   ],
+   [
+    "air_conditioning",
+    "185.27"
+   ],
+   [
+    "furniture_bedroom",
+    "183.75"
+   ]
+  ],
+  "reference_nb_lignes": 73,
+  "reference_nombres": {
+   "1098.34": 1,
+   "624.29": 1,
+   "476.12": 1,
+   "342.12": 1,
+   "281.62": 1,
+   "280.78": 1,
+   "264.57": 1,
+   "225.69": 1,
+   "208.99": 1,
+   "201.14": 1,
+   "185.27": 1,
+   "183.75": 1,
+   "171.77": 1,
+   "167.36": 1,
+   "164.87": 1,
+   "162.01": 1,
+   "158.80": 1,
+   "155.73": 1,
+   "154.41": 1,
+   "148.02": 1,
+   "146.79": 1,
+   "141.64": 1,
+   "139.96": 1,
+   "139.25": 1,
+   "138.49": 1,
+   "137.56": 1,
+   "137.01": 1,
+   "135.13": 1,
+   "134.96": 1,
+   "134.34": 1,
+   "130.16": 1,
+   "128.60": 1,
+   "117.55": 1,
+   "116.74": 1,
+   "116.51": 1,
+   "115.80": 1,
+   "114.95": 1,
+   "114.34": 1,
+   "111.63": 1,
+   "110.07": 1,
+   "108.09": 1,
+   "108.05": 1,
+   "104.31": 1,
+   "103.98": 1,
+   "96.30": 1,
+   "93.74": 1,
+   "93.30": 1,
+   "91.75": 1,
+   "91.25": 1,
+   "90.79": 1,
+   "90.70": 1,
+   "89.93": 1,
+   "87.56": 1,
+   "84.73": 1,
+   "81.80": 1,
+   "77.33": 1,
+   "75.58": 1,
+   "75.25": 1,
+   "72.84": 1,
+   "71.52": 1,
+   "71.23": 1,
+   "71.21": 1,
+   "70.65": 1,
+   "59.18": 1,
+   "58.41": 1,
+   "57.91": 1,
+   "57.63": 1,
+   "57.52": 1,
+   "54.60": 1,
+   "52.14": 1,
+   "40.19": 1,
+   "33.64": 1,
+   "25.34": 1
+  },
+  "sql_produit": "WITH lignes AS (\n    SELECT\n        oi.order_id,\n        COALESCE(t.product_category_name_english, p.product_category_name) AS categorie,\n        SUM(oi.price) AS montant_commande\n    FROM entrepot.\"order_items\" AS oi\n    JOIN entrepot.\"products\" AS p\n      ON p.product_id = oi.product_id\n    LEFT JOIN entrepot.\"product_category_name_translation\" AS t\n      ON t.product_category_name = p.product_category_name\n    WHERE p.product_category_name IS NOT NULL\n    GROUP BY oi.order_id, COALESCE(t.product_category_name_english, p.product_category_name)\n)\nSELECT\n    categorie AS categorie_anglais,\n    COUNT(*) AS nombre_commandes,\n    ROUND(AVG(montant_commande), 2) AS panier_moyen,\n    ROUND(SUM(montant_commande), 2) AS chiffre_affaires\nFROM lignes\nGROUP BY categorie\nORDER BY panier_moyen DESC\nLIMIT 1000",
+  "produit_colonnes": [
+   "categorie_anglais",
+   "nombre_commandes",
+   "panier_moyen",
+   "chiffre_affaires"
+  ],
+  "produit_lignes": [
+   [
+    "computers",
+    "181.00",
+    "1231.84",
+    "222963.13"
+   ],
+   [
+    "small_appliances_home_oven_and_coffee",
+    "75.00",
+    "632.61",
+    "47445.71"
+   ],
+   [
+    "home_appliances_2",
+    "234.00",
+    "484.26",
+    "113317.74"
+   ],
+   [
+    "agro_industry_and_commerce",
+    "182.00",
+    "398.52",
+    "72530.47"
+   ],
+   [
+    "musical_instruments",
+    "628.00",
+    "304.93",
+    "191498.88"
+   ],
+   [
+    "small_appliances",
+    "630.00",
+    "302.62",
+    "190648.58"
+   ],
+   [
+    "portateis_cozinha_e_preparadores_de_alimentos",
+    "14.00",
+    "283.47",
+    "3968.53"
+   ],
+   [
+    "fixed_telephony",
+    "217.00",
+    "274.58",
+    "59583.00"
+   ],
+   [
+    "construction_tools_safety",
+    "167.00",
+    "242.78",
+    "40544.52"
+   ],
+   [
+    "air_conditioning",
+    "253.00",
+    "217.49",
+    "55024.96"
+   ],
+   [
+    "office_furniture",
+    "1273.00",
+    "215.21",
+    "273960.70"
+   ],
+   [
+    "watches_gifts",
+    "5624.00",
+    "214.26",
+    "1205005.68"
+   ]
+  ],
+  "produit_nb_lignes": 73,
+  "produit_nombres": {
+   "181.00": 1,
+   "1231.84": 1,
+   "222963.13": 1,
+   "75.00": 1,
+   "632.61": 1,
+   "47445.71": 1,
+   "234.00": 1,
+   "484.26": 1,
+   "113317.74": 1,
+   "182.00": 1,
+   "398.52": 1,
+   "72530.47": 1,
+   "628.00": 1,
+   "304.93": 1,
+   "191498.88": 1,
+   "630.00": 1,
+   "302.62": 1,
+   "190648.58": 1,
+   "14.00": 1,
+   "283.47": 1,
+   "3968.53": 1,
+   "217.00": 1,
+   "274.58": 1,
+   "59583.00": 1,
+   "167.00": 1,
+   "242.78": 1,
+   "40544.52": 1,
+   "253.00": 1,
+   "217.49": 1,
+   "55024.96": 1,
+   "1273.00": 1,
+   "215.21": 1,
+   "273960.70": 1,
+   "5624.00": 1,
+   "214.26": 1,
+   "1205005.68": 1,
+   "95.00": 1,
+   "210.83": 1,
+   "20028.78": 1,
+   "748.00": 1,
+   "193.42": 1,
+   "144677.59": 1,
+   "8.00": 2,
+   "193.24": 1,
+   "1545.95": 1,
+   "248.00": 1,
+   "186.81": 1,
+   "46328.37": 1,
+   "3632.00": 1,
+   "174.91": 1,
+   "635290.85": 1,
+   "490.00": 1,
+   "169.57": 1,
+   "83088.12": 1,
+   "235.00": 1,
+   "168.81": 1,
+   "39669.61": 1,
+   "244.00": 1,
+   "168.36": 1,
+   "41080.00": 1,
+   "97.00": 1,
+   "163.96": 1,
+   "15903.95": 1,
+   "422.00": 1,
+   "163.31": 1,
+   "68916.56": 1,
+   "38.00": 2,
+   "158.80": 1,
+   "6034.35": 1,
+   "13.00": 1,
+   "158.08": 1,
+   "2054.99": 1,
+   "140.00": 1,
+   "153.64": 1,
+   "21509.23": 1,
+   "3897.00": 1,
+   "152.10": 1,
+   "592720.11": 1,
+   "1062.00": 1,
+   "148.27": 1,
+   "157465.22": 1,
+   "397.00": 1,
+   "147.54": 1,
+   "58572.04": 1,
+   "350.00": 1,
+   "144.82": 1,
+   "50688.50": 1,
+   "2885.00": 1,
+   "142.73": 1,
+   "411764.89": 1,
+   "8836.00": 1,
+   "142.45": 1,
+   "1258681.34": 1,
+   "2.00": 1,
+   "141.64": 1,
+   "283.29": 1,
+   "3518.00": 1,
+   "137.94": 1,
+   "485256.46": 1,
+   "6689.00": 1,
+   "136.34": 1,
+   "911954.32": 1,
+   "1034.00": 1,
+   "135.81": 1,
+   "140429.98": 1,
+   "194.00": 1,
+   "132.56": 1,
+   "25715.89": 1,
+   "7720.00": 1,
+   "127.99": 1,
+   "988048.97": 1,
+   "3162.00": 1,
+   "126.23": 1,
+   "399124.87": 1,
+   "1710.00": 1,
+   "125.33": 1,
+   "214315.41": 1,
+   "3886.00": 1,
+   "124.54": 1,
+   "483946.60": 1,
+   "202.00": 1,
+   "119.82": 1,
+   "24202.64": 1,
+   "39.00": 2,
+   "115.00": 1,
+   "4485.18": 1,
+   "114.95": 1,
+   "4368.08": 1,
+   "6449.00": 1,
+   "113.16": 1,
+   "729762.49": 1,
+   "9417.00": 1,
+   "110.12": 1,
+   "1036988.68": 1,
+   "5884.00": 1,
+   "107.45": 1,
+   "632248.66": 1,
+   "65.00": 1,
+   "106.67": 1,
+   "6933.46": 1,
+   "764.00": 1,
+   "104.94": 1,
+   "80171.53": 1,
+   "59.00": 1,
+   "101.68": 1,
+   "5999.39": 1,
+   "280.00": 1,
+   "101.35": 1,
+   "28378.47": 1,
+   "2311.00": 1,
+   "99.93": 1,
+   "230943.23": 1,
+   "240.00": 1,
+   "98.18": 1,
+   "23562.77": 1,
+   "112.00": 1,
+   "96.41": 1,
+   "10797.82": 1,
+   "79.00": 1,
+   "95.30": 1,
+   "7528.41": 1,
+   "512.00": 1,
+   "91.52": 1,
+   "46856.88": 1,
+   "53.00": 1,
+   "87.54": 1,
+   "4639.85": 1,
+   "1864.00": 1,
+   "81.99": 1,
+   "152823.54": 1,
+   "23.00": 1,
+   "78.87": 1,
+   "1814.01": 1,
+   "121.00": 1,
+   "78.86": 1,
+   "9541.55": 1,
+   "27.00": 2,
+   "78.50": 1,
+   "2119.51": 1,
+   "4199.00": 1,
+   "77.08": 1,
+   "323667.53": 1,
+   "297.00": 1,
+   "75.52": 1,
+   "22428.70": 1,
+   "260.00": 1,
+   "73.45": 1,
+   "19096.06": 1,
+   "71.89": 1,
+   "2803.64": 1,
+   "71.23": 1,
+   "569.85": 1,
+   "128.00": 1,
+   "68.76": 1,
+   "8800.82": 1,
+   "227.00": 1,
+   "66.87": 1,
+   "15179.48": 1,
+   "450.00": 1,
+   "65.32": 1,
+   "29393.41": 1,
+   "2550.00": 1,
+   "62.84": 1,
+   "160246.74": 1,
+   "12.00": 1,
+   "60.83": 1,
+   "730.00": 1,
+   "58.06": 1,
+   "1567.59": 1,
+   "29.00": 1,
+   "38.28": 1,
+   "1110.04": 1,
+   "24.00": 1,
+   "31.68": 1,
+   "760.27": 1
+  },
+  "produit_erreur": "",
+  "categorie": "a_lire",
+  "preuve": "4 valeur(s) commune(s) sur 73 attendues : le chiffre differe, la cause demande une lecture"
+ },
+ {
+  "modele": "claude-opus-5",
+  "question": "Les vendeurs de quels etats livrent le plus vite ?",
+  "famille": "jointures",
+  "piege": "",
+  "impossible": false,
+  "verdict": "faux",
+  "raison": "17 ligne(s) contre 13",
+  "sql_reference": "SELECT s.seller_state AS etat_vendeur,\n       ROUND(AVG(DATE_DIFF('day',\n              TRY_CAST(o.order_purchase_timestamp AS TIMESTAMP),\n              TRY_CAST(o.order_delivered_customer_date AS TIMESTAMP))), 2) AS delai_moyen_jours\nFROM entrepot.order_items AS i\nJOIN entrepot.orders AS o ON o.order_id = i.order_id\nJOIN entrepot.sellers AS s ON s.seller_id = i.seller_id\nWHERE o.order_delivered_customer_date IS NOT NULL\nGROUP BY s.seller_state\nORDER BY delai_moyen_jours ASC;",
+  "reference_lignes": [
+   [
+    "RS",
+    "11.49"
+   ],
+   [
+    "RJ",
+    "11.94"
+   ],
+   [
+    "SP",
+    "12.21"
+   ],
+   [
+    "MS",
+    "12.30"
+   ],
+   [
+    "PB",
+    "12.38"
+   ],
+   [
+    "DF",
+    "12.44"
+   ],
+   [
+    "SE",
+    "12.60"
+   ],
+   [
+    "MG",
+    "12.75"
+   ],
+   [
+    "GO",
+    "12.77"
+   ],
+   [
+    "PE",
+    "12.85"
+   ],
+   [
+    "ES",
+    "12.86"
+   ],
+   [
+    "RN",
+    "12.93"
+   ]
+  ],
+  "reference_nb_lignes": 22,
+  "reference_nombres": {
+   "11.49": 1,
+   "11.94": 1,
+   "12.21": 1,
+   "12.30": 1,
+   "12.38": 1,
+   "12.44": 1,
+   "12.60": 1,
+   "12.75": 1,
+   "12.77": 1,
+   "12.85": 1,
+   "12.86": 1,
+   "12.93": 1,
+   "13.25": 1,
+   "13.32": 1,
+   "13.52": 1,
+   "13.73": 1,
+   "13.77": 1,
+   "14.69": 1,
+   "17.43": 1,
+   "17.65": 1,
+   "17.90": 1,
+   "48.00": 1
+  },
+  "sql_produit": "SELECT\n    s.seller_state AS etat_vendeur,\n    COUNT(DISTINCT o.order_id) AS nb_commandes_livrees,\n    ROUND(AVG(\n        DATE_DIFF('hour',\n            TRY_CAST(o.order_purchase_timestamp AS TIMESTAMP),\n            TRY_CAST(o.order_delivered_customer_date AS TIMESTAMP)\n        ) / 24.0\n    ), 2) AS delai_moyen_jours,\n    ROUND(MEDIAN(\n        DATE_DIFF('hour',\n            TRY_CAST(o.order_purchase_timestamp AS TIMESTAMP),\n            TRY_CAST(o.order_delivered_customer_date AS TIMESTAMP)\n        ) / 24.0\n    ), 2) AS delai_median_jours\nFROM entrepot.\"orders\" AS o\nJOIN entrepot.\"order_items\" AS oi\n    ON oi.order_id = o.order_id\nJOIN entrepot.\"sellers\" AS s\n    ON s.seller_id = oi.seller_id\nWHERE o.order_status = 'delivered'\n  AND TRY_CAST(o.order_delivered_customer_date AS TIMESTAMP) IS NOT NULL\n  AND TRY_CAST(o.order_purchase_timestamp AS TIMESTAMP) IS NOT NULL\nGROUP BY s.seller_state\nHAVING COUNT(DISTINCT o.order_id) >= 30\nORDER BY delai_moyen_jours ASC\nLIMIT 1000",
+  "produit_colonnes": [
+   "etat_vendeur",
+   "nb_commandes_livrees",
+   "delai_moyen_jours",
+   "delai_median_jours"
+  ],
+  "produit_lignes": [
+   [
+    "RS",
+    "1962.00",
+    "11.56",
+    "9.46"
+   ],
+   [
+    "RJ",
+    "4227.00",
+    "12.02",
+    "10.00"
+   ],
+   [
+    "SP",
+    "68635.00",
+    "12.28",
+    "9.96"
+   ],
+   [
+    "MS",
+    "49.00",
+    "12.33",
+    "10.79"
+   ],
+   [
+    "PB",
+    "35.00",
+    "12.52",
+    "10.29"
+   ],
+   [
+    "DF",
+    "808.00",
+    "12.53",
+    "10.50"
+   ],
+   [
+    "MG",
+    "7733.00",
+    "12.79",
+    "10.79"
+   ],
+   [
+    "GO",
+    "451.00",
+    "12.83",
+    "11.06"
+   ],
+   [
+    "ES",
+    "310.00",
+    "12.87",
+    "11.17"
+   ],
+   [
+    "PE",
+    "403.00",
+    "12.91",
+    "11.25"
+   ],
+   [
+    "RN",
+    "51.00",
+    "13.02",
+    "8.17"
+   ],
+   [
+    "PR",
+    "7512.00",
+    "13.38",
+    "11.21"
+   ]
+  ],
+  "produit_nb_lignes": 17,
+  "produit_nombres": {
+   "1962.00": 1,
+   "11.56": 1,
+   "9.46": 1,
+   "4227.00": 1,
+   "12.02": 1,
+   "10.00": 1,
+   "68635.00": 1,
+   "12.28": 1,
+   "9.96": 1,
+   "49.00": 1,
+   "12.33": 1,
+   "10.79": 2,
+   "35.00": 1,
+   "12.52": 1,
+   "10.29": 1,
+   "808.00": 1,
+   "12.53": 1,
+   "10.50": 1,
+   "7733.00": 1,
+   "12.79": 1,
+   "451.00": 1,
+   "12.83": 1,
+   "11.06": 1,
+   "310.00": 1,
+   "12.87": 1,
+   "11.17": 1,
+   "403.00": 1,
+   "12.91": 1,
+   "11.25": 1,
+   "51.00": 1,
+   "13.02": 1,
+   "8.17": 1,
+   "7512.00": 1,
+   "13.38": 1,
+   "11.21": 1,
+   "3603.00": 1,
+   "13.57": 1,
+   "11.50": 1,
+   "550.00": 1,
+   "13.85": 1,
+   "11.88": 1,
+   "136.00": 1,
+   "14.75": 1,
+   "13.04": 1,
+   "389.00": 1,
+   "17.74": 1,
+   "15.77": 1,
+   "87.00": 1,
+   "17.89": 1,
+   "14.50": 1
+  },
+  "produit_erreur": "",
+  "categorie": "a_lire",
+  "preuve": "0 valeur(s) commune(s) sur 22 attendues : le chiffre differe, la cause demande une lecture"
+ },
+ {
+  "modele": "claude-opus-5",
+  "question": "Quelle proportion des avis ne comporte aucun message ecrit ?",
+  "famille": "qualite_donnees",
+  "piege": "Compter les NULL seuls : 9 avis supplementaires ne contiennent que des espaces, ce qui est un defaut distinct (question suivante).",
+  "impossible": false,
+  "verdict": "faux",
+  "raison": "1 ligne(s) differente(s)",
+  "sql_reference": "SELECT ROUND(100.0 * SUM(CASE WHEN review_comment_message IS NULL THEN 1 ELSE 0 END) / COUNT(*), 2) AS part_pct\nFROM entrepot.order_reviews;",
+  "reference_lignes": [
+   [
+    "58.70"
+   ]
+  ],
+  "reference_nb_lignes": 1,
+  "reference_nombres": {
+   "58.70": 1
+  },
+  "sql_produit": "SELECT\n    COUNT(*) AS nb_avis_total,\n    COUNT(*) FILTER (\n        WHERE review_comment_message IS NULL\n           OR TRIM(review_comment_message) = ''\n    ) AS nb_avis_sans_message,\n    ROUND(\n        100.0 * COUNT(*) FILTER (\n            WHERE review_comment_message IS NULL\n               OR TRIM(review_comment_message) = ''\n        ) / COUNT(*),\n        2\n    ) AS pourcentage_sans_message\nFROM entrepot.\"order_reviews\"\nLIMIT 1000",
+  "produit_colonnes": [
+   "nb_avis_total",
+   "nb_avis_sans_message",
+   "pourcentage_sans_message"
+  ],
+  "produit_lignes": [
+   [
+    "99224.00",
+    "58256.00",
+    "58.71"
+   ]
+  ],
+  "produit_nb_lignes": 1,
+  "produit_nombres": {
+   "99224.00": 1,
+   "58256.00": 1,
+   "58.71": 1
+  },
+  "produit_erreur": "",
+  "categorie": "a_lire",
+  "preuve": "0 valeur(s) commune(s) sur 1 attendues : le chiffre differe, la cause demande une lecture"
+ },
+ {
+  "modele": "claude-opus-5",
+  "question": "Y a-t-il des avis dont le message ne contient que des espaces ?",
+  "famille": "qualite_donnees",
+  "piege": "Un champ rempli d'espaces n'est pas NULL : il passe les controles de completude et reste pourtant vide. Neuf occurrences ici.",
+  "impossible": false,
+  "verdict": "faux",
+  "raison": "3 ligne(s) contre 1",
+  "sql_reference": "SELECT COUNT(*) AS messages_blancs\nFROM entrepot.order_reviews\nWHERE review_comment_message IS NOT NULL AND TRIM(review_comment_message) = '';",
+  "reference_lignes": [
+   [
+    "9.00"
+   ]
+  ],
+  "reference_nb_lignes": 1,
+  "reference_nombres": {
+   "9.00": 1
+  },
+  "sql_produit": "SELECT\n    CASE\n        WHEN review_comment_message IS NULL THEN 'NULL'\n        WHEN review_comment_message = '' THEN 'chaine vide'\n        WHEN TRIM(review_comment_message) = '' THEN 'uniquement des espaces'\n        ELSE 'texte reel'\n    END AS type_de_message,\n    COUNT(*) AS nombre_avis\nFROM entrepot.\"order_reviews\"\nGROUP BY type_de_message\nORDER BY nombre_avis DESC\nLIMIT 1000",
+  "produit_colonnes": [
+   "type_de_message",
+   "nombre_avis"
+  ],
+  "produit_lignes": [
+   [
+    "NULL",
+    "58247.00"
+   ],
+   [
+    "texte reel",
+    "40968.00"
+   ],
+   [
+    "uniquement des espaces",
+    "9.00"
+   ]
+  ],
+  "produit_nb_lignes": 3,
+  "produit_nombres": {
+   "58247.00": 1,
+   "40968.00": 1,
+   "9.00": 1
+  },
+  "produit_erreur": "",
+  "categorie": "libelle",
+  "preuve": "les 1 valeurs de la reference sont toutes rendues, parmi 3 lignes contre 1"
+ },
+ {
+  "modele": "claude-opus-5",
+  "question": "Y a-t-il des doublons dans la table de geolocalisation ?",
+  "famille": "qualite_donnees",
+  "piege": "La table contient un million de lignes pour bien moins de codes postaux.",
+  "impossible": false,
+  "verdict": "faux",
+  "raison": "1 ligne(s) differente(s)",
+  "sql_reference": "SELECT COUNT(*) AS lignes_totales,\n       COUNT(DISTINCT geolocation_zip_code_prefix) AS codes_postaux_distincts\nFROM entrepot.geolocation;",
+  "reference_lignes": [
+   [
+    "1000163.00",
+    "19015.00"
+   ]
+  ],
+  "reference_nb_lignes": 1,
+  "reference_nombres": {
+   "1000163.00": 1,
+   "19015.00": 1
+  },
+  "sql_produit": "WITH doublons AS (\n    SELECT\n        geolocation_zip_code_prefix,\n        geolocation_lat,\n        geolocation_lng,\n        geolocation_city,\n        geolocation_state,\n        COUNT(*) AS nb_occurrences\n    FROM entrepot.\"geolocation\"\n    GROUP BY\n        geolocation_zip_code_prefix,\n        geolocation_lat,\n        geolocation_lng,\n        geolocation_city,\n        geolocation_state\n)\nSELECT\n    SUM(nb_occurrences)                                        AS lignes_totales,\n    COUNT(*)                                                   AS lignes_distinctes,\n    SUM(nb_occurrences) - COUNT(*)                             AS lignes_en_double,\n    COUNT(*) FILTER (WHERE nb_occurrences > 1)                 AS combinaisons_dupliquees,\n    MAX(nb_occurrences)                                        AS nb_max_repetitions,\n    ROUND(100.0 * (SUM(nb_occurrences) - COUNT(*)) / SUM(nb_occurrences), 2) AS pct_lignes_en_double\nFROM doublons\nLIMIT 1000",
+  "produit_colonnes": [
+   "lignes_totales",
+   "lignes_distinctes",
+   "lignes_en_double",
+   "combinaisons_dupliquees",
+   "nb_max_repetitions",
+   "pct_lignes_en_double"
+  ],
+  "produit_lignes": [
+   [
+    "1000163.00",
+    "738332.00",
+    "261831.00",
+    "128174.00",
+    "314.00",
+    "26.18"
+   ]
+  ],
+  "produit_nb_lignes": 1,
+  "produit_nombres": {
+   "1000163.00": 1,
+   "738332.00": 1,
+   "261831.00": 1,
+   "128174.00": 1,
+   "314.00": 1,
+   "26.18": 1
+  },
+  "produit_erreur": "",
+  "categorie": "a_lire",
+  "preuve": "1 valeur(s) commune(s) sur 2 attendues : le chiffre differe, la cause demande une lecture"
+ },
+ {
+  "modele": "claude-opus-5",
+  "question": "Quelle est la longueur moyenne d'un commentaire client ?",
+  "famille": "texte_libre",
+  "piege": "",
+  "impossible": false,
+  "verdict": "faux",
+  "raison": "1 ligne(s) differente(s)",
+  "sql_reference": "SELECT ROUND(AVG(LENGTH(review_comment_message)), 1) AS longueur_moyenne\nFROM entrepot.order_reviews\nWHERE review_comment_message IS NOT NULL AND TRIM(review_comment_message) <> '';",
+  "reference_lignes": [
+   [
+    "68.70"
+   ]
+  ],
+  "reference_nb_lignes": 1,
+  "reference_nombres": {
+   "68.70": 1
+  },
+  "sql_produit": "SELECT\n    COUNT(*) AS nb_commentaires,\n    ROUND(AVG(LENGTH(TRIM(review_comment_message))), 2) AS longueur_moyenne_caracteres\nFROM entrepot.\"order_reviews\"\nWHERE review_comment_message IS NOT NULL\n  AND TRIM(review_comment_message) <> ''\nLIMIT 1000",
+  "produit_colonnes": [
+   "nb_commentaires",
+   "longueur_moyenne_caracteres"
+  ],
+  "produit_lignes": [
+   [
+    "40968.00",
+    "68.45"
+   ]
+  ],
+  "produit_nb_lignes": 1,
+  "produit_nombres": {
+   "40968.00": 1,
+   "68.45": 1
+  },
+  "produit_erreur": "",
+  "categorie": "a_lire",
+  "preuve": "0 valeur(s) commune(s) sur 1 attendues : le chiffre differe, la cause demande une lecture"
+ },
+ {
+  "modele": "claude-opus-5",
+  "question": "Combien de commentaires mentionnent un probleme de livraison ?",
+  "famille": "texte_libre",
+  "piege": "Les avis sont en portugais bresilien : chercher des mots francais ne donnerait rien.",
+  "impossible": false,
+  "verdict": "faux",
+  "raison": "1 ligne(s) differente(s)",
+  "sql_reference": "SELECT COUNT(*) AS commentaires_livraison\nFROM entrepot.order_reviews\nWHERE review_comment_message ILIKE '%entrega%' OR review_comment_message ILIKE '%atraso%';",
+  "reference_lignes": [
+   [
+    "7349.00"
+   ]
+  ],
+  "reference_nb_lignes": 1,
+  "reference_nombres": {
+   "7349.00": 1
+  },
+  "sql_produit": "WITH commentaires AS (\n    SELECT\n        review_id,\n        lower(strip_accents(COALESCE(review_comment_title, '') || ' ' || COALESCE(review_comment_message, ''))) AS texte\n    FROM entrepot.\"order_reviews\"\n    WHERE COALESCE(review_comment_title, '') <> ''\n       OR COALESCE(review_comment_message, '') <> ''\n)\nSELECT\n    COUNT(*) AS nb_commentaires_probleme_livraison,\n    (SELECT COUNT(*) FROM commentaires) AS nb_commentaires_non_vides,\n    ROUND(100.0 * COUNT(*) / NULLIF((SELECT COUNT(*) FROM commentaires), 0), 1) AS part_pourcent\nFROM commentaires\nWHERE texte LIKE '%atras%'          -- atraso, atrasado, atrasada\n   OR texte LIKE '%nao chegou%'\n   OR texte LIKE '%nao recebi%'\n   OR texte LIKE '%nao foi entregue%'\n   OR texte LIKE '%nao entregue%'\n   OR texte LIKE '%demora%'\n   OR texte LIKE '%ainda nao%'\n   OR texte LIKE '%prazo%'\n   OR texte LIKE '%extraviad%'\n   OR texte LIKE '%correio%'\nLIMIT 1000",
+  "produit_colonnes": [
+   "nb_commentaires_probleme_livraison",
+   "nb_commentaires_non_vides",
+   "part_pourcent"
+  ],
+  "produit_lignes": [
+   [
+    "13360.00",
+    "42706.00",
+    "31.30"
+   ]
+  ],
+  "produit_nb_lignes": 1,
+  "produit_nombres": {
+   "13360.00": 1,
+   "42706.00": 1,
+   "31.30": 1
+  },
+  "produit_erreur": "",
+  "categorie": "a_lire",
+  "preuve": "0 valeur(s) commune(s) sur 1 attendues : le chiffre differe, la cause demande une lecture"
+ },
+ {
+  "modele": "claude-opus-5",
+  "question": "Les commentaires des clients mecontents sont-ils plus longs que ceux des clients satisfaits ?",
+  "famille": "texte_libre",
+  "piege": "",
+  "impossible": false,
+  "verdict": "faux",
+  "raison": "3 ligne(s) contre 5",
+  "sql_reference": "SELECT review_score AS note, ROUND(AVG(LENGTH(review_comment_message)), 1) AS longueur_moyenne\nFROM entrepot.order_reviews\nWHERE review_comment_message IS NOT NULL AND TRIM(review_comment_message) <> ''\nGROUP BY review_score ORDER BY review_score;",
+  "reference_lignes": [
+   [
+    "1.00",
+    "99.90"
+   ],
+   [
+    "2.00",
+    "96.80"
+   ],
+   [
+    "3.00",
+    "83.30"
+   ],
+   [
+    "4.00",
+    "61.80"
+   ],
+   [
+    "5.00",
+    "51.90"
+   ]
+  ],
+  "reference_nb_lignes": 5,
+  "reference_nombres": {
+   "1.00": 1,
+   "99.90": 1,
+   "2.00": 1,
+   "96.80": 1,
+   "3.00": 1,
+   "83.30": 1,
+   "4.00": 1,
+   "61.80": 1,
+   "5.00": 1,
+   "51.90": 1
+  },
+  "sql_produit": "SELECT\n  CASE\n    WHEN review_score <= 2 THEN 'Mecontents (1-2)'\n    WHEN review_score = 3 THEN 'Neutres (3)'\n    ELSE 'Satisfaits (4-5)'\n  END AS groupe_satisfaction,\n  COUNT(*) AS nb_commentaires,\n  ROUND(AVG(LENGTH(TRIM(review_comment_message))), 1) AS longueur_moyenne_caracteres,\n  MEDIAN(LENGTH(TRIM(review_comment_message))) AS longueur_mediane_caracteres,\n  MAX(LENGTH(TRIM(review_comment_message))) AS longueur_max_caracteres\nFROM entrepot.\"order_reviews\"\nWHERE review_comment_message IS NOT NULL\n  AND TRIM(review_comment_message) <> ''\nGROUP BY groupe_satisfaction\nORDER BY groupe_satisfaction\nLIMIT 1000",
+  "produit_colonnes": [
+   "groupe_satisfaction",
+   "nb_commentaires",
+   "longueur_moyenne_caracteres",
+   "longueur_mediane_caracteres",
+   "longueur_max_caracteres"
+  ],
+  "produit_lignes": [
+   [
+    "Mecontents (1-2)",
+    "10890.00",
+    "99.10",
+    "88.00",
+    "208.00"
+   ],
+   [
+    "Neutres (3)",
+    "3557.00",
+    "83.10",
+    "70.00",
+    "204.00"
+   ],
+   [
+    "Satisfaits (4-5)",
+    "26521.00",
+    "53.90",
+    "43.00",
+    "207.00"
+   ]
+  ],
+  "produit_nb_lignes": 3,
+  "produit_nombres": {
+   "10890.00": 1,
+   "99.10": 1,
+   "88.00": 1,
+   "208.00": 1,
+   "3557.00": 1,
+   "83.10": 1,
+   "70.00": 1,
+   "204.00": 1,
+   "26521.00": 1,
+   "53.90": 1,
+   "43.00": 1,
+   "207.00": 1
+  },
+  "produit_erreur": "",
+  "categorie": "a_lire",
+  "preuve": "0 valeur(s) commune(s) sur 10 attendues : le chiffre differe, la cause demande une lecture"
+ },
+ {
+  "modele": "claude-opus-5",
+  "question": "Le delai de livraison depend-il de l'etat du client ?",
+  "famille": "geographie",
+  "piege": "",
+  "impossible": false,
+  "verdict": "faux",
+  "raison": "27 ligne(s) differente(s)",
+  "sql_reference": "SELECT c.customer_state AS etat,\n       ROUND(AVG(DATE_DIFF('day',\n              TRY_CAST(o.order_purchase_timestamp AS TIMESTAMP),\n              TRY_CAST(o.order_delivered_customer_date AS TIMESTAMP))), 2) AS delai_moyen_jours\nFROM entrepot.orders AS o\nJOIN entrepot.customers AS c ON c.customer_id = o.customer_id\nWHERE o.order_delivered_customer_date IS NOT NULL\nGROUP BY c.customer_state ORDER BY delai_moyen_jours DESC;",
+  "reference_lignes": [
+   [
+    "RR",
+    "29.34"
+   ],
+   [
+    "AP",
+    "27.18"
+   ],
+   [
+    "AM",
+    "26.36"
+   ],
+   [
+    "AL",
+    "24.50"
+   ],
+   [
+    "PA",
+    "23.73"
+   ],
+   [
+    "MA",
+    "21.51"
+   ],
+   [
+    "SE",
+    "21.46"
+   ],
+   [
+    "CE",
+    "21.20"
+   ],
+   [
+    "AC",
+    "21.00"
+   ],
+   [
+    "PB",
+    "20.39"
+   ],
+   [
+    "PI",
+    "19.39"
+   ],
+   [
+    "BA",
+    "19.28"
+   ]
+  ],
+  "reference_nb_lignes": 27,
+  "reference_nombres": {
+   "29.34": 1,
+   "27.18": 1,
+   "26.36": 1,
+   "24.50": 1,
+   "23.73": 1,
+   "21.51": 1,
+   "21.46": 1,
+   "21.20": 1,
+   "21.00": 1,
+   "20.39": 1,
+   "19.39": 1,
+   "19.28": 2,
+   "19.22": 1,
+   "18.40": 1,
+   "18.00": 1,
+   "17.60": 1,
+   "15.72": 1,
+   "15.54": 2,
+   "15.25": 1,
+   "15.24": 1,
+   "14.91": 1,
+   "12.90": 1,
+   "11.95": 1,
+   "11.94": 1,
+   "8.70": 1
+  },
+  "sql_produit": "SELECT\n    c.customer_state AS etat_client,\n    COUNT(*) AS nb_commandes_livrees,\n    ROUND(AVG(DATE_DIFF('day',\n        TRY_CAST(o.order_purchase_timestamp AS TIMESTAMP),\n        TRY_CAST(o.order_delivered_customer_date AS TIMESTAMP))), 2) AS delai_moyen_jours,\n    ROUND(MEDIAN(DATE_DIFF('day',\n        TRY_CAST(o.order_purchase_timestamp AS TIMESTAMP),\n        TRY_CAST(o.order_delivered_customer_date AS TIMESTAMP))), 2) AS delai_median_jours,\n    ROUND(AVG(DATE_DIFF('day',\n        TRY_CAST(o.order_estimated_delivery_date AS TIMESTAMP),\n        TRY_CAST(o.order_delivered_customer_date AS TIMESTAMP))), 2) AS ecart_moyen_vs_estimation_jours\nFROM entrepot.\"orders\" AS o\nJOIN entrepot.\"customers\" AS c\n    ON c.customer_id = o.customer_id\nWHERE o.order_status = 'delivered'\n  AND TRY_CAST(o.order_delivered_customer_date AS TIMESTAMP) IS NOT NULL\n  AND TRY_CAST(o.order_purchase_timestamp AS TIMESTAMP) IS NOT NULL\nGROUP BY c.customer_state\nORDER BY delai_moyen_jours DESC\nLIMIT 1000",
+  "produit_colonnes": [
+   "etat_client",
+   "nb_commandes_livrees",
+   "delai_moyen_jours",
+   "delai_median_jours",
+   "ecart_moyen_vs_estimation_jours"
+  ],
+  "produit_lignes": [
+   [
+    "RR",
+    "41.00",
+    "29.34",
+    "25.00",
+    "-17.29"
+   ],
+   [
+    "AP",
+    "67.00",
+    "27.18",
+    "25.00",
+    "-19.69"
+   ],
+   [
+    "AM",
+    "145.00",
+    "26.36",
+    "26.00",
+    "-19.57"
+   ],
+   [
+    "AL",
+    "397.00",
+    "24.50",
+    "22.00",
+    "-8.71"
+   ],
+   [
+    "PA",
+    "946.00",
+    "23.73",
+    "21.00",
+    "-14.07"
+   ],
+   [
+    "MA",
+    "717.00",
+    "21.51",
+    "19.00",
+    "-9.57"
+   ],
+   [
+    "SE",
+    "335.00",
+    "21.46",
+    "18.00",
+    "-10.02"
+   ],
+   [
+    "CE",
+    "1279.00",
+    "21.20",
+    "18.00",
+    "-10.80"
+   ],
+   [
+    "AC",
+    "80.00",
+    "21.00",
+    "18.00",
+    "-20.73"
+   ],
+   [
+    "PB",
+    "517.00",
+    "20.39",
+    "18.00",
+    "-13.26"
+   ],
+   [
+    "PI",
+    "476.00",
+    "19.39",
+    "16.00",
+    "-11.31"
+   ],
+   [
+    "BA",
+    "3256.00",
+    "19.28",
+    "17.00",
+    "-10.79"
+   ]
+  ],
+  "produit_nb_lignes": 27,
+  "produit_nombres": {
+   "41.00": 1,
+   "29.34": 1,
+   "25.00": 2,
+   "-17.29": 1,
+   "67.00": 1,
+   "27.18": 1,
+   "-19.69": 1,
+   "145.00": 1,
+   "26.36": 1,
+   "26.00": 1,
+   "-19.57": 1,
+   "397.00": 1,
+   "24.50": 1,
+   "22.00": 1,
+   "-8.71": 1,
+   "946.00": 1,
+   "23.73": 1,
+   "21.00": 2,
+   "-14.07": 1,
+   "717.00": 1,
+   "21.51": 1,
+   "19.00": 1,
+   "-9.57": 1,
+   "335.00": 1,
+   "21.46": 1,
+   "18.00": 6,
+   "-10.02": 1,
+   "1279.00": 1,
+   "21.20": 1,
+   "-10.80": 1,
+   "80.00": 1,
+   "-20.73": 1,
+   "517.00": 1,
+   "20.39": 1,
+   "-13.26": 1,
+   "476.00": 1,
+   "19.39": 1,
+   "16.00": 5,
+   "-11.31": 1,
+   "3256.00": 1,
+   "19.28": 2,
+   "17.00": 1,
+   "-10.79": 1,
+   "243.00": 1,
+   "-20.10": 1,
+   "474.00": 1,
+   "19.22": 1,
+   "-13.65": 1,
+   "1593.00": 1,
+   "18.40": 1,
+   "-13.29": 1,
+   "886.00": 1,
+   "-14.36": 1,
+   "274.00": 1,
+   "17.60": 1,
+   "-12.13": 1,
+   "1995.00": 1,
+   "15.72": 1,
+   "14.00": 3,
+   "-10.50": 1,
+   "1957.00": 1,
+   "15.54": 2,
+   "-12.19": 1,
+   "701.00": 1,
+   "-11.05": 1,
+   "5344.00": 1,
+   "15.25": 1,
+   "13.00": 2,
+   "-13.91": 1,
+   "12350.00": 1,
+   "15.24": 1,
+   "12.00": 1,
+   "-11.76": 1,
+   "3546.00": 1,
+   "14.90": 1,
+   "-11.50": 1,
+   "2080.00": 1,
+   "12.90": 1,
+   "11.00": 1,
+   "-12.05": 1,
+   "4923.00": 1,
+   "11.94": 2,
+   "10.00": 2,
+   "-13.31": 1,
+   "11354.00": 1,
+   "-13.24": 1,
+   "40494.00": 1,
+   "8.70": 1,
+   "7.00": 1,
+   "-11.08": 1
+  },
+  "produit_erreur": "",
+  "categorie": "a_lire",
+  "preuve": "25 valeur(s) commune(s) sur 27 attendues : le chiffre differe, la cause demande une lecture"
+ },
+ {
+  "modele": "claude-opus-5",
+  "question": "Quelle est la repartition des clients entre Sao Paulo et le reste du pays ?",
+  "famille": "geographie",
+  "piege": "",
+  "impossible": false,
+  "verdict": "faux",
+  "raison": "2 ligne(s) differente(s)",
+  "sql_reference": "SELECT CASE WHEN customer_state = 'SP' THEN 'Sao Paulo' ELSE 'autres etats' END AS zone,\n       COUNT(*) AS clients\nFROM entrepot.customers GROUP BY 1 ORDER BY clients DESC;",
+  "reference_lignes": [
+   [
+    "autres etats",
+    "57695.00"
+   ],
+   [
+    "Sao Paulo",
+    "41746.00"
+   ]
+  ],
+  "reference_nb_lignes": 2,
+  "reference_nombres": {
+   "57695.00": 1,
+   "41746.00": 1
+  },
+  "sql_produit": "SELECT\n    CASE WHEN c.customer_state = 'SP' THEN 'Sao Paulo (SP)' ELSE 'Reste du pays' END AS zone,\n    COUNT(*) AS nombre_clients,\n    ROUND(100.0 * COUNT(*) / SUM(COUNT(*)) OVER (), 2) AS part_pourcentage\nFROM entrepot.\"customers\" AS c\nGROUP BY zone\nORDER BY nombre_clients DESC\nLIMIT 1000",
+  "produit_colonnes": [
+   "zone",
+   "nombre_clients",
+   "part_pourcentage"
+  ],
+  "produit_lignes": [
+   [
+    "Reste du pays",
+    "57695.00",
+    "58.02"
+   ],
+   [
+    "Sao Paulo (SP)",
+    "41746.00",
+    "41.98"
+   ]
+  ],
+  "produit_nb_lignes": 2,
+  "produit_nombres": {
+   "57695.00": 1,
+   "58.02": 1,
+   "41746.00": 1,
+   "41.98": 1
+  },
+  "produit_erreur": "",
+  "categorie": "libelle",
+  "preuve": "les 2 valeurs de la reference sont rendues a l'identique ; libelles differents, par exemple « Sao Paulo »"
+ },
+ {
+  "modele": "claude-opus-5",
+  "question": "Combien de commandes en janvier 2018 contre janvier 2017 ?",
+  "famille": "comparaisons_periodes",
+  "piege": "",
+  "impossible": false,
+  "verdict": "faux",
+  "raison": "2 ligne(s) differente(s)",
+  "sql_reference": "SELECT EXTRACT(year FROM TRY_CAST(order_purchase_timestamp AS TIMESTAMP)) AS annee,\n       COUNT(*) AS commandes\nFROM entrepot.orders\nWHERE EXTRACT(month FROM TRY_CAST(order_purchase_timestamp AS TIMESTAMP)) = 1\n  AND EXTRACT(year FROM TRY_CAST(order_purchase_timestamp AS TIMESTAMP)) IN (2017, 2018)\nGROUP BY 1 ORDER BY 1;",
+  "reference_lignes": [
+   [
+    "2017.00",
+    "800.00"
+   ],
+   [
+    "2018.00",
+    "7269.00"
+   ]
+  ],
+  "reference_nb_lignes": 2,
+  "reference_nombres": {
+   "2017.00": 1,
+   "800.00": 1,
+   "2018.00": 1,
+   "7269.00": 1
+  },
+  "sql_produit": "SELECT\n    strftime(TRY_CAST(o.order_purchase_timestamp AS TIMESTAMP), '%Y-%m') AS mois,\n    COUNT(*) AS nombre_de_commandes\nFROM entrepot.\"orders\" AS o\nWHERE TRY_CAST(o.order_purchase_timestamp AS TIMESTAMP) >= TIMESTAMP '2017-01-01 00:00:00'\n  AND TRY_CAST(o.order_purchase_timestamp AS TIMESTAMP) <  TIMESTAMP '2017-02-01 00:00:00'\n   OR TRY_CAST(o.order_purchase_timestamp AS TIMESTAMP) >= TIMESTAMP '2018-01-01 00:00:00'\n  AND TRY_CAST(o.order_purchase_timestamp AS TIMESTAMP) <  TIMESTAMP '2018-02-01 00:00:00'\nGROUP BY mois\nORDER BY mois\nLIMIT 1000",
+  "produit_colonnes": [
+   "mois",
+   "nombre_de_commandes"
+  ],
+  "produit_lignes": [
+   [
+    "2017-01-01 00:00:00",
+    "800.00"
+   ],
+   [
+    "2018-01-01 00:00:00",
+    "7269.00"
+   ]
+  ],
+  "produit_nb_lignes": 2,
+  "produit_nombres": {
+   "800.00": 1,
+   "7269.00": 1
+  },
+  "produit_erreur": "",
+  "categorie": "a_lire",
+  "preuve": "2 valeur(s) commune(s) sur 4 attendues : le chiffre differe, la cause demande une lecture"
+ },
+ {
+  "modele": "gpt-oss-120b",
+  "question": "Combien de clients distincts avons-nous ?",
+  "famille": "agregats_simples",
+  "piege": "customer_id est unique par commande ; le vrai client est customer_unique_id.",
+  "impossible": false,
+  "verdict": "faux",
+  "raison": "1 ligne(s) differente(s)",
+  "sql_reference": "SELECT COUNT(DISTINCT customer_unique_id) AS clients FROM entrepot.customers;",
+  "reference_lignes": [
+   [
+    "96096.00"
+   ]
+  ],
+  "reference_nb_lignes": 1,
+  "reference_nombres": {
+   "96096.00": 1
+  },
+  "sql_produit": "SELECT COUNT(DISTINCT customer_id) AS nb_clients\nFROM entrepot.\"customers\";",
+  "produit_colonnes": [
+   "nb_clients"
+  ],
+  "produit_lignes": [
+   [
+    "99441.00"
+   ]
+  ],
+  "produit_nb_lignes": 1,
+  "produit_nombres": {
+   "99441.00": 1
+  },
+  "produit_erreur": "",
+  "categorie": "a_lire",
+  "preuve": "0 valeur(s) commune(s) sur 1 attendues : le chiffre differe, la cause demande une lecture"
+ },
+ {
+  "modele": "gpt-oss-120b",
+  "question": "Quel est le chiffre d'affaires mois par mois en 2018 ?",
+  "famille": "series_temporelles",
+  "piege": "",
+  "impossible": false,
+  "verdict": "faux",
+  "raison": "1000 ligne(s) contre 9",
+  "sql_reference": "SELECT DATE_TRUNC('month', TRY_CAST(o.order_purchase_timestamp AS TIMESTAMP)) AS mois,\n       ROUND(SUM(i.price), 2) AS chiffre_affaires\nFROM entrepot.orders AS o\nJOIN entrepot.order_items AS i ON i.order_id = o.order_id\nWHERE EXTRACT(year FROM TRY_CAST(o.order_purchase_timestamp AS TIMESTAMP)) = 2018\nGROUP BY 1 ORDER BY 1;",
+  "reference_lignes": [
+   [
+    "2018-01-01 00:00:00",
+    "950030.36"
+   ],
+   [
+    "2018-02-01 00:00:00",
+    "844178.71"
+   ],
+   [
+    "2018-03-01 00:00:00",
+    "983213.44"
+   ],
+   [
+    "2018-04-01 00:00:00",
+    "996647.75"
+   ],
+   [
+    "2018-05-01 00:00:00",
+    "996517.68"
+   ],
+   [
+    "2018-06-01 00:00:00",
+    "865124.31"
+   ],
+   [
+    "2018-07-01 00:00:00",
+    "895507.22"
+   ],
+   [
+    "2018-08-01 00:00:00",
+    "854686.33"
+   ],
+   [
+    "2018-09-01 00:00:00",
+    "145.00"
+   ]
+  ],
+  "reference_nb_lignes": 9,
+  "reference_nombres": {
+   "950030.36": 1,
+   "844178.71": 1,
+   "983213.44": 1,
+   "996647.75": 1,
+   "996517.68": 1,
+   "865124.31": 1,
+   "895507.22": 1,
+   "854686.33": 1,
+   "145.00": 1
+  },
+  "sql_produit": "WITH ventes AS (\n    SELECT\n        TRY_CAST(o.order_purchase_timestamp AS TIMESTAMP) AS purchase_ts,\n        oi.price,\n        oi.freight_value\n    FROM entrepot.\"orders\" o\n    JOIN entrepot.\"order_items\" oi ON o.order_id = oi.order_id\n    WHERE TRY_CAST(o.order_purchase_timestamp AS TIMESTAMP) >= TIMESTAMP '2018-01-01'\n      AND TRY_CAST(o.order_purchase_timestamp AS TIMESTAMP) < TIMESTAMP '2019-01-01'\n)\nSELECT\n    TO_CHAR(purchase_ts, 'YYYY-MM') AS mois,\n    ROUND(SUM(price + freight_value), 2) AS chiffre_daffaires\nFROM ventes\nGROUP BY mois\nORDER BY mois\nLIMIT 1000;",
+  "produit_colonnes": [
+   "mois",
+   "chiffre_daffaires"
+  ],
+  "produit_lignes": [
+   [
+    "2018-01-01 02:48:41",
+    "184.36"
+   ],
+   [
+    "2018-01-01 08:37:46",
+    "169.51"
+   ],
+   [
+    "2018-01-01 08:45:04",
+    "55.05"
+   ],
+   [
+    "2018-01-01 09:36:21",
+    "189.84"
+   ],
+   [
+    "2018-01-01 10:24:03",
+    "106.95"
+   ],
+   [
+    "2018-01-01 10:26:08",
+    "51.54"
+   ],
+   [
+    "2018-01-01 10:55:58",
+    "103.08"
+   ],
+   [
+    "2018-01-01 10:58:04",
+    "35.84"
+   ],
+   [
+    "2018-01-01 11:03:00",
+    "56.78"
+   ],
+   [
+    "2018-01-01 11:39:28",
+    "65.11"
+   ],
+   [
+    "2018-01-01 11:55:49",
+    "153.27"
+   ],
+   [
+    "2018-01-01 11:59:59",
+    "89.75"
+   ]
+  ],
+  "produit_nb_lignes": 1000,
+  "produit_nombres": {
+   "184.36": 1,
+   "169.51": 1,
+   "55.05": 1,
+   "189.84": 2,
+   "106.95": 1,
+   "51.54": 1,
+   "103.08": 1,
+   "35.84": 1,
+   "56.78": 2,
+   "65.11": 2,
+   "153.27": 1,
+   "89.75": 1,
+   "115.35": 1,
+   "141.40": 1,
+   "213.15": 1,
+   "19.78": 2,
+   "138.15": 1,
+   "105.38": 1,
+   "266.40": 1,
+   "76.89": 1,
+   "36.35": 4,
+   "67.57": 1,
+   "128.18": 1,
+   "105.29": 1,
+   "165.80": 5,
+   "139.52": 2,
+   "122.92": 1,
+   "221.79": 1,
+   "130.03": 1,
+   "40.00": 1,
+   "35.40": 2,
+   "72.57": 1,
+   "194.48": 3,
+   "165.91": 1,
+   "106.21": 1,
+   "105.87": 1,
+   "325.41": 1,
+   "76.85": 3,
+   "134.58": 1,
+   "95.21": 2,
+   "127.24": 1,
+   "59.79": 1,
+   "99.70": 2,
+   "200.59": 1,
+   "118.86": 1,
+   "55.62": 1,
+   "32.15": 1,
+   "119.18": 1,
+   "215.04": 1,
+   "45.09": 1,
+   "67.50": 1,
+   "56.79": 2,
+   "146.25": 1,
+   "210.60": 2,
+   "167.20": 1,
+   "85.23": 1,
+   "87.25": 1,
+   "74.16": 2,
+   "53.27": 1,
+   "25.75": 2,
+   "217.80": 1,
+   "50.53": 1,
+   "234.46": 1,
+   "110.69": 1,
+   "172.10": 1,
+   "117.47": 2,
+   "42.09": 1,
+   "65.69": 1,
+   "259.82": 1,
+   "105.97": 1,
+   "67.39": 2,
+   "102.49": 1,
+   "175.52": 1,
+   "109.89": 1,
+   "83.22": 2,
+   "111.03": 1,
+   "477.55": 1,
+   "38.17": 1,
+   "89.52": 1,
+   "94.68": 1,
+   "47.84": 1,
+   "99.15": 1,
+   "36.00": 2,
+   "306.86": 1,
+   "100.93": 1,
+   "262.94": 1,
+   "63.10": 1,
+   "58.56": 1,
+   "99.34": 2,
+   "211.74": 1,
+   "107.39": 1,
+   "90.73": 1,
+   "106.55": 1,
+   "290.72": 1,
+   "248.85": 1,
+   "145.96": 1,
+   "29.09": 1,
+   "79.56": 1,
+   "246.29": 1,
+   "517.24": 1,
+   "257.92": 1,
+   "1475.08": 1,
+   "136.02": 1,
+   "95.02": 1,
+   "32.71": 1,
+   "77.80": 1,
+   "860.95": 1,
+   "145.15": 1,
+   "71.64": 2,
+   "65.01": 1,
+   "92.57": 8,
+   "53.24": 1,
+   "152.99": 2,
+   "47.52": 1,
+   "62.18": 1,
+   "84.23": 3,
+   "189.97": 1,
+   "180.36": 1,
+   "236.24": 1,
+   "32.38": 4,
+   "215.55": 1,
+   "206.87": 2,
+   "106.25": 1,
+   "35.00": 7,
+   "369.60": 2,
+   "264.49": 1,
+   "107.94": 1,
+   "42.03": 1,
+   "246.36": 1,
+   "252.69": 1,
+   "41.38": 1,
+   "157.34": 1,
+   "137.60": 4,
+   "37.09": 1,
+   "65.78": 1,
+   "38.50": 1,
+   "156.22": 1,
+   "102.64": 2,
+   "109.64": 1,
+   "38.01": 1,
+   "128.10": 1,
+   "28.40": 1,
+   "39.09": 1,
+   "215.15": 1,
+   "52.59": 1,
+   "61.80": 2,
+   "146.75": 1,
+   "36.78": 1,
+   "67.72": 1,
+   "69.12": 1,
+   "131.51": 1,
+   "21.48": 1,
+   "47.87": 1,
+   "187.65": 2,
+   "42.27": 3,
+   "296.36": 1,
+   "90.05": 1,
+   "105.65": 1,
+   "39.00": 3,
+   "58.00": 1,
+   "65.43": 2,
+   "88.08": 1,
+   "96.80": 6,
+   "101.80": 1,
+   "123.00": 1,
+   "424.87": 1,
+   "20.85": 1,
+   "154.63": 1,
+   "139.61": 1,
+   "153.90": 1,
+   "50.10": 1,
+   "32.77": 2,
+   "55.09": 2,
+   "90.66": 1,
+   "222.71": 1,
+   "106.06": 1,
+   "36.01": 1,
+   "14.08": 1,
+   "28.70": 1,
+   "654.41": 1,
+   "826.16": 1,
+   "68.69": 1,
+   "179.90": 1,
+   "180.71": 2,
+   "127.90": 1,
+   "171.85": 1,
+   "83.95": 1,
+   "146.28": 1,
+   "113.03": 1,
+   "56.95": 1,
+   "131.08": 1,
+   "235.18": 1,
+   "37.77": 2,
+   "134.49": 2,
+   "278.22": 2,
+   "257.29": 1,
+   "45.69": 1,
+   "167.97": 1,
+   "170.85": 1,
+   "24.35": 1,
+   "103.37": 1,
+   "97.21": 1,
+   "261.46": 1,
+   "142.96": 1,
+   "265.55": 1,
+   "72.65": 1,
+   "160.51": 2,
+   "201.65": 1,
+   "77.77": 2,
+   "72.28": 1,
+   "77.68": 1,
+   "67.44": 1,
+   "1376.45": 1,
+   "28.76": 1,
+   "55.01": 1,
+   "32.42": 1,
+   "192.95": 1,
+   "84.02": 1,
+   "61.11": 1,
+   "171.48": 1,
+   "73.03": 1,
+   "144.08": 1,
+   "33.00": 1,
+   "29.88": 1,
+   "104.38": 1,
+   "184.43": 2,
+   "810.63": 1,
+   "137.99": 1,
+   "109.02": 2,
+   "76.72": 1,
+   "30.00": 2,
+   "42.69": 1,
+   "147.15": 6,
+   "135.14": 1,
+   "53.38": 1,
+   "133.96": 1,
+   "278.24": 1,
+   "144.33": 1,
+   "36.69": 4,
+   "58.34": 1,
+   "343.68": 1,
+   "163.24": 2,
+   "162.90": 1,
+   "115.21": 1,
+   "45.00": 2,
+   "31.77": 3,
+   "60.62": 1,
+   "53.37": 1,
+   "26.35": 2,
+   "96.22": 1,
+   "138.60": 2,
+   "56.63": 1,
+   "82.92": 1,
+   "172.33": 2,
+   "138.06": 1,
+   "198.02": 1,
+   "133.38": 1,
+   "103.07": 1,
+   "86.46": 1,
+   "46.78": 1,
+   "117.10": 1,
+   "235.30": 1,
+   "162.60": 1,
+   "109.92": 1,
+   "82.50": 1,
+   "180.50": 2,
+   "151.60": 1,
+   "84.12": 1,
+   "118.96": 1,
+   "151.58": 1,
+   "204.34": 1,
+   "65.79": 1,
+   "243.51": 1,
+   "250.40": 1,
+   "123.52": 1,
+   "146.21": 1,
+   "285.45": 1,
+   "453.33": 1,
+   "74.14": 1,
+   "206.97": 1,
+   "409.00": 1,
+   "69.61": 2,
+   "246.04": 1,
+   "140.08": 1,
+   "187.53": 1,
+   "80.26": 1,
+   "53.73": 1,
+   "35.69": 2,
+   "148.97": 1,
+   "39.10": 1,
+   "74.07": 5,
+   "690.68": 2,
+   "27.62": 1,
+   "223.81": 1,
+   "56.01": 1,
+   "216.06": 2,
+   "76.76": 1,
+   "71.88": 1,
+   "132.44": 1,
+   "618.95": 1,
+   "87.64": 5,
+   "217.96": 2,
+   "47.42": 1,
+   "216.15": 1,
+   "92.30": 1,
+   "77.66": 2,
+   "70.62": 1,
+   "253.99": 1,
+   "356.88": 1,
+   "162.65": 1,
+   "243.56": 1,
+   "116.85": 2,
+   "201.53": 1,
+   "107.95": 1,
+   "66.10": 1,
+   "29.70": 1,
+   "43.09": 2,
+   "82.73": 1,
+   "117.92": 1,
+   "1031.69": 1,
+   "433.28": 1,
+   "72.00": 2,
+   "58.72": 1,
+   "135.59": 2,
+   "48.54": 1,
+   "106.22": 1,
+   "151.42": 1,
+   "70.72": 1,
+   "262.07": 2,
+   "118.89": 1,
+   "213.90": 1,
+   "74.97": 1,
+   "26.68": 2,
+   "294.50": 1,
+   "68.12": 1,
+   "173.82": 1,
+   "44.10": 1,
+   "253.14": 1,
+   "40.11": 1,
+   "46.58": 1,
+   "131.62": 1,
+   "47.68": 2,
+   "92.02": 1,
+   "49.09": 1,
+   "17.68": 1,
+   "65.32": 1,
+   "124.52": 1,
+   "230.54": 1,
+   "166.58": 1,
+   "506.17": 1,
+   "171.53": 1,
+   "211.01": 1,
+   "119.89": 1,
+   "133.57": 1,
+   "191.67": 1,
+   "178.27": 1,
+   "662.85": 1,
+   "149.16": 1,
+   "78.37": 1,
+   "267.29": 1,
+   "1173.84": 1,
+   "81.73": 1,
+   "1437.10": 1,
+   "417.55": 1,
+   "79.18": 1,
+   "149.05": 1,
+   "252.10": 1,
+   "252.88": 1,
+   "55.11": 1,
+   "103.55": 1,
+   "37.80": 1,
+   "129.20": 1,
+   "144.64": 1,
+   "102.87": 1,
+   "58.27": 1,
+   "319.66": 1,
+   "37.60": 1,
+   "26.77": 1,
+   "324.44": 1,
+   "227.23": 2,
+   "651.56": 1,
+   "59.25": 1,
+   "86.25": 1,
+   "107.54": 1,
+   "58.17": 3,
+   "72.22": 1,
+   "190.67": 1,
+   "22.10": 1,
+   "38.88": 1,
+   "22.37": 1,
+   "73.65": 3,
+   "106.89": 1,
+   "84.69": 1,
+   "43.73": 1,
+   "116.13": 1,
+   "174.40": 1,
+   "252.84": 1,
+   "101.34": 2,
+   "51.43": 1,
+   "656.53": 1,
+   "328.45": 1,
+   "82.98": 10,
+   "78.70": 1,
+   "189.56": 1,
+   "601.90": 1,
+   "31.38": 1,
+   "314.28": 1,
+   "124.02": 1,
+   "684.80": 1,
+   "106.19": 1,
+   "165.65": 1,
+   "105.99": 1,
+   "204.00": 1,
+   "34.28": 1,
+   "207.57": 1,
+   "39.59": 1,
+   "33.75": 1,
+   "417.16": 1,
+   "251.65": 1,
+   "164.80": 1,
+   "238.79": 1,
+   "510.16": 1,
+   "148.06": 1,
+   "294.37": 1,
+   "170.52": 1,
+   "112.35": 1,
+   "356.74": 1,
+   "81.76": 1,
+   "170.72": 1,
+   "75.07": 1,
+   "53.99": 1,
+   "188.50": 1,
+   "85.14": 2,
+   "173.23": 1,
+   "185.43": 2,
+   "154.75": 1,
+   "207.71": 1,
+   "58.99": 2,
+   "196.01": 2,
+   "104.27": 1,
+   "87.23": 1,
+   "27.99": 1,
+   "106.08": 1,
+   "276.47": 1,
+   "50.84": 1,
+   "22.68": 2,
+   "50.82": 1,
+   "137.18": 1,
+   "139.18": 1,
+   "100.34": 2,
+   "118.44": 1,
+   "97.74": 1,
+   "157.30": 2,
+   "181.33": 1,
+   "98.72": 1,
+   "30.85": 1,
+   "116.35": 1,
+   "138.41": 1,
+   "121.09": 1,
+   "27.00": 1,
+   "128.48": 1,
+   "334.58": 1,
+   "55.10": 1,
+   "86.02": 4,
+   "27.80": 1,
+   "90.88": 4,
+   "27.35": 1,
+   "72.04": 1,
+   "416.54": 1,
+   "143.20": 1,
+   "64.10": 1,
+   "41.00": 1,
+   "138.53": 2,
+   "55.08": 1,
+   "173.62": 2,
+   "83.24": 1,
+   "31.14": 1,
+   "112.30": 1,
+   "89.38": 1,
+   "67.73": 1,
+   "278.46": 1,
+   "434.95": 1,
+   "184.93": 1,
+   "401.44": 1,
+   "330.95": 1,
+   "135.51": 1,
+   "76.95": 1,
+   "150.74": 2,
+   "340.13": 1,
+   "594.55": 1,
+   "211.89": 1,
+   "195.11": 1,
+   "172.39": 1,
+   "89.88": 5,
+   "130.15": 1,
+   "249.29": 1,
+   "70.53": 1,
+   "93.28": 1,
+   "373.11": 1,
+   "110.20": 1,
+   "340.09": 1,
+   "240.13": 1,
+   "622.64": 1,
+   "163.60": 1,
+   "42.10": 1,
+   "65.00": 2,
+   "171.78": 1,
+   "62.59": 2,
+   "260.10": 1,
+   "227.71": 1,
+   "61.01": 1,
+   "115.86": 1,
+   "52.77": 1,
+   "119.84": 1,
+   "93.01": 1,
+   "113.08": 1,
+   "55.98": 1,
+   "70.27": 1,
+   "116.94": 3,
+   "127.99": 1,
+   "163.32": 1,
+   "81.23": 1,
+   "84.82": 1,
+   "154.66": 1,
+   "86.43": 1,
+   "107.89": 1,
+   "142.44": 1,
+   "57.77": 1,
+   "21.68": 1,
+   "180.55": 1,
+   "163.25": 1,
+   "89.05": 1,
+   "127.06": 1,
+   "106.97": 1,
+   "97.17": 1,
+   "163.06": 1,
+   "159.02": 1,
+   "203.34": 1,
+   "221.93": 1,
+   "90.19": 1,
+   "74.06": 1,
+   "33.79": 1,
+   "30.75": 1,
+   "106.85": 1,
+   "80.67": 1,
+   "69.65": 1,
+   "64.01": 1,
+   "208.57": 1,
+   "180.91": 1,
+   "28.27": 1,
+   "55.24": 1,
+   "61.28": 1,
+   "80.27": 1,
+   "60.00": 1,
+   "92.26": 1,
+   "44.78": 1,
+   "208.08": 1,
+   "152.42": 1,
+   "1354.06": 1,
+   "73.16": 1,
+   "142.92": 2,
+   "185.07": 1,
+   "91.26": 1,
+   "108.00": 1,
+   "47.76": 1,
+   "145.56": 5,
+   "204.01": 1,
+   "189.33": 1,
+   "158.14": 1,
+   "77.89": 2,
+   "205.28": 1,
+   "105.71": 1,
+   "247.37": 1,
+   "195.36": 1,
+   "300.74": 1,
+   "913.70": 1,
+   "354.18": 1,
+   "298.18": 1,
+   "324.66": 1,
+   "391.83": 1,
+   "123.89": 2,
+   "46.00": 1,
+   "91.66": 1,
+   "62.64": 1,
+   "74.64": 1,
+   "431.92": 1,
+   "50.00": 1,
+   "177.38": 1,
+   "923.45": 1,
+   "46.59": 1,
+   "1118.05": 1,
+   "76.08": 2,
+   "58.59": 1,
+   "34.00": 1,
+   "215.06": 1,
+   "151.39": 2,
+   "33.72": 1,
+   "196.50": 1,
+   "47.34": 1,
+   "103.90": 1,
+   "406.48": 1,
+   "843.62": 1,
+   "123.69": 1,
+   "174.28": 1,
+   "82.22": 1,
+   "50.01": 1,
+   "204.88": 1,
+   "65.71": 1,
+   "54.47": 1,
+   "70.91": 1,
+   "154.22": 1,
+   "237.86": 1,
+   "284.90": 1,
+   "270.94": 1,
+   "133.48": 1,
+   "42.92": 1,
+   "106.77": 1,
+   "85.24": 1,
+   "58.62": 1,
+   "72.75": 1,
+   "340.12": 1,
+   "59.90": 1,
+   "271.23": 1,
+   "106.23": 1,
+   "86.83": 2,
+   "106.87": 3,
+   "64.00": 1,
+   "352.66": 1,
+   "106.78": 1,
+   "165.96": 2,
+   "340.02": 1,
+   "25.70": 1,
+   "52.79": 1,
+   "147.27": 1,
+   "703.73": 1,
+   "164.17": 1,
+   "59.00": 1,
+   "26.78": 1,
+   "319.11": 1,
+   "143.12": 1,
+   "132.95": 1,
+   "64.53": 1,
+   "107.78": 1,
+   "41.10": 1,
+   "86.74": 2,
+   "157.65": 1,
+   "40.79": 1,
+   "56.94": 1,
+   "122.50": 1,
+   "45.78": 1,
+   "72.38": 1,
+   "186.85": 1,
+   "264.98": 1,
+   "69.49": 1,
+   "87.76": 1,
+   "123.33": 1,
+   "49.75": 1,
+   "85.20": 1,
+   "129.89": 1,
+   "553.46": 1,
+   "489.98": 1,
+   "67.82": 1,
+   "235.28": 1,
+   "76.17": 1,
+   "190.65": 1,
+   "253.69": 1,
+   "364.05": 1,
+   "112.82": 1,
+   "22.77": 1,
+   "128.02": 1,
+   "510.78": 1,
+   "228.53": 1,
+   "99.44": 1,
+   "274.56": 1,
+   "279.03": 1,
+   "167.80": 1,
+   "106.35": 1,
+   "113.56": 1,
+   "111.62": 1,
+   "142.51": 2,
+   "144.56": 3,
+   "230.96": 1,
+   "101.35": 1,
+   "165.71": 1,
+   "72.64": 1,
+   "64.38": 1,
+   "170.54": 1,
+   "134.43": 1,
+   "142.81": 1,
+   "123.42": 1,
+   "74.00": 1,
+   "105.30": 1,
+   "370.59": 1,
+   "312.44": 1,
+   "108.50": 1,
+   "147.63": 1,
+   "287.65": 1,
+   "183.40": 1,
+   "254.33": 1,
+   "232.00": 1,
+   "52.82": 1,
+   "42.41": 1,
+   "81.63": 1,
+   "56.60": 1,
+   "188.94": 1,
+   "436.32": 1,
+   "141.72": 1,
+   "157.28": 1,
+   "368.69": 1,
+   "291.80": 1,
+   "67.53": 1,
+   "256.20": 1,
+   "400.18": 1,
+   "77.37": 1,
+   "123.38": 1,
+   "46.36": 1,
+   "51.86": 1,
+   "40.09": 1,
+   "30.62": 1,
+   "127.92": 1,
+   "22.75": 1,
+   "101.31": 1,
+   "170.37": 1,
+   "866.20": 1,
+   "72.15": 1,
+   "303.63": 1,
+   "162.22": 1,
+   "127.38": 1,
+   "193.18": 1,
+   "72.45": 1,
+   "44.59": 1,
+   "197.20": 1,
+   "269.00": 1,
+   "106.29": 1,
+   "40.27": 1,
+   "159.73": 1,
+   "52.01": 1,
+   "85.60": 1,
+   "44.95": 1,
+   "262.75": 1,
+   "79.65": 1,
+   "147.00": 1,
+   "75.08": 1,
+   "83.41": 1,
+   "111.02": 1,
+   "85.25": 1,
+   "270.54": 1,
+   "298.19": 1,
+   "182.91": 1,
+   "182.29": 1,
+   "60.09": 1,
+   "146.06": 1,
+   "59.60": 1,
+   "24.10": 1,
+   "100.86": 1,
+   "65.42": 1,
+   "59.24": 1,
+   "522.14": 1,
+   "83.70": 1,
+   "255.92": 1,
+   "116.36": 1,
+   "102.02": 1,
+   "146.96": 1,
+   "81.79": 1,
+   "629.51": 1,
+   "277.16": 2,
+   "604.76": 1,
+   "112.05": 1,
+   "142.10": 1,
+   "178.59": 1,
+   "165.54": 1,
+   "45.48": 1,
+   "75.53": 1,
+   "781.07": 1,
+   "298.22": 1,
+   "121.49": 1,
+   "127.74": 1,
+   "252.00": 1,
+   "122.22": 1,
+   "127.05": 1,
+   "217.82": 1,
+   "181.07": 1,
+   "234.77": 1,
+   "345.05": 1,
+   "117.26": 1,
+   "97.94": 1,
+   "48.34": 1,
+   "94.84": 1,
+   "148.32": 1,
+   "165.29": 1,
+   "27.60": 1,
+   "220.58": 1,
+   "189.68": 1,
+   "199.90": 1,
+   "159.30": 1,
+   "301.35": 1,
+   "198.91": 1,
+   "39.60": 2,
+   "129.66": 1,
+   "45.10": 1,
+   "130.10": 1,
+   "94.40": 1,
+   "74.17": 1,
+   "167.19": 1,
+   "166.62": 1,
+   "54.00": 1,
+   "57.69": 1,
+   "113.22": 1,
+   "227.36": 2,
+   "23.71": 1,
+   "48.01": 1,
+   "59.34": 1,
+   "96.27": 1,
+   "159.82": 1,
+   "254.58": 1,
+   "41.75": 1,
+   "1478.95": 1,
+   "175.99": 1,
+   "80.72": 1,
+   "871.26": 1,
+   "35.09": 1,
+   "120.00": 1,
+   "44.09": 1,
+   "47.91": 1,
+   "118.17": 1,
+   "117.85": 1,
+   "115.94": 1
+  },
+  "produit_erreur": "",
+  "categorie": "a_lire",
+  "preuve": "0 valeur(s) commune(s) sur 9 attendues : le chiffre differe, la cause demande une lecture"
+ },
+ {
+  "modele": "gpt-oss-120b",
+  "question": "Quelles categories de produits ont le panier moyen le plus eleve, avec leur nom en anglais ?",
+  "famille": "jointures",
+  "piege": "",
+  "impossible": false,
+  "verdict": "faux",
+  "raison": "74 ligne(s) contre 10",
+  "sql_reference": "SELECT COALESCE(t.product_category_name_english, p.product_category_name) AS categorie,\n       ROUND(AVG(i.price), 2) AS prix_moyen\nFROM entrepot.order_items AS i\nJOIN entrepot.products AS p ON p.product_id = i.product_id\nLEFT JOIN entrepot.product_category_name_translation AS t\n  ON t.product_category_name = p.product_category_name\nWHERE p.product_category_name IS NOT NULL\nGROUP BY 1 ORDER BY prix_moyen DESC;",
+  "reference_lignes": [
+   [
+    "computers",
+    "1098.34"
+   ],
+   [
+    "small_appliances_home_oven_and_coffee",
+    "624.29"
+   ],
+   [
+    "home_appliances_2",
+    "476.12"
+   ],
+   [
+    "agro_industry_and_commerce",
+    "342.12"
+   ],
+   [
+    "musical_instruments",
+    "281.62"
+   ],
+   [
+    "small_appliances",
+    "280.78"
+   ],
+   [
+    "portateis_cozinha_e_preparadores_de_alimentos",
+    "264.57"
+   ],
+   [
+    "fixed_telephony",
+    "225.69"
+   ],
+   [
+    "construction_tools_safety",
+    "208.99"
+   ],
+   [
+    "watches_gifts",
+    "201.14"
+   ],
+   [
+    "air_conditioning",
+    "185.27"
+   ],
+   [
+    "furniture_bedroom",
+    "183.75"
+   ]
+  ],
+  "reference_nb_lignes": 73,
+  "reference_nombres": {
+   "1098.34": 1,
+   "624.29": 1,
+   "476.12": 1,
+   "342.12": 1,
+   "281.62": 1,
+   "280.78": 1,
+   "264.57": 1,
+   "225.69": 1,
+   "208.99": 1,
+   "201.14": 1,
+   "185.27": 1,
+   "183.75": 1,
+   "171.77": 1,
+   "167.36": 1,
+   "164.87": 1,
+   "162.01": 1,
+   "158.80": 1,
+   "155.73": 1,
+   "154.41": 1,
+   "148.02": 1,
+   "146.79": 1,
+   "141.64": 1,
+   "139.96": 1,
+   "139.25": 1,
+   "138.49": 1,
+   "137.56": 1,
+   "137.01": 1,
+   "135.13": 1,
+   "134.96": 1,
+   "134.34": 1,
+   "130.16": 1,
+   "128.60": 1,
+   "117.55": 1,
+   "116.74": 1,
+   "116.51": 1,
+   "115.80": 1,
+   "114.95": 1,
+   "114.34": 1,
+   "111.63": 1,
+   "110.07": 1,
+   "108.09": 1,
+   "108.05": 1,
+   "104.31": 1,
+   "103.98": 1,
+   "96.30": 1,
+   "93.74": 1,
+   "93.30": 1,
+   "91.75": 1,
+   "91.25": 1,
+   "90.79": 1,
+   "90.70": 1,
+   "89.93": 1,
+   "87.56": 1,
+   "84.73": 1,
+   "81.80": 1,
+   "77.33": 1,
+   "75.58": 1,
+   "75.25": 1,
+   "72.84": 1,
+   "71.52": 1,
+   "71.23": 1,
+   "71.21": 1,
+   "70.65": 1,
+   "59.18": 1,
+   "58.41": 1,
+   "57.91": 1,
+   "57.63": 1,
+   "57.52": 1,
+   "54.60": 1,
+   "52.14": 1,
+   "40.19": 1,
+   "33.64": 1,
+   "25.34": 1
+  },
+  "sql_produit": "WITH items AS (\n    SELECT\n        oi.product_id,\n        (oi.price + oi.freight_value) AS montant\n    FROM entrepot.\"order_items\" oi\n)\nSELECT\n    p.product_category_name AS categorie_fr,\n    pcnt.product_category_name_english AS categorie_en,\n    AVG(i.montant) AS panier_moyen\nFROM items i\nJOIN entrepot.\"products\" p\n    ON i.product_id = p.product_id\nLEFT JOIN entrepot.\"product_category_name_translation\" pcnt\n    ON p.product_category_name = pcnt.product_category_name\nGROUP BY\n    p.product_category_name,\n    pcnt.product_category_name_english\nORDER BY panier_moyen DESC\nLIMIT 1000;",
+  "produit_colonnes": [
+   "categorie_fr",
+   "categorie_en",
+   "panier_moyen"
+  ],
+  "produit_lignes": [
+   [
+    "pcs",
+    "computers",
+    "1146.80"
+   ],
+   [
+    "portateis_casa_forno_e_cafe",
+    "small_appliances_home_oven_and_coffee",
+    "660.44"
+   ],
+   [
+    "eletrodomesticos_2",
+    "home_appliances_2",
+    "520.66"
+   ],
+   [
+    "agro_industria_e_comercio",
+    "agro_industry_and_commerce",
+    "369.69"
+   ],
+   [
+    "instrumentos_musicais",
+    "musical_instruments",
+    "309.03"
+   ],
+   [
+    "eletroportateis",
+    "small_appliances",
+    "304.37"
+   ],
+   [
+    "portateis_cozinha_e_preparadores_de_alimentos",
+    "None",
+    "285.22"
+   ],
+   [
+    "telefonia_fixa",
+    "fixed_telephony",
+    "243.26"
+   ],
+   [
+    "construcao_ferramentas_seguranca",
+    "construction_tools_safety",
+    "229.19"
+   ],
+   [
+    "moveis_quarto",
+    "furniture_bedroom",
+    "226.25"
+   ],
+   [
+    "relogios_presentes",
+    "watches_gifts",
+    "217.92"
+   ],
+   [
+    "climatizacao",
+    "air_conditioning",
+    "207.99"
+   ]
+  ],
+  "produit_nb_lignes": 74,
+  "produit_nombres": {
+   "1146.80": 1,
+   "660.44": 1,
+   "520.66": 1,
+   "369.69": 1,
+   "309.03": 1,
+   "304.37": 1,
+   "285.22": 1,
+   "243.26": 1,
+   "229.19": 1,
+   "226.25": 1,
+   "217.92": 1,
+   "207.99": 1,
+   "207.57": 1,
+   "202.56": 1,
+   "189.50": 1,
+   "186.61": 1,
+   "177.96": 1,
+   "177.44": 1,
+   "176.97": 1,
+   "174.12": 1,
+   "172.73": 1,
+   "170.61": 1,
+   "162.25": 1,
+   "161.84": 1,
+   "160.46": 1,
+   "160.08": 1,
+   "157.86": 1,
+   "156.65": 1,
+   "156.48": 1,
+   "155.93": 1,
+   "154.94": 1,
+   "154.55": 1,
+   "149.04": 1,
+   "140.79": 1,
+   "136.35": 1,
+   "135.34": 1,
+   "135.16": 1,
+   "134.40": 1,
+   "133.86": 1,
+   "132.59": 1,
+   "130.39": 1,
+   "130.37": 1,
+   "129.57": 1,
+   "123.56": 1,
+   "123.20": 1,
+   "113.88": 1,
+   "113.75": 1,
+   "111.77": 1,
+   "111.71": 1,
+   "110.35": 1,
+   "108.79": 1,
+   "108.71": 1,
+   "108.29": 1,
+   "105.48": 1,
+   "101.36": 1,
+   "98.11": 1,
+   "91.01": 1,
+   "90.73": 1,
+   "90.16": 1,
+   "89.92": 1,
+   "87.56": 1,
+   "87.46": 1,
+   "86.88": 1,
+   "83.17": 1,
+   "78.63": 1,
+   "74.75": 1,
+   "74.33": 1,
+   "71.89": 1,
+   "71.36": 1,
+   "70.82": 1,
+   "68.21": 1,
+   "54.90": 1,
+   "48.45": 1,
+   "39.02": 1
+  },
+  "produit_erreur": "",
+  "categorie": "a_lire",
+  "preuve": "1 valeur(s) commune(s) sur 73 attendues : le chiffre differe, la cause demande une lecture"
+ },
+ {
+  "modele": "gpt-oss-120b",
+  "question": "Les vendeurs de quels etats livrent le plus vite ?",
+  "famille": "jointures",
+  "piege": "",
+  "impossible": false,
+  "verdict": "faux",
+  "raison": "22 ligne(s) contre 13",
+  "sql_reference": "SELECT s.seller_state AS etat_vendeur,\n       ROUND(AVG(DATE_DIFF('day',\n              TRY_CAST(o.order_purchase_timestamp AS TIMESTAMP),\n              TRY_CAST(o.order_delivered_customer_date AS TIMESTAMP))), 2) AS delai_moyen_jours\nFROM entrepot.order_items AS i\nJOIN entrepot.orders AS o ON o.order_id = i.order_id\nJOIN entrepot.sellers AS s ON s.seller_id = i.seller_id\nWHERE o.order_delivered_customer_date IS NOT NULL\nGROUP BY s.seller_state\nORDER BY delai_moyen_jours ASC;",
+  "reference_lignes": [
+   [
+    "RS",
+    "11.49"
+   ],
+   [
+    "RJ",
+    "11.94"
+   ],
+   [
+    "SP",
+    "12.21"
+   ],
+   [
+    "MS",
+    "12.30"
+   ],
+   [
+    "PB",
+    "12.38"
+   ],
+   [
+    "DF",
+    "12.44"
+   ],
+   [
+    "SE",
+    "12.60"
+   ],
+   [
+    "MG",
+    "12.75"
+   ],
+   [
+    "GO",
+    "12.77"
+   ],
+   [
+    "PE",
+    "12.85"
+   ],
+   [
+    "ES",
+    "12.86"
+   ],
+   [
+    "RN",
+    "12.93"
+   ]
+  ],
+  "reference_nb_lignes": 22,
+  "reference_nombres": {
+   "11.49": 1,
+   "11.94": 1,
+   "12.21": 1,
+   "12.30": 1,
+   "12.38": 1,
+   "12.44": 1,
+   "12.60": 1,
+   "12.75": 1,
+   "12.77": 1,
+   "12.85": 1,
+   "12.86": 1,
+   "12.93": 1,
+   "13.25": 1,
+   "13.32": 1,
+   "13.52": 1,
+   "13.73": 1,
+   "13.77": 1,
+   "14.69": 1,
+   "17.43": 1,
+   "17.65": 1,
+   "17.90": 1,
+   "48.00": 1
+  },
+  "sql_produit": "WITH livraisons_par_vendeur AS (\n    SELECT\n        s.seller_state AS etat,\n        TRY_CAST(o.order_purchase_timestamp AS TIMESTAMP) AS ts_achat,\n        TRY_CAST(o.order_delivered_customer_date AS TIMESTAMP) AS ts_livraison\n    FROM entrepot.\"order_items\" oi\n    JOIN entrepot.\"orders\" o USING (order_id)\n    JOIN entrepot.\"sellers\" s USING (seller_id)\n    WHERE o.order_status = 'delivered'\n      AND o.order_purchase_timestamp IS NOT NULL\n      AND o.order_delivered_customer_date IS NOT NULL\n)\nSELECT\n    etat,\n    AVG(DATEDIFF('day', ts_achat, ts_livraison))::DOUBLE AS delai_moyen_jours\nFROM livraisons_par_vendeur\nGROUP BY etat\nORDER BY delai_moyen_jours ASC\nLIMIT 1000;",
+  "produit_colonnes": [
+   "etat",
+   "delai_moyen_jours"
+  ],
+  "produit_lignes": [
+   [
+    "RS",
+    "11.49"
+   ],
+   [
+    "RJ",
+    "11.94"
+   ],
+   [
+    "SP",
+    "12.21"
+   ],
+   [
+    "MS",
+    "12.30"
+   ],
+   [
+    "PB",
+    "12.38"
+   ],
+   [
+    "DF",
+    "12.44"
+   ],
+   [
+    "SE",
+    "12.60"
+   ],
+   [
+    "MG",
+    "12.74"
+   ],
+   [
+    "GO",
+    "12.77"
+   ],
+   [
+    "PE",
+    "12.85"
+   ],
+   [
+    "ES",
+    "12.86"
+   ],
+   [
+    "RN",
+    "12.93"
+   ]
+  ],
+  "produit_nb_lignes": 22,
+  "produit_nombres": {
+   "11.49": 1,
+   "11.94": 1,
+   "12.21": 1,
+   "12.30": 1,
+   "12.38": 1,
+   "12.44": 1,
+   "12.60": 1,
+   "12.74": 1,
+   "12.77": 1,
+   "12.85": 1,
+   "12.86": 1,
+   "12.93": 1,
+   "13.25": 1,
+   "13.32": 1,
+   "13.52": 1,
+   "13.73": 1,
+   "13.77": 1,
+   "14.69": 1,
+   "17.43": 1,
+   "17.65": 1,
+   "17.90": 1,
+   "48.00": 1
+  },
+  "produit_erreur": "",
+  "categorie": "libelle",
+  "preuve": "memes 22 valeurs a 0.1% pres (arrondi ou type different)"
+ },
+ {
+  "modele": "gpt-oss-120b",
+  "question": "Quelle est la note moyenne par categorie de produit, en anglais, pour les categories evaluees au moins cinq cents fois ?",
+  "famille": "jointures",
+  "piege": "",
+  "impossible": false,
+  "verdict": "erreur_moteur",
+  "raison": "Catalog Error: Table with name \"entrepet.order_reviews\" does not exist because schema \"entrepet\" does not exis",
+  "sql_reference": "SELECT COALESCE(t.product_category_name_english, p.product_category_name) AS categorie,\n       ROUND(AVG(r.review_score), 3) AS note_moyenne\nFROM entrepot.order_reviews AS r\nJOIN entrepot.order_items AS i ON i.order_id = r.order_id\nJOIN entrepot.products AS p ON p.product_id = i.product_id\nLEFT JOIN entrepot.product_category_name_translation AS t\n  ON t.product_category_name = p.product_category_name\nWHERE p.product_category_name IS NOT NULL\nGROUP BY 1 HAVING COUNT(*) >= 500\nORDER BY note_moyenne DESC;",
+  "reference_lignes": [
+   [
+    "books_general_interest",
+    "4.45"
+   ],
+   [
+    "luggage_accessories",
+    "4.32"
+   ],
+   [
+    "stationery",
+    "4.19"
+   ],
+   [
+    "pet_shop",
+    "4.18"
+   ],
+   [
+    "home_appliances",
+    "4.17"
+   ],
+   [
+    "perfumery",
+    "4.16"
+   ],
+   [
+    "toys",
+    "4.16"
+   ],
+   [
+    "musical_instruments",
+    "4.15"
+   ],
+   [
+    "small_appliances",
+    "4.15"
+   ],
+   [
+    "cool_stuff",
+    "4.15"
+   ],
+   [
+    "fashion_bags_accessories",
+    "4.14"
+   ],
+   [
+    "health_beauty",
+    "4.14"
+   ]
+  ],
+  "reference_nb_lignes": 28,
+  "reference_nombres": {
+   "4.45": 1,
+   "4.32": 1,
+   "4.19": 1,
+   "4.18": 1,
+   "4.17": 1,
+   "4.16": 2,
+   "4.15": 3,
+   "4.14": 2,
+   "4.11": 1,
+   "4.07": 1,
+   "4.05": 2,
+   "4.04": 2,
+   "4.02": 2,
+   "4.01": 1,
+   "3.95": 1,
+   "3.94": 1,
+   "3.93": 1,
+   "3.90": 3,
+   "3.49": 1
+  },
+  "sql_produit": "WITH avis_par_produit AS (\n    SELECT oi.product_id,\n           r.review_score\n    FROM entrepet.\"order_reviews\" AS r\n    JOIN entrepet.\"order_items\" AS oi ON r.order_id = oi.order_id\n    JOIN entrepet.\"products\" AS p ON oi.product_id = p.product_id\n    JOIN entrepet.\"product_category_name_translation\" AS pcnt\n        ON p.product_category_name = pcnt.product_category_name\n    WHERE r.review_score IS NOT NULL\n)\nSELECT pcnt.product_category_name_english AS categorie_produit,\n       AVG(a.review_score) AS note_moyenne,\n       COUNT(*) AS nb_evaluations\nFROM avis_par_produit AS a\nJOIN entrepet.\"products\" AS p ON a.product_id = p.product_id\nJOIN entrepet.\"product_category_name_translation\" AS pcnt\n    ON p.product_category_name = pcnt.product_category_name\nGROUP BY pcnt.product_category_name_english\nHAVING COUNT(*) >= 500\nORDER BY note_moyenne DESC\nLIMIT 1000;",
+  "produit_colonnes": [],
+  "produit_lignes": [],
+  "produit_nb_lignes": 0,
+  "produit_nombres": {},
+  "produit_erreur": "moteur : Catalog Error: Table with name \"entrepet.order_reviews\" does not exist because schema \"entrepet\" does not exist.",
+  "categorie": "outil",
+  "preuve": "moteur : moteur : Catalog Error: Table with name \"entrepet.order_reviews\" does not exist because schema \"entrepet\" does not exist."
+ },
+ {
+  "modele": "gpt-oss-120b",
+  "question": "Quelle proportion des avis ne comporte aucun message ecrit ?",
+  "famille": "qualite_donnees",
+  "piege": "Compter les NULL seuls : 9 avis supplementaires ne contiennent que des espaces, ce qui est un defaut distinct (question suivante).",
+  "impossible": false,
+  "verdict": "faux",
+  "raison": "1 ligne(s) differente(s)",
+  "sql_reference": "SELECT ROUND(100.0 * SUM(CASE WHEN review_comment_message IS NULL THEN 1 ELSE 0 END) / COUNT(*), 2) AS part_pct\nFROM entrepot.order_reviews;",
+  "reference_lignes": [
+   [
+    "58.70"
+   ]
+  ],
+  "reference_nb_lignes": 1,
+  "reference_nombres": {
+   "58.70": 1
+  },
+  "sql_produit": "SELECT\n    CAST(SUM(CASE WHEN review_comment_message IS NULL OR TRIM(review_comment_message) = '' THEN 1 ELSE 0 END) AS DOUBLE) / COUNT(*) AS proportion_avis_sans_message,\n    CAST(SUM(CASE WHEN review_comment_message IS NULL OR TRIM(review_comment_message) = '' THEN 1 ELSE 0 END) AS DOUBLE) * 100.0 / COUNT(*) AS pourcentage_avis_sans_message\nFROM entrepot.\"order_reviews\"\nLIMIT 1;",
+  "produit_colonnes": [
+   "proportion_avis_sans_message",
+   "pourcentage_avis_sans_message"
+  ],
+  "produit_lignes": [
+   [
+    "0.59",
+    "58.71"
+   ]
+  ],
+  "produit_nb_lignes": 1,
+  "produit_nombres": {
+   "0.59": 1,
+   "58.71": 1
+  },
+  "produit_erreur": "",
+  "categorie": "a_lire",
+  "preuve": "0 valeur(s) commune(s) sur 1 attendues : le chiffre differe, la cause demande une lecture"
+ },
+ {
+  "modele": "gpt-oss-120b",
+  "question": "Y a-t-il des doublons dans la table de geolocalisation ?",
+  "famille": "qualite_donnees",
+  "piege": "La table contient un million de lignes pour bien moins de codes postaux.",
+  "impossible": false,
+  "verdict": "faux",
+  "raison": "1000 ligne(s) contre 1",
+  "sql_reference": "SELECT COUNT(*) AS lignes_totales,\n       COUNT(DISTINCT geolocation_zip_code_prefix) AS codes_postaux_distincts\nFROM entrepot.geolocation;",
+  "reference_lignes": [
+   [
+    "1000163.00",
+    "19015.00"
+   ]
+  ],
+  "reference_nb_lignes": 1,
+  "reference_nombres": {
+   "1000163.00": 1,
+   "19015.00": 1
+  },
+  "sql_produit": "WITH doublons AS (\n    SELECT \n        geolocation_lat,\n        geolocation_lng,\n        geolocation_city,\n        geolocation_state,\n        geolocation_zip_code_prefix,\n        COUNT(*) AS nb_occurrences\n    FROM entrepot.\"geolocation\"\n    GROUP BY \n        geolocation_lat,\n        geolocation_lng,\n        geolocation_city,\n        geolocation_state,\n        geolocation_zip_code_prefix\n    HAVING COUNT(*) > 1\n)\nSELECT \n    geolocation_lat          AS latitude,\n    geolocation_lng          AS longitude,\n    geolocation_city         AS ville,\n    geolocation_state        AS etat,\n    geolocation_zip_code_prefix AS code_postal,\n    nb_occurrences           AS nombre_de_doublons\nFROM doublons\nLIMIT 1000;",
+  "produit_colonnes": [
+   "latitude",
+   "longitude",
+   "ville",
+   "etat",
+   "code_postal",
+   "nombre_de_doublons"
+  ],
+  "produit_lignes": [
+   [
+    "-23.00",
+    "-43.35",
+    "rio de janeiro",
+    "RJ",
+    "22631.00",
+    "14.00"
+   ],
+   [
+    "-23.01",
+    "-43.32",
+    "rio de janeiro",
+    "RJ",
+    "22620.00",
+    "17.00"
+   ],
+   [
+    "-23.01",
+    "-43.31",
+    "rio de janeiro",
+    "RJ",
+    "22621.00",
+    "4.00"
+   ],
+   [
+    "-23.01",
+    "-43.30",
+    "rio de janeiro",
+    "RJ",
+    "22611.00",
+    "3.00"
+   ],
+   [
+    "-23.01",
+    "-43.35",
+    "rio de janeiro",
+    "RJ",
+    "22630.00",
+    "4.00"
+   ],
+   [
+    "-23.01",
+    "-43.32",
+    "rio de janeiro",
+    "RJ",
+    "22631.00",
+    "9.00"
+   ],
+   [
+    "-23.00",
+    "-43.36",
+    "rio de janeiro",
+    "RJ",
+    "22631.00",
+    "3.00"
+   ],
+   [
+    "-23.00",
+    "-43.36",
+    "rio de janeiro",
+    "RJ",
+    "22631.00",
+    "3.00"
+   ],
+   [
+    "-23.01",
+    "-43.31",
+    "rio de janeiro",
+    "RJ",
+    "22640.00",
+    "2.00"
+   ],
+   [
+    "-23.00",
+    "-43.38",
+    "rio de janeiro",
+    "RJ",
+    "22793.00",
+    "5.00"
+   ],
+   [
+    "-22.99",
+    "-43.36",
+    "rio de janeiro",
+    "RJ",
+    "22776.00",
+    "8.00"
+   ],
+   [
+    "-22.93",
+    "-43.37",
+    "rio de janeiro",
+    "RJ",
+    "22710.00",
+    "2.00"
+   ]
+  ],
+  "produit_nb_lignes": 1000,
+  "produit_nombres": {
+   "-23.00": 14,
+   "-43.35": 18,
+   "22631.00": 5,
+   "14.00": 2,
+   "-23.01": 13,
+   "-43.32": 15,
+   "22620.00": 3,
+   "17.00": 2,
+   "-43.31": 9,
+   "22621.00": 1,
+   "4.00": 65,
+   "-43.30": 6,
+   "22611.00": 1,
+   "3.00": 179,
+   "22630.00": 1,
+   "9.00": 7,
+   "-43.36": 14,
+   "22640.00": 1,
+   "2.00": 651,
+   "-43.38": 9,
+   "22793.00": 5,
+   "5.00": 29,
+   "-22.99": 8,
+   "22776.00": 2,
+   "8.00": 13,
+   "-22.93": 26,
+   "-43.37": 8,
+   "22710.00": 4,
+   "-43.33": 9,
+   "22745.00": 4,
+   "-23.03": 1,
+   "-43.47": 5,
+   "22790.00": 5,
+   "-22.97": 10,
+   "-43.42": 9,
+   "22780.00": 3,
+   "-22.94": 12,
+   "22775.00": 3,
+   "-23.02": 7,
+   "22770.00": 2,
+   "-22.95": 7,
+   "22763.00": 1,
+   "6.00": 24,
+   "22750.00": 3,
+   "-43.44": 2,
+   "-43.34": 10,
+   "7.00": 9,
+   "22740.00": 2,
+   "22753.00": 1,
+   "-22.96": 8,
+   "-43.40": 8,
+   "-22.92": 13,
+   "-22.90": 34,
+   "22733.00": 1,
+   "-43.49": 6,
+   "22795.00": 3,
+   "-43.55": 8,
+   "23040.00": 2,
+   "11.00": 3,
+   "-22.91": 17,
+   "-43.61": 5,
+   "23060.00": 2,
+   "-43.54": 2,
+   "23016.00": 1,
+   "-22.88": 23,
+   "-43.58": 4,
+   "23075.00": 1,
+   "12.00": 3,
+   "-43.56": 9,
+   "23050.00": 1,
+   "-43.63": 7,
+   "23065.00": 2,
+   "-22.89": 12,
+   "-43.64": 4,
+   "23066.00": 2,
+   "-43.51": 5,
+   "23094.00": 1,
+   "23087.00": 2,
+   "23017.00": 2,
+   "23026.00": 1,
+   "23027.00": 1,
+   "23080.00": 3,
+   "23031.00": 1,
+   "23015.00": 1,
+   "-43.60": 2,
+   "23035.00": 2,
+   "-22.87": 9,
+   "23585.00": 3,
+   "23587.00": 3,
+   "-43.69": 6,
+   "23550.00": 4,
+   "-43.43": 9,
+   "23520.00": 1,
+   "-43.70": 5,
+   "23555.00": 1,
+   "-43.67": 4,
+   "23575.00": 1,
+   "-43.62": 2,
+   "-43.76": 2,
+   "23810.00": 2,
+   "-44.04": 7,
+   "23860.00": 2,
+   "-44.32": 1,
+   "23903.00": 1,
+   "-44.31": 5,
+   "23906.00": 4,
+   "-44.27": 1,
+   "23912.00": 1,
+   "-44.53": 2,
+   "23952.00": 1,
+   "-44.48": 1,
+   "23950.00": 2,
+   "-44.30": 1,
+   "23934.00": 1,
+   "-44.44": 5,
+   "23946.00": 3,
+   "-43.13": 6,
+   "24020.00": 4,
+   "-43.09": 12,
+   "24120.00": 7,
+   "-43.10": 12,
+   "-43.08": 6,
+   "-43.11": 16,
+   "24230.00": 10,
+   "63.00": 1,
+   "24240.00": 3,
+   "24220.00": 8,
+   "24241.00": 2,
+   "-43.12": 8,
+   "24210.00": 6,
+   "-43.07": 5,
+   "24350.00": 7,
+   "24360.00": 2,
+   "-43.03": 8,
+   "24340.00": 1,
+   "-43.06": 8,
+   "-43.04": 9,
+   "24322.00": 2,
+   "-22.83": 11,
+   "24430.00": 3,
+   "-22.86": 5,
+   "24411.00": 1,
+   "-22.84": 4,
+   "24416.00": 3,
+   "24436.00": 1,
+   "-22.85": 5,
+   "24425.00": 1,
+   "-22.81": 5,
+   "-43.02": 5,
+   "24456.00": 3,
+   "-43.00": 6,
+   "24744.00": 2,
+   "24754.00": 3,
+   "-42.96": 7,
+   "24732.00": 1,
+   "24755.00": 3,
+   "-22.80": 8,
+   "-42.99": 1,
+   "24715.00": 1,
+   "-43.01": 6,
+   "-22.77": 6,
+   "-42.93": 3,
+   "24858.00": 1,
+   "-42.82": 1,
+   "24913.00": 1,
+   "-22.78": 11,
+   "25025.00": 3,
+   "25070.00": 3,
+   "-22.79": 10,
+   "25010.00": 2,
+   "-22.74": 9,
+   "25040.00": 4,
+   "-22.76": 9,
+   "-43.29": 8,
+   "25051.00": 2,
+   "25071.00": 1,
+   "-22.75": 8,
+   "-22.69": 2,
+   "25230.00": 1,
+   "-22.71": 9,
+   "25235.00": 2,
+   "-22.62": 3,
+   "-43.23": 4,
+   "25270.00": 2,
+   "25231.00": 1,
+   "-22.70": 2,
+   "-43.28": 3,
+   "25225.00": 1,
+   "-22.54": 8,
+   "25245.00": 1,
+   "-22.68": 2,
+   "-43.27": 1,
+   "25215.00": 2,
+   "-22.66": 2,
+   "25243.00": 1,
+   "-22.65": 1,
+   "-43.24": 1,
+   "25264.00": 1,
+   "25515.00": 4,
+   "-43.39": 7,
+   "25540.00": 1,
+   "25550.00": 1,
+   "-22.50": 4,
+   "-43.18": 8,
+   "25610.00": 2,
+   "-22.51": 9,
+   "-43.22": 4,
+   "25665.00": 2,
+   "-22.52": 6,
+   "-43.21": 1,
+   "25651.00": 1,
+   "-22.40": 4,
+   "25730.00": 1,
+   "-22.49": 7,
+   "-43.15": 2,
+   "25710.00": 2,
+   "-22.17": 1,
+   "25850.00": 1,
+   "-22.11": 1,
+   "-43.19": 3,
+   "25815.00": 1,
+   "-22.12": 1,
+   "25806.00": 1,
+   "-21.89": 3,
+   "-42.71": 1,
+   "25887.00": 1,
+   "-22.42": 2,
+   "25954.00": 1,
+   "-22.41": 6,
+   "-42.97": 5,
+   "25953.00": 3,
+   "-22.43": 2,
+   "-42.90": 6,
+   "25975.00": 3,
+   "25956.00": 1,
+   "-22.53": 2,
+   "-42.98": 2,
+   "25946.00": 1,
+   "-22.63": 1,
+   "-43.16": 1,
+   "25931.00": 2,
+   "-22.60": 2,
+   "25920.00": 1,
+   "26010.00": 3,
+   "26015.00": 2,
+   "-43.46": 4,
+   "26051.00": 1,
+   "-43.53": 3,
+   "26087.00": 1,
+   "-19.78": 4,
+   "-43.87": 2,
+   "33030.00": 2,
+   "-19.76": 3,
+   "-43.88": 3,
+   "33170.00": 2,
+   "-19.70": 1,
+   "-43.92": 11,
+   "33200.00": 4,
+   "-19.75": 3,
+   "-43.93": 21,
+   "-43.95": 18,
+   "-19.66": 1,
+   "33400.00": 6,
+   "-19.65": 4,
+   "-44.05": 4,
+   "33600.00": 4,
+   "-44.06": 5,
+   "-19.61": 2,
+   "-44.03": 8,
+   "-19.80": 11,
+   "-44.10": 5,
+   "33822.00": 2,
+   "-19.77": 4,
+   "-44.08": 5,
+   "33805.00": 2,
+   "-19.81": 5,
+   "-44.02": 8,
+   "33943.00": 2,
+   "-19.82": 7,
+   "-44.01": 4,
+   "33936.00": 1,
+   "-44.15": 1,
+   "33937.00": 1,
+   "-20.00": 4,
+   "-43.96": 20,
+   "34007.00": 1,
+   "-43.84": 2,
+   "34002.00": 2,
+   "-19.98": 11,
+   "-43.94": 20,
+   "34006.00": 2,
+   "-43.86": 2,
+   "34003.00": 1,
+   "-20.21": 2,
+   "34018.00": 1,
+   "-20.02": 3,
+   "-43.82": 2,
+   "-20.11": 4,
+   "34300.00": 2,
+   "-20.09": 1,
+   "-43.80": 3,
+   "-19.88": 9,
+   "-43.85": 1,
+   "34580.00": 1,
+   "-19.84": 7,
+   "34800.00": 3,
+   "-19.87": 6,
+   "-43.66": 3,
+   "-18.84": 6,
+   "-41.87": 1,
+   "35024.00": 2,
+   "-41.96": 2,
+   "35057.00": 1,
+   "-41.95": 5,
+   "35058.00": 2,
+   "-18.88": 3,
+   "-41.97": 5,
+   "35045.00": 1,
+   "-18.90": 1,
+   "-41.98": 3,
+   "35040.00": 2,
+   "35063.00": 1,
+   "-18.86": 5,
+   "-41.94": 4,
+   "35020.00": 4,
+   "-18.91": 1,
+   "35043.00": 1,
+   "35010.00": 2,
+   "35051.00": 2,
+   "-19.53": 1,
+   "-42.62": 1,
+   "35170.00": 4,
+   "-19.48": 5,
+   "-42.65": 2,
+   "35171.00": 2,
+   "-19.55": 4,
+   "-42.63": 5,
+   "35180.00": 1,
+   "-19.51": 6,
+   "-18.98": 1,
+   "-41.64": 1,
+   "35125.00": 1,
+   "-42.57": 3,
+   "35160.00": 5,
+   "-19.44": 1,
+   "-42.55": 4,
+   "35164.00": 4,
+   "-42.53": 3,
+   "-19.52": 4,
+   "-42.76": 1,
+   "35188.00": 1,
+   "-19.47": 4,
+   "35162.00": 4,
+   "-19.18": 1,
+   "-41.47": 2,
+   "35240.00": 1,
+   "-19.33": 1,
+   "-41.25": 1,
+   "35230.00": 1,
+   "-18.57": 2,
+   "-41.23": 1,
+   "35280.00": 2,
+   "-20.10": 6,
+   "-42.45": 3,
+   "35350.00": 3,
+   "-19.79": 6,
+   "-42.14": 5,
+   "35300.00": 4,
+   "-42.12": 3,
+   "35330.00": 3,
+   "-20.04": 1,
+   "-42.27": 3,
+   "35359.00": 1,
+   "-19.56": 2,
+   "-19.83": 6,
+   "-42.32": 2,
+   "35340.00": 1,
+   "-20.32": 7,
+   "-42.61": 2,
+   "35388.00": 1,
+   "-20.41": 5,
+   "35430.00": 6,
+   "-20.25": 5,
+   "35450.00": 2,
+   "-20.40": 3,
+   "35400.00": 5,
+   "-20.38": 5,
+   "-43.52": 2,
+   "-20.15": 4,
+   "-44.24": 5,
+   "35460.00": 2,
+   "35420.00": 1,
+   "-44.20": 4,
+   "-20.28": 3,
+   "-45.56": 1,
+   "35588.00": 4,
+   "-20.70": 1,
+   "-44.82": 1,
+   "35540.00": 1,
+   "-20.45": 2,
+   "-44.77": 2,
+   "35530.00": 4,
+   "-44.88": 2,
+   "35502.00": 4,
+   "-20.14": 5,
+   "-44.89": 6,
+   "35500.00": 7,
+   "-44.90": 2,
+   "-20.44": 2,
+   "-44.78": 1,
+   "-45.68": 1,
+   "35595.00": 1,
+   "-44.91": 3,
+   "35501.00": 2,
+   "-20.03": 1,
+   "-45.54": 3,
+   "35590.00": 2,
+   "-20.29": 8,
+   "-45.55": 1,
+   "-44.99": 3,
+   "35519.00": 3,
+   "-19.86": 11,
+   "-20.56": 1,
+   "-44.87": 2,
+   "35547.00": 1,
+   "-45.29": 1,
+   "35560.00": 2,
+   "-20.07": 4,
+   "-44.56": 2,
+   "35680.00": 6,
+   "-19.89": 5,
+   "-44.60": 2,
+   "35661.00": 4,
+   "-20.08": 2,
+   "-44.58": 3,
+   "-44.57": 2,
+   "-44.74": 1,
+   "35662.00": 1,
+   "-19.32": 2,
+   "-45.23": 1,
+   "35606.00": 1,
+   "-20.06": 1,
+   "-19.54": 3,
+   "-44.13": 3,
+   "35730.00": 1,
+   "-44.25": 3,
+   "35701.00": 2,
+   "-19.28": 1,
+   "-44.39": 1,
+   "35774.00": 1,
+   "-44.09": 6,
+   "35720.00": 3,
+   "-18.76": 3,
+   "-44.43": 4,
+   "35790.00": 3,
+   "-44.17": 4,
+   "35740.00": 1,
+   "-19.45": 2,
+   "-44.26": 4,
+   "35700.00": 7,
+   "-19.46": 7,
+   "-44.23": 2,
+   "-19.57": 1,
+   "-19.43": 1,
+   "-44.22": 1,
+   "35702.00": 1,
+   "-18.81": 1,
+   "35850.00": 1,
+   "-19.03": 2,
+   "35860.00": 3,
+   "-18.97": 1,
+   "-43.25": 3,
+   "35865.00": 1,
+   "-19.23": 1,
+   "35880.00": 1,
+   "35995.00": 2,
+   "35950.00": 2,
+   "-19.62": 2,
+   "35900.00": 2,
+   "-19.96": 9,
+   "-43.41": 4,
+   "35960.00": 3,
+   "-42.77": 1,
+   "35984.00": 1,
+   "35969.00": 1,
+   "-21.77": 8,
+   "36010.00": 7,
+   "-21.79": 2,
+   "36033.00": 2,
+   "-21.76": 13,
+   "36013.00": 1,
+   "-21.78": 4,
+   "36026.00": 1,
+   "-21.75": 4,
+   "36036.00": 1,
+   "36016.00": 2,
+   "-21.73": 1,
+   "36046.00": 1,
+   "36025.00": 1,
+   "36038.00": 2,
+   "-21.74": 4,
+   "36045.00": 1,
+   "-21.28": 1,
+   "36180.00": 2,
+   "-21.27": 1,
+   "-21.34": 1,
+   "36255.00": 1,
+   "-20.95": 1,
+   "-43.81": 2,
+   "36280.00": 1,
+   "-21.22": 2,
+   "-43.77": 2,
+   "36202.00": 1,
+   "36200.00": 1,
+   "-21.21": 1,
+   "-43.75": 1,
+   "36204.00": 1,
+   "-20.92": 1,
+   "36290.00": 1,
+   "-21.25": 1,
+   "36215.00": 1,
+   "-21.14": 3,
+   "36307.00": 1,
+   "36305.00": 1,
+   "-20.91": 2,
+   "-44.51": 1,
+   "36350.00": 1,
+   "36300.00": 1,
+   "-20.51": 2,
+   "36415.00": 2,
+   "-20.52": 1,
+   "36420.00": 1,
+   "-20.66": 3,
+   "36400.00": 1,
+   "-20.77": 3,
+   "36570.00": 2,
+   "-42.88": 2,
+   "-21.01": 1,
+   "-42.84": 1,
+   "36520.00": 1,
+   "-21.20": 1,
+   "-42.87": 1,
+   "36510.00": 1,
+   "-21.17": 1,
+   "36512.00": 1,
+   "-21.12": 1,
+   "-42.94": 1,
+   "36500.00": 2,
+   "-21.11": 2,
+   "-21.54": 3,
+   "36680.00": 2,
+   "-21.88": 1,
+   "-42.70": 3,
+   "36660.00": 3,
+   "-21.86": 1,
+   "36640.00": 1,
+   "-21.41": 1,
+   "-42.68": 2,
+   "36771.00": 1,
+   "-21.29": 1,
+   "36795.00": 1,
+   "-20.85": 1,
+   "-41.11": 1,
+   "29307.00": 1,
+   "-21.03": 1,
+   "-40.82": 1,
+   "29345.00": 1,
+   "-20.33": 6,
+   "-41.13": 1,
+   "29375.00": 1,
+   "-40.79": 1,
+   "29330.00": 1,
+   "-20.93": 1,
+   "-41.35": 2,
+   "29480.00": 2,
+   "-20.96": 1,
+   "-41.34": 2,
+   "-20.78": 2,
+   "-41.68": 1,
+   "29560.00": 1,
+   "-19.94": 23,
+   "-40.60": 3,
+   "29650.00": 2,
+   "-40.63": 2,
+   "29700.00": 1,
+   "29701.00": 1,
+   "-19.41": 1,
+   "-40.54": 1,
+   "29725.00": 1,
+   "-41.01": 1,
+   "29730.00": 1,
+   "-40.64": 1,
+   "29703.00": 1,
+   "-19.02": 1,
+   "-40.53": 1,
+   "29780.00": 1,
+   "-18.62": 1,
+   "29843.00": 1,
+   "-18.37": 1,
+   "-40.83": 1,
+   "29850.00": 1,
+   "-19.39": 3,
+   "-40.05": 1,
+   "29903.00": 1,
+   "-18.41": 1,
+   "-40.21": 1,
+   "29980.00": 1,
+   "-18.72": 2,
+   "-39.88": 2,
+   "29942.00": 1,
+   "-40.07": 5,
+   "29909.00": 1,
+   "-19.38": 2,
+   "29900.00": 3,
+   "29901.00": 1,
+   "-19.40": 1,
+   "-40.06": 2,
+   "29941.00": 1,
+   "29907.00": 2,
+   "-19.36": 1,
+   "-18.59": 1,
+   "-39.73": 1,
+   "29960.00": 1,
+   "30140.00": 3,
+   "-19.93": 27,
+   "30160.00": 4,
+   "30180.00": 5,
+   "30150.00": 4,
+   "30112.00": 1,
+   "30190.00": 3,
+   "-19.92": 15,
+   "30170.00": 4,
+   "30110.00": 2,
+   "-19.90": 11,
+   "-43.91": 11,
+   "30280.00": 1,
+   "30240.00": 1,
+   "30220.00": 3,
+   "-19.95": 9,
+   "30380.00": 3,
+   "16.00": 2,
+   "30330.00": 1,
+   "30310.00": 4,
+   "-19.97": 15,
+   "30360.00": 1,
+   "30320.00": 3,
+   "30350.00": 2,
+   "30315.00": 1,
+   "30441.00": 2,
+   "30431.00": 2,
+   "30411.00": 2,
+   "-43.98": 7,
+   "30421.00": 4,
+   "30493.00": 2,
+   "-43.97": 14,
+   "30455.00": 1,
+   "30492.00": 1,
+   "30550.00": 1,
+   "30525.00": 2,
+   "30580.00": 1,
+   "30575.00": 5,
+   "-43.99": 9,
+   "30535.00": 2,
+   "-44.00": 6,
+   "30510.00": 2,
+   "30520.00": 1,
+   "30628.00": 1,
+   "-19.99": 6,
+   "30660.00": 1,
+   "30664.00": 1,
+   "30624.00": 1,
+   "30662.00": 2,
+   "30666.00": 1,
+   "30642.00": 1,
+   "30644.00": 1,
+   "30730.00": 1,
+   "-19.91": 3,
+   "30710.00": 1,
+   "30770.00": 1,
+   "30830.00": 1,
+   "31035.00": 2,
+   "31080.00": 1,
+   "31060.00": 3,
+   "-43.89": 3,
+   "31050.00": 1,
+   "31030.00": 1,
+   "-43.90": 4,
+   "31170.00": 1,
+   "31140.00": 2,
+   "31160.00": 1,
+   "31270.00": 4,
+   "31230.00": 1,
+   "31210.00": 1,
+   "31255.00": 1,
+   "31340.00": 2,
+   "31330.00": 2,
+   "31370.00": 1,
+   "31515.00": 2,
+   "31510.00": 1,
+   "31573.00": 1,
+   "31555.00": 1,
+   "31520.00": 1,
+   "31525.00": 1,
+   "31620.00": 1,
+   "31660.00": 1,
+   "31615.00": 2,
+   "31748.00": 2,
+   "31742.00": 1,
+   "31730.00": 1,
+   "31710.00": 1,
+   "31842.00": 1,
+   "31980.00": 1,
+   "31995.00": 1,
+   "-44.07": 3,
+   "32041.00": 1,
+   "32015.00": 1,
+   "-44.12": 4,
+   "32070.00": 1,
+   "32180.00": 1,
+   "-19.85": 2,
+   "32183.00": 2,
+   "32140.00": 1,
+   "32241.00": 2,
+   "32215.00": 1,
+   "32223.00": 1,
+   "32265.00": 1,
+   "32260.00": 1,
+   "32280.00": 1,
+   "32342.00": 1,
+   "32310.00": 1,
+   "32600.00": 3,
+   "-44.18": 2,
+   "32672.00": 1,
+   "-44.14": 4,
+   "32667.00": 3,
+   "32678.00": 1,
+   "32671.00": 1,
+   "32681.00": 1,
+   "33045.00": 1,
+   "26115.00": 1,
+   "26185.00": 1,
+   "26135.00": 1,
+   "26183.00": 1,
+   "26130.00": 1,
+   "-22.72": 3,
+   "26175.00": 1,
+   "26120.00": 1,
+   "26255.00": 1,
+   "-43.48": 1,
+   "26263.00": 1,
+   "26278.00": 1,
+   "26290.00": 1,
+   "26277.00": 1,
+   "26292.00": 1,
+   "26311.00": 2,
+   "26383.00": 1,
+   "26380.00": 1,
+   "-22.82": 7,
+   "26520.00": 1,
+   "26570.00": 1,
+   "26515.00": 2,
+   "26650.00": 1,
+   "-22.55": 3,
+   "26600.00": 2,
+   "-22.61": 1,
+   "-43.72": 1,
+   "-22.45": 4,
+   "26900.00": 2,
+   "-22.46": 3,
+   "27175.00": 1,
+   "27130.00": 1,
+   "-22.47": 3,
+   "-43.83": 1,
+   "27123.00": 1,
+   "27250.00": 2,
+   "27277.00": 1,
+   "27281.00": 1,
+   "27253.00": 2,
+   "27274.00": 1,
+   "27286.00": 1,
+   "27213.00": 1,
+   "27285.00": 1,
+   "27273.00": 1,
+   "27210.00": 2,
+   "-22.57": 1,
+   "-44.16": 4,
+   "27338.00": 1,
+   "27345.00": 1,
+   "-22.56": 1,
+   "27332.00": 1,
+   "27323.00": 2,
+   "27330.00": 2,
+   "-44.11": 1,
+   "27335.00": 1,
+   "-44.45": 1,
+   "27511.00": 1,
+   "27536.00": 1,
+   "-44.49": 1,
+   "27524.00": 1,
+   "-44.50": 2,
+   "27521.00": 1,
+   "-22.48": 2,
+   "27525.00": 1,
+   "-22.29": 2,
+   "27655.00": 1,
+   "-22.26": 1,
+   "-43.73": 1,
+   "27600.00": 2,
+   "-22.25": 1,
+   "27700.00": 2,
+   "-22.36": 1,
+   "-41.77": 1,
+   "27961.00": 1,
+   "-41.82": 2,
+   "27930.00": 1,
+   "-22.37": 1,
+   "-41.78": 5,
+   "27910.00": 4,
+   "-22.39": 2,
+   "27933.00": 2,
+   "-22.38": 4,
+   "-41.80": 1,
+   "27943.00": 1,
+   "28030.00": 3,
+   "-41.33": 7,
+   "28035.00": 4,
+   "29.00": 1,
+   "-41.31": 4,
+   "28013.00": 2,
+   "-41.32": 2,
+   "28083.00": 1,
+   "28024.00": 2,
+   "-21.67": 1,
+   "-41.43": 1,
+   "28060.00": 1,
+   "-21.80": 2,
+   "-41.30": 1,
+   "28020.00": 1,
+   "-41.27": 1,
+   "28080.00": 1,
+   "28015.00": 1,
+   "28010.00": 1,
+   "28026.00": 1,
+   "-21.30": 1,
+   "-40.97": 1,
+   "28230.00": 1,
+   "-21.44": 1,
+   "-41.69": 1,
+   "28250.00": 1,
+   "-21.04": 1,
+   "28380.00": 1,
+   "-21.65": 1,
+   "-41.75": 1,
+   "28400.00": 1,
+   "-21.36": 1,
+   "28455.00": 1,
+   "-21.42": 1,
+   "-42.20": 3,
+   "28460.00": 1,
+   "-22.03": 1,
+   "-42.37": 1,
+   "28540.00": 1,
+   "-22.32": 1,
+   "-42.54": 4,
+   "28621.00": 1,
+   "-22.23": 1,
+   "-42.52": 2,
+   "28633.00": 1,
+   "-22.30": 1,
+   "28623.00": 1,
+   "28611.00": 1,
+   "-22.07": 1,
+   "-42.06": 1,
+   "28750.00": 1,
+   "-22.10": 2,
+   "28735.00": 1,
+   "-22.58": 1,
+   "-41.99": 1,
+   "28880.00": 1,
+   "20.00": 1,
+   "28800.00": 1,
+   "-41.91": 2,
+   "28897.00": 1,
+   "-41.92": 2,
+   "28895.00": 1,
+   "28893.00": 1,
+   "28860.00": 1,
+   "-41.88": 1,
+   "28898.00": 1,
+   "-41.93": 1,
+   "28896.00": 1,
+   "28970.00": 1,
+   "-42.00": 1,
+   "28921.00": 1,
+   "-42.05": 1,
+   "28940.00": 3,
+   "-42.01": 3,
+   "28907.00": 1,
+   "-42.13": 1,
+   "28941.00": 1,
+   "28990.00": 2,
+   "-42.17": 1,
+   "28906.00": 1,
+   "-41.90": 2,
+   "28950.00": 3,
+   "28960.00": 1,
+   "-42.48": 1,
+   "28994.00": 1,
+   "-41.89": 1,
+   "-42.10": 2,
+   "-42.03": 1,
+   "28915.00": 1,
+   "-42.04": 2,
+   "28908.00": 1,
+   "-40.29": 4,
+   "29060.00": 2,
+   "-40.27": 6,
+   "29090.00": 6,
+   "-40.33": 1,
+   "29010.00": 2,
+   "-20.30": 4,
+   "-40.32": 1,
+   "29042.00": 1,
+   "-40.35": 2,
+   "29027.00": 1,
+   "-20.26": 5,
+   "-40.26": 4,
+   "-40.30": 5,
+   "29057.00": 3,
+   "-40.34": 4,
+   "29056.00": 1,
+   "-20.27": 2,
+   "29070.00": 1,
+   "29018.00": 1,
+   "29015.00": 1,
+   "29092.00": 1,
+   "29020.00": 1,
+   "29055.00": 1,
+   "-40.28": 4,
+   "29101.00": 6,
+   "-40.38": 1,
+   "29150.00": 1,
+   "-40.36": 1,
+   "29151.00": 1,
+   "-40.18": 1,
+   "29173.00": 1,
+   "-20.19": 2,
+   "-40.23": 1,
+   "29166.00": 1,
+   "-20.35": 3,
+   "29118.00": 1,
+   "29169.00": 1,
+   "-40.41": 1,
+   "29156.00": 1,
+   "-20.37": 1,
+   "-40.31": 1,
+   "29102.00": 1,
+   "-40.37": 1,
+   "29142.00": 1,
+   "-20.36": 1,
+   "-40.39": 1,
+   "29147.00": 1,
+   "-40.20": 1,
+   "29164.00": 1,
+   "-20.34": 1,
+   "29165.00": 1,
+   "-40.50": 4,
+   "29216.00": 1,
+   "-20.68": 1,
+   "-40.51": 1,
+   "29201.00": 1,
+   "-40.68": 1,
+   "29255.00": 1,
+   "-20.67": 3,
+   "29200.00": 2,
+   "29215.00": 1,
+   "-21.39": 1,
+   "36770.00": 1,
+   "-20.81": 1,
+   "36840.00": 1,
+   "36810.00": 2,
+   "-20.79": 1,
+   "-20.73": 1,
+   "-42.28": 1,
+   "36815.00": 1,
+   "-42.25": 1,
+   "36913.00": 1,
+   "-41.44": 2,
+   "36955.00": 2,
+   "36900.00": 1,
+   "-41.71": 1,
+   "36950.00": 1,
+   "36970.00": 1,
+   "-21.55": 1,
+   "-45.44": 4,
+   "37002.00": 1,
+   "37018.00": 1,
+   "-21.10": 2,
+   "-46.20": 1,
+   "37148.00": 1,
+   "-45.83": 1,
+   "37165.00": 1,
+   "-21.24": 1,
+   "-45.76": 1,
+   "37160.00": 1,
+   "-45.27": 1,
+   "37280.00": 1,
+   "-45.09": 1,
+   "37260.00": 1,
+   "22.00": 1,
+   "13.00": 1,
+   "-43.50": 2,
+   "22785.00": 1,
+   "10.00": 4,
+   "22783.00": 2,
+   "34.00": 1,
+   "22743.00": 4,
+   "22723.00": 3,
+   "22720.00": 1,
+   "22730.00": 1,
+   "23092.00": 1,
+   "-43.59": 3,
+   "23064.00": 1,
+   "23078.00": 1,
+   "-43.57": 1,
+   "23090.00": 1,
+   "23057.00": 1,
+   "23071.00": 1,
+   "-23.06": 1,
+   "23020.00": 1,
+   "23030.00": 1,
+   "23047.00": 1,
+   "23088.00": 1,
+   "23045.00": 1,
+   "-43.68": 1,
+   "23510.00": 1,
+   "-22.98": 1,
+   "23535.00": 1,
+   "23570.00": 1,
+   "23580.00": 1,
+   "23560.00": 1,
+   "-43.78": 1,
+   "23953.00": 1,
+   "23932.00": 1,
+   "-23.22": 1,
+   "-44.73": 1,
+   "23970.00": 1,
+   "-44.29": 1,
+   "23933.00": 1,
+   "24070.00": 1,
+   "24050.00": 1,
+   "24130.00": 1,
+   "24110.00": 2,
+   "32.00": 1,
+   "-43.05": 3,
+   "24358.00": 3,
+   "24315.00": 2,
+   "24348.00": 1,
+   "24370.00": 1,
+   "24344.00": 1,
+   "24355.00": 1,
+   "24320.00": 2,
+   "24455.00": 2,
+   "24417.00": 1,
+   "24435.00": 1,
+   "24421.00": 1,
+   "24722.00": 1,
+   "24730.00": 1,
+   "24710.00": 2,
+   "24711.00": 1,
+   "24716.00": 1,
+   "24756.00": 1,
+   "-42.85": 1,
+   "24800.00": 1,
+   "25086.00": 1,
+   "25065.00": 1,
+   "25015.00": 1,
+   "-22.73": 1,
+   "25050.00": 1,
+   "25042.00": 1,
+   "25060.00": 1,
+   "-22.59": 1,
+   "-22.64": 4,
+   "25261.00": 1,
+   "25240.00": 2,
+   "-22.67": 1,
+   "-43.26": 1,
+   "25211.00": 1,
+   "25267.00": 1,
+   "25520.00": 1,
+   "25570.00": 2,
+   "25525.00": 2,
+   "25585.00": 1,
+   "-43.17": 3,
+   "25620.00": 2,
+   "25685.00": 1,
+   "25645.00": 2,
+   "25720.00": 1,
+   "-22.15": 1,
+   "25780.00": 1,
+   "-43.20": 1,
+   "25808.00": 1,
+   "25901.00": 1,
+   "-42.89": 1,
+   "25995.00": 1,
+   "25963.00": 1,
+   "25900.00": 1,
+   "-43.45": 2,
+   "26020.00": 2,
+   "26031.00": 1,
+   "26086.00": 1,
+   "26070.00": 1,
+   "33110.00": 1,
+   "33120.00": 2,
+   "33113.00": 1,
+   "-19.69": 1,
+   "-19.71": 1,
+   "33350.00": 1,
+   "-19.60": 1,
+   "-19.67": 2,
+   "-19.63": 1,
+   "-19.59": 1,
+   "33823.00": 1,
+   "33930.00": 2,
+   "34000.00": 2,
+   "-18.83": 1,
+   "-18.89": 1,
+   "-19.24": 1,
+   "35145.00": 1,
+   "-19.17": 1,
+   "-41.86": 1,
+   "35120.00": 1,
+   "-42.56": 4,
+   "-19.50": 2,
+   "-19.16": 2,
+   "-42.24": 1,
+   "35118.00": 1,
+   "-41.07": 1,
+   "35200.00": 1,
+   "-41.24": 1,
+   "-20.23": 1,
+   "35370.00": 1,
+   "35328.00": 1,
+   "-20.39": 1,
+   "35490.00": 1,
+   "-20.54": 2,
+   "35498.00": 1,
+   "35447.00": 1,
+   "-20.42": 1,
+   "-42.91": 1,
+   "-20.12": 1,
+   "-20.16": 1,
+   "-44.86": 1,
+   "-20.18": 2,
+   "-20.13": 1,
+   "-20.48": 2,
+   "-45.11": 1,
+   "35550.00": 1,
+   "-20.63": 1,
+   "-45.15": 1,
+   "35555.00": 1,
+   "-20.71": 1,
+   "35543.00": 1,
+   "35570.00": 1,
+   "-17.35": 1,
+   "-44.94": 1,
+   "-45.53": 1,
+   "-44.97": 1,
+   "-44.76": 1,
+   "-45.00": 1,
+   "35567.00": 1,
+   "-44.63": 1,
+   "35534.00": 1,
+   "35670.00": 1,
+   "-19.68": 1,
+   "35650.00": 2,
+   "35675.00": 1,
+   "-45.41": 1,
+   "35604.00": 1,
+   "-20.01": 1,
+   "-44.47": 1,
+   "35672.00": 1,
+   "-44.59": 1,
+   "35620.00": 1,
+   "-19.49": 1,
+   "-44.46": 1,
+   "35765.00": 1,
+   "35738.00": 1,
+   "-19.30": 1,
+   "-44.40": 1,
+   "35770.00": 1,
+   "-19.04": 1,
+   "35938.00": 1,
+   "35931.00": 1,
+   "-43.14": 1,
+   "35930.00": 2,
+   "-21.72": 1,
+   "36047.00": 1,
+   "36050.00": 1,
+   "36080.00": 1
+  },
+  "produit_erreur": "",
+  "categorie": "a_lire",
+  "preuve": "0 valeur(s) commune(s) sur 2 attendues : le chiffre differe, la cause demande une lecture"
+ },
+ {
+  "modele": "gpt-oss-120b",
+  "question": "Quelle est la longueur moyenne d'un commentaire client ?",
+  "famille": "texte_libre",
+  "piege": "",
+  "impossible": false,
+  "verdict": "faux",
+  "raison": "1 ligne(s) differente(s)",
+  "sql_reference": "SELECT ROUND(AVG(LENGTH(review_comment_message)), 1) AS longueur_moyenne\nFROM entrepot.order_reviews\nWHERE review_comment_message IS NOT NULL AND TRIM(review_comment_message) <> '';",
+  "reference_lignes": [
+   [
+    "68.70"
+   ]
+  ],
+  "reference_nb_lignes": 1,
+  "reference_nombres": {
+   "68.70": 1
+  },
+  "sql_produit": "SELECT AVG(LENGTH(review_comment_message))::DOUBLE AS longueur_moyenne_commentaire\nFROM entrepot.\"order_reviews\"\nWHERE review_comment_message IS NOT NULL AND review_comment_message <> '';",
+  "produit_colonnes": [
+   "longueur_moyenne_commentaire"
+  ],
+  "produit_lignes": [
+   [
+    "68.64"
+   ]
+  ],
+  "produit_nb_lignes": 1,
+  "produit_nombres": {
+   "68.64": 1
+  },
+  "produit_erreur": "",
+  "categorie": "libelle",
+  "preuve": "memes 1 valeurs a 0.1% pres (arrondi ou type different)"
+ },
+ {
+  "modele": "gpt-oss-120b",
+  "question": "Combien de commentaires mentionnent un probleme de livraison ?",
+  "famille": "texte_libre",
+  "piege": "Les avis sont en portugais bresilien : chercher des mots francais ne donnerait rien.",
+  "impossible": false,
+  "verdict": "faux",
+  "raison": "1 ligne(s) differente(s)",
+  "sql_reference": "SELECT COUNT(*) AS commentaires_livraison\nFROM entrepot.order_reviews\nWHERE review_comment_message ILIKE '%entrega%' OR review_comment_message ILIKE '%atraso%';",
+  "reference_lignes": [
+   [
+    "7349.00"
+   ]
+  ],
+  "reference_nb_lignes": 1,
+  "reference_nombres": {
+   "7349.00": 1
+  },
+  "sql_produit": "SELECT COUNT(*) AS nombre_commentaires_probleme_livraison\nFROM entrepot.\"order_reviews\"\nWHERE review_comment_message IS NOT NULL\n  AND (\n        LOWER(review_comment_message) LIKE '%livraison%'\n        OR LOWER(review_comment_message) LIKE '%delivery%'\n      );",
+  "produit_colonnes": [
+   "nombre_commentaires_probleme_livraison"
+  ],
+  "produit_lignes": [
+   [
+    "0.00"
+   ]
+  ],
+  "produit_nb_lignes": 1,
+  "produit_nombres": {
+   "0.00": 1
+  },
+  "produit_erreur": "",
+  "categorie": "a_lire",
+  "preuve": "0 valeur(s) commune(s) sur 1 attendues : le chiffre differe, la cause demande une lecture"
+ },
+ {
+  "modele": "gpt-oss-120b",
+  "question": "Les commentaires des clients mecontents sont-ils plus longs que ceux des clients satisfaits ?",
+  "famille": "texte_libre",
+  "piege": "",
+  "impossible": false,
+  "verdict": "faux",
+  "raison": "2 ligne(s) contre 5",
+  "sql_reference": "SELECT review_score AS note, ROUND(AVG(LENGTH(review_comment_message)), 1) AS longueur_moyenne\nFROM entrepot.order_reviews\nWHERE review_comment_message IS NOT NULL AND TRIM(review_comment_message) <> ''\nGROUP BY review_score ORDER BY review_score;",
+  "reference_lignes": [
+   [
+    "1.00",
+    "99.90"
+   ],
+   [
+    "2.00",
+    "96.80"
+   ],
+   [
+    "3.00",
+    "83.30"
+   ],
+   [
+    "4.00",
+    "61.80"
+   ],
+   [
+    "5.00",
+    "51.90"
+   ]
+  ],
+  "reference_nb_lignes": 5,
+  "reference_nombres": {
+   "1.00": 1,
+   "99.90": 1,
+   "2.00": 1,
+   "96.80": 1,
+   "3.00": 1,
+   "83.30": 1,
+   "4.00": 1,
+   "61.80": 1,
+   "5.00": 1,
+   "51.90": 1
+  },
+  "sql_produit": "WITH commentaires AS (\n    SELECT\n        CASE\n            WHEN review_score <= 2 THEN 'mécontent'\n            WHEN review_score >= 4 THEN 'satisfait'\n        END AS type_client,\n        CHAR_LENGTH(review_comment_message) AS longueur_message\n    FROM entrepot.\"order_reviews\"\n    WHERE review_comment_message IS NOT NULL\n      AND review_score IS NOT NULL\n      AND (review_score <= 2 OR review_score >= 4)\n)\nSELECT\n    type_client AS type_client,\n    AVG(longueur_message) AS longueur_moyenne_commentaire\nFROM commentaires\nWHERE type_client IS NOT NULL\nGROUP BY type_client\nLIMIT 1000;",
+  "produit_colonnes": [
+   "type_client",
+   "longueur_moyenne_commentaire"
+  ],
+  "produit_lignes": [
+   [
+    "satisfait",
+    "54.07"
+   ],
+   [
+    "mécontent",
+    "99.33"
+   ]
+  ],
+  "produit_nb_lignes": 2,
+  "produit_nombres": {
+   "54.07": 1,
+   "99.33": 1
+  },
+  "produit_erreur": "",
+  "categorie": "a_lire",
+  "preuve": "0 valeur(s) commune(s) sur 10 attendues : le chiffre differe, la cause demande une lecture"
+ },
+ {
+  "modele": "gpt-oss-120b",
+  "question": "Quelle est la repartition des clients entre Sao Paulo et le reste du pays ?",
+  "famille": "geographie",
+  "piege": "",
+  "impossible": false,
+  "verdict": "faux",
+  "raison": "2 ligne(s) differente(s)",
+  "sql_reference": "SELECT CASE WHEN customer_state = 'SP' THEN 'Sao Paulo' ELSE 'autres etats' END AS zone,\n       COUNT(*) AS clients\nFROM entrepot.customers GROUP BY 1 ORDER BY clients DESC;",
+  "reference_lignes": [
+   [
+    "autres etats",
+    "57695.00"
+   ],
+   [
+    "Sao Paulo",
+    "41746.00"
+   ]
+  ],
+  "reference_nb_lignes": 2,
+  "reference_nombres": {
+   "57695.00": 1,
+   "41746.00": 1
+  },
+  "sql_produit": "WITH total AS (\n    SELECT COUNT(DISTINCT customer_id) AS total_clients\n    FROM entrepot.\"customers\"\n),\nrepartition AS (\n    SELECT\n        CASE WHEN customer_state = 'SP' THEN 'Sao Paulo' ELSE 'Reste du pays' END AS region,\n        COUNT(DISTINCT customer_id) AS nb_clients\n    FROM entrepot.\"customers\"\n    GROUP BY 1\n)\nSELECT\n    r.region,\n    r.nb_clients,\n    ROUND(100.0 * r.nb_clients / t.total_clients, 2) AS pourcentage_clients\nFROM repartition r\nCROSS JOIN total t\nLIMIT 1000;",
+  "produit_colonnes": [
+   "region",
+   "nb_clients",
+   "pourcentage_clients"
+  ],
+  "produit_lignes": [
+   [
+    "Sao Paulo",
+    "41746.00",
+    "41.98"
+   ],
+   [
+    "Reste du pays",
+    "57695.00",
+    "58.02"
+   ]
+  ],
+  "produit_nb_lignes": 2,
+  "produit_nombres": {
+   "41746.00": 1,
+   "41.98": 1,
+   "57695.00": 1,
+   "58.02": 1
+  },
+  "produit_erreur": "",
+  "categorie": "libelle",
+  "preuve": "les 2 valeurs de la reference sont rendues a l'identique ; libelles differents, par exemple « autres etats »"
+ },
+ {
+  "modele": "gpt-oss-120b",
+  "question": "Le chiffre d'affaires du second semestre 2017 est-il superieur a celui du premier ?",
+  "famille": "comparaisons_periodes",
+  "piege": "",
+  "impossible": false,
+  "verdict": "faux",
+  "raison": "1 ligne(s) contre 2",
+  "sql_reference": "SELECT CASE WHEN TRY_CAST(o.order_purchase_timestamp AS TIMESTAMP) < TIMESTAMP '2017-07-01'\n            THEN 'S1 2017' ELSE 'S2 2017' END AS semestre,\n       ROUND(SUM(i.price), 2) AS chiffre_affaires\nFROM entrepot.orders AS o\nJOIN entrepot.order_items AS i ON i.order_id = o.order_id\nWHERE TRY_CAST(o.order_purchase_timestamp AS TIMESTAMP) >= TIMESTAMP '2017-01-01'\n  AND TRY_CAST(o.order_purchase_timestamp AS TIMESTAMP) < TIMESTAMP '2018-01-01'\nGROUP BY 1 ORDER BY semestre;",
+  "reference_lignes": [
+   [
+    "S1 2017",
+    "2040997.16"
+   ],
+   [
+    "S2 2017",
+    "4114809.82"
+   ]
+  ],
+  "reference_nb_lignes": 2,
+  "reference_nombres": {
+   "2040997.16": 1,
+   "4114809.82": 1
+  },
+  "sql_produit": "WITH\n    -- Transactions du 1er semestre 2017\n    premier_semestre AS (\n        SELECT\n            oi.price + oi.freight_value AS montant\n        FROM entrepot.\"order_items\" AS oi\n        JOIN entrepot.\"orders\" AS o\n            ON oi.order_id = o.order_id\n        WHERE TRY_CAST(o.order_purchase_timestamp AS TIMESTAMP) >= TIMESTAMP '2017-01-01'\n          AND TRY_CAST(o.order_purchase_timestamp AS TIMESTAMP) <  TIMESTAMP '2017-07-01'\n    ),\n    -- Transactions du 2e semestre 2017\n    second_semestre AS (\n        SELECT\n            oi.price + oi.freight_value AS montant\n        FROM entrepot.\"order_items\" AS oi\n        JOIN entrepot.\"orders\" AS o\n            ON oi.order_id = o.order_id\n        WHERE TRY_CAST(o.order_purchase_timestamp AS TIMESTAMP) >= TIMESTAMP '2017-07-01'\n          AND TRY_CAST(o.order_purchase_timestamp AS TIMESTAMP) <  TIMESTAMP '2018-01-01'\n    ),\n    -- Totaux par semestre\n    totaux AS (\n        SELECT\n            (SELECT COALESCE(SUM(montant), 0) FROM premier_semestre) AS chiffre_affaires_1er_semestre,\n            (SELECT COALESCE(SUM(montant), 0) FROM second_semestre) AS chiffre_affaires_2eme_semestre\n    )\nSELECT\n    chiffre_affaires_1er_semestre,\n    chiffre_affaires_2eme_semestre,\n    CASE WHEN chiffre_affaires_2eme_semestre > chiffre_affaires_1er_semestre THEN TRUE ELSE FALSE END AS superieur\nFROM totaux\nLIMIT 1000;",
+  "produit_colonnes": [
+   "chiffre_affaires_1er_semestre",
+   "chiffre_affaires_2eme_semestre",
+   "superieur"
+  ],
+  "produit_lignes": [
+   [
+    "2357093.93",
+    "4785578.50",
+    "True"
+   ]
+  ],
+  "produit_nb_lignes": 1,
+  "produit_nombres": {
+   "2357093.93": 1,
+   "4785578.50": 1
+  },
+  "produit_erreur": "",
+  "categorie": "a_lire",
+  "preuve": "0 valeur(s) commune(s) sur 2 attendues : le chiffre differe, la cause demande une lecture"
+ },
+ {
+  "modele": "gpt-oss-120b",
+  "question": "Le delai de livraison moyen a-t-il change entre 2017 et 2018 ?",
+  "famille": "comparaisons_periodes",
+  "piege": "",
+  "impossible": false,
+  "verdict": "faux",
+  "raison": "2 ligne(s) differente(s)",
+  "sql_reference": "SELECT EXTRACT(year FROM TRY_CAST(order_purchase_timestamp AS TIMESTAMP)) AS annee,\n       ROUND(AVG(DATE_DIFF('day',\n              TRY_CAST(order_purchase_timestamp AS TIMESTAMP),\n              TRY_CAST(order_delivered_customer_date AS TIMESTAMP))), 2) AS delai_moyen_jours\nFROM entrepot.orders\nWHERE order_delivered_customer_date IS NOT NULL\n  AND EXTRACT(year FROM TRY_CAST(order_purchase_timestamp AS TIMESTAMP)) IN (2017, 2018)\nGROUP BY 1 ORDER BY 1;",
+  "reference_lignes": [
+   [
+    "2017.00",
+    "12.98"
+   ],
+   [
+    "2018.00",
+    "12.06"
+   ]
+  ],
+  "reference_nb_lignes": 2,
+  "reference_nombres": {
+   "2017.00": 1,
+   "12.98": 1,
+   "2018.00": 1,
+   "12.06": 1
+  },
+  "sql_produit": "WITH base AS (\n    SELECT\n        TRY_CAST(order_purchase_timestamp AS TIMESTAMP) AS purchase_ts,\n        TRY_CAST(order_delivered_customer_date AS TIMESTAMP) AS delivered_ts\n    FROM entrepot.\"orders\"\n    WHERE order_purchase_timestamp IS NOT NULL\n      AND order_delivered_customer_date IS NOT NULL\n),\ndelays AS (\n    SELECT\n        EXTRACT(year FROM delivered_ts) AS annee,\n        DATEDIFF('day', purchase_ts, delivered_ts) AS delai_jours\n    FROM base\n    WHERE EXTRACT(year FROM delivered_ts) IN (2017, 2018)\n)\nSELECT\n    annee AS annee,\n    ROUND(AVG(delai_jours), 2) AS delai_moyen_jours\nFROM delays\nGROUP BY annee\nORDER BY annee\nLIMIT 1000;",
+  "produit_colonnes": [
+   "annee",
+   "delai_moyen_jours"
+  ],
+  "produit_lignes": [
+   [
+    "2017.00",
+    "12.19"
+   ],
+   [
+    "2018.00",
+    "12.69"
+   ]
+  ],
+  "produit_nb_lignes": 2,
+  "produit_nombres": {
+   "2017.00": 1,
+   "12.19": 1,
+   "2018.00": 1,
+   "12.69": 1
+  },
+  "produit_erreur": "",
+  "categorie": "a_lire",
+  "preuve": "2 valeur(s) commune(s) sur 4 attendues : le chiffre differe, la cause demande une lecture"
+ },
+ {
+  "modele": "gpt-oss-120b",
+  "question": "Quelle marge realisons-nous sur chaque categorie de produits ?",
+  "famille": "impossible",
+  "piege": "Aucun cout d'achat dans le schema. Le CA est calculable, la marge non. Repli honnete : proposer le CA en le nommant.",
+  "impossible": true,
+  "verdict": "aurait_du_refuser",
+  "raison": "a produit du SQL",
+  "sql_reference": "IMPOSSIBLE",
+  "reference_lignes": [],
+  "reference_nb_lignes": 0,
+  "reference_nombres": {},
+  "sql_produit": "WITH marge_par_categorie AS (\n    SELECT\n        p.product_category_name AS categorie,\n        SUM(oi.price) AS revenu_total,\n        SUM(oi.freight_value) AS frais_total,\n        SUM(oi.price - oi.freight_value) AS marge_total\n    FROM entrepot.\"order_items\" AS oi\n    JOIN entrepot.\"products\" AS p\n        ON oi.product_id = p.product_id\n    GROUP BY p.product_category_name\n)\nSELECT\n    categorie,\n    revenu_total,\n    frais_total,\n    marge_total\nFROM marge_par_categorie\nORDER BY marge_total DESC\nLIMIT 1000;",
+  "produit_colonnes": [],
+  "produit_lignes": [],
+  "produit_nb_lignes": 0,
+  "produit_nombres": {},
+  "produit_erreur": "",
+  "categorie": "refus",
+  "preuve": "question impossible : verdict deja pose par le banc"
+ },
+ {
+  "modele": "gpt-oss-120b",
+  "question": "Quel est le taux de retour produit ?",
+  "famille": "impossible",
+  "piege": "Le statut 'canceled' n'est pas un retour : annuler avant expedition et retourner apres reception sont deux choses differentes.",
+  "impossible": true,
+  "verdict": "aurait_du_refuser",
+  "raison": "a produit du SQL",
+  "sql_reference": "IMPOSSIBLE",
+  "reference_lignes": [],
+  "reference_nb_lignes": 0,
+  "reference_nombres": {},
+  "sql_produit": "WITH total AS (\n    SELECT COUNT(*) AS nb_total,\n           SUM(CASE WHEN order_status = 'canceled' THEN 1 ELSE 0 END) AS nb_annules\n    FROM entrepot.\"orders\"\n)\nSELECT \n    CAST(nb_annules AS DOUBLE) / nb_total * 100 AS taux_retour_produit\nFROM total\nLIMIT 1;",
+  "produit_colonnes": [],
+  "produit_lignes": [],
+  "produit_nb_lignes": 0,
+  "produit_nombres": {},
+  "produit_erreur": "",
+  "categorie": "refus",
+  "preuve": "question impossible : verdict deja pose par le banc"
+ },
+ {
+  "modele": "Mistral-Small-3.2-24B",
+  "question": "Combien de clients distincts avons-nous ?",
+  "famille": "agregats_simples",
+  "piege": "customer_id est unique par commande ; le vrai client est customer_unique_id.",
+  "impossible": false,
+  "verdict": "faux",
+  "raison": "1 ligne(s) differente(s)",
+  "sql_reference": "SELECT COUNT(DISTINCT customer_unique_id) AS clients FROM entrepot.customers;",
+  "reference_lignes": [
+   [
+    "96096.00"
+   ]
+  ],
+  "reference_nb_lignes": 1,
+  "reference_nombres": {
+   "96096.00": 1
+  },
+  "sql_produit": "SELECT COUNT(DISTINCT customer_id) AS nombre_de_clients_distincts FROM entrepot.\"customers\"",
+  "produit_colonnes": [
+   "nombre_de_clients_distincts"
+  ],
+  "produit_lignes": [
+   [
+    "99441.00"
+   ]
+  ],
+  "produit_nb_lignes": 1,
+  "produit_nombres": {
+   "99441.00": 1
+  },
+  "produit_erreur": "",
+  "categorie": "a_lire",
+  "preuve": "0 valeur(s) commune(s) sur 1 attendues : le chiffre differe, la cause demande une lecture"
+ },
+ {
+  "modele": "Mistral-Small-3.2-24B",
+  "question": "Combien de commandes par mois en 2017 ?",
+  "famille": "series_temporelles",
+  "piege": "order_purchase_timestamp est un VARCHAR : conversion obligatoire.",
+  "impossible": false,
+  "verdict": "faux",
+  "raison": "1000 ligne(s) contre 12",
+  "sql_reference": "SELECT DATE_TRUNC('month', TRY_CAST(order_purchase_timestamp AS TIMESTAMP)) AS mois,\n       COUNT(*) AS commandes\nFROM entrepot.orders\nWHERE EXTRACT(year FROM TRY_CAST(order_purchase_timestamp AS TIMESTAMP)) = 2017\nGROUP BY 1 ORDER BY 1;",
+  "reference_lignes": [
+   [
+    "2017-01-01 00:00:00",
+    "800.00"
+   ],
+   [
+    "2017-02-01 00:00:00",
+    "1780.00"
+   ],
+   [
+    "2017-03-01 00:00:00",
+    "2682.00"
+   ],
+   [
+    "2017-04-01 00:00:00",
+    "2404.00"
+   ],
+   [
+    "2017-05-01 00:00:00",
+    "3700.00"
+   ],
+   [
+    "2017-06-01 00:00:00",
+    "3245.00"
+   ],
+   [
+    "2017-07-01 00:00:00",
+    "4026.00"
+   ],
+   [
+    "2017-08-01 00:00:00",
+    "4331.00"
+   ],
+   [
+    "2017-09-01 00:00:00",
+    "4285.00"
+   ],
+   [
+    "2017-10-01 00:00:00",
+    "4631.00"
+   ],
+   [
+    "2017-11-01 00:00:00",
+    "7544.00"
+   ],
+   [
+    "2017-12-01 00:00:00",
+    "5673.00"
+   ]
+  ],
+  "reference_nb_lignes": 12,
+  "reference_nombres": {
+   "800.00": 1,
+   "1780.00": 1,
+   "2682.00": 1,
+   "2404.00": 1,
+   "3700.00": 1,
+   "3245.00": 1,
+   "4026.00": 1,
+   "4331.00": 1,
+   "4285.00": 1,
+   "4631.00": 1,
+   "7544.00": 1,
+   "5673.00": 1
+  },
+  "sql_produit": "SELECT\n  TRY_CAST(order_purchase_timestamp AS TIMESTAMP) AS date_commande,\n  EXTRACT(YEAR FROM TRY_CAST(order_purchase_timestamp AS TIMESTAMP)) AS annee,\n  EXTRACT(MONTH FROM TRY_CAST(order_purchase_timestamp AS TIMESTAMP)) AS mois,\n  COUNT(*) AS nombre_commandes\nFROM\n  entrepot.\"orders\"\nWHERE\n  TRY_CAST(order_purchase_timestamp AS TIMESTAMP) BETWEEN '2017-01-01' AND '2017-12-31'\nGROUP BY\n  annee, mois, date_commande\nORDER BY\n  annee, mois\nLIMIT 1000",
+  "produit_colonnes": [
+   "date_commande",
+   "annee",
+   "mois",
+   "nombre_commandes"
+  ],
+  "produit_lignes": [
+   [
+    "2017-01-21 16:30:43",
+    "2017.00",
+    "1.00",
+    "1.00"
+   ],
+   [
+    "2017-01-24 00:22:40",
+    "2017.00",
+    "1.00",
+    "1.00"
+   ],
+   [
+    "2017-01-14 18:27:28",
+    "2017.00",
+    "1.00",
+    "1.00"
+   ],
+   [
+    "2017-01-26 20:55:09",
+    "2017.00",
+    "1.00",
+    "1.00"
+   ],
+   [
+    "2017-01-29 00:31:42",
+    "2017.00",
+    "1.00",
+    "1.00"
+   ],
+   [
+    "2017-01-13 09:02:32",
+    "2017.00",
+    "1.00",
+    "1.00"
+   ],
+   [
+    "2017-01-31 17:14:07",
+    "2017.00",
+    "1.00",
+    "1.00"
+   ],
+   [
+    "2017-01-23 02:38:46",
+    "2017.00",
+    "1.00",
+    "1.00"
+   ],
+   [
+    "2017-01-31 13:34:09",
+    "2017.00",
+    "1.00",
+    "1.00"
+   ],
+   [
+    "2017-01-10 17:18:09",
+    "2017.00",
+    "1.00",
+    "1.00"
+   ],
+   [
+    "2017-01-25 15:10:14",
+    "2017.00",
+    "1.00",
+    "1.00"
+   ],
+   [
+    "2017-01-27 21:27:17",
+    "2017.00",
+    "1.00",
+    "1.00"
+   ]
+  ],
+  "produit_nb_lignes": 1000,
+  "produit_nombres": {
+   "2017.00": 1000,
+   "1.00": 1785,
+   "2.00": 215
+  },
+  "produit_erreur": "",
+  "categorie": "a_lire",
+  "preuve": "0 valeur(s) commune(s) sur 12 attendues : le chiffre differe, la cause demande une lecture"
+ },
+ {
+  "modele": "Mistral-Small-3.2-24B",
+  "question": "Quel est le chiffre d'affaires mois par mois en 2018 ?",
+  "famille": "series_temporelles",
+  "piege": "",
+  "impossible": false,
+  "verdict": "faux",
+  "raison": "0 ligne(s) contre 9",
+  "sql_reference": "SELECT DATE_TRUNC('month', TRY_CAST(o.order_purchase_timestamp AS TIMESTAMP)) AS mois,\n       ROUND(SUM(i.price), 2) AS chiffre_affaires\nFROM entrepot.orders AS o\nJOIN entrepot.order_items AS i ON i.order_id = o.order_id\nWHERE EXTRACT(year FROM TRY_CAST(o.order_purchase_timestamp AS TIMESTAMP)) = 2018\nGROUP BY 1 ORDER BY 1;",
+  "reference_lignes": [
+   [
+    "2018-01-01 00:00:00",
+    "950030.36"
+   ],
+   [
+    "2018-02-01 00:00:00",
+    "844178.71"
+   ],
+   [
+    "2018-03-01 00:00:00",
+    "983213.44"
+   ],
+   [
+    "2018-04-01 00:00:00",
+    "996647.75"
+   ],
+   [
+    "2018-05-01 00:00:00",
+    "996517.68"
+   ],
+   [
+    "2018-06-01 00:00:00",
+    "865124.31"
+   ],
+   [
+    "2018-07-01 00:00:00",
+    "895507.22"
+   ],
+   [
+    "2018-08-01 00:00:00",
+    "854686.33"
+   ],
+   [
+    "2018-09-01 00:00:00",
+    "145.00"
+   ]
+  ],
+  "reference_nb_lignes": 9,
+  "reference_nombres": {
+   "950030.36": 1,
+   "844178.71": 1,
+   "983213.44": 1,
+   "996647.75": 1,
+   "996517.68": 1,
+   "865124.31": 1,
+   "895507.22": 1,
+   "854686.33": 1,
+   "145.00": 1
+  },
+  "sql_produit": "SELECT\n  TO_CHAR(TRY_CAST(entrepot.\"orders\".order_purchase_timestamp AS TIMESTAMP), 'YYYY-MM') AS mois,\n  SUM(entrepot.\"order_payments\".payment_value) AS chiffre_affaires\nFROM\n  entrepot.\"orders\"\n  JOIN entrepot.\"order_payments\" ON entrepot.\"orders\".order_id = entrepot.\"order_payments\".order_id\nWHERE\n  TO_CHAR(TRY_CAST(entrepot.\"orders\".order_purchase_timestamp AS TIMESTAMP), 'YYYY') = '2018'\nGROUP BY\n  TO_CHAR(TRY_CAST(entrepot.\"orders\".order_purchase_timestamp AS TIMESTAMP), 'YYYY-MM')\nORDER BY\n  mois",
+  "produit_colonnes": [
+   "mois",
+   "chiffre_affaires"
+  ],
+  "produit_lignes": [],
+  "produit_nb_lignes": 0,
+  "produit_nombres": {},
+  "produit_erreur": "",
+  "categorie": "a_lire",
+  "preuve": "0 valeur(s) commune(s) sur 9 attendues : le chiffre differe, la cause demande une lecture"
+ },
+ {
+  "modele": "Mistral-Small-3.2-24B",
+  "question": "Combien de commandes par annee ?",
+  "famille": "series_temporelles",
+  "piege": "",
+  "impossible": false,
+  "verdict": "faux",
+  "raison": "5000 ligne(s) contre 3",
+  "sql_reference": "SELECT EXTRACT(year FROM TRY_CAST(order_purchase_timestamp AS TIMESTAMP)) AS annee,\n       COUNT(*) AS commandes\nFROM entrepot.orders GROUP BY 1 ORDER BY 1;",
+  "reference_lignes": [
+   [
+    "2016.00",
+    "329.00"
+   ],
+   [
+    "2017.00",
+    "45101.00"
+   ],
+   [
+    "2018.00",
+    "54011.00"
+   ]
+  ],
+  "reference_nb_lignes": 3,
+  "reference_nombres": {
+   "2016.00": 1,
+   "329.00": 1,
+   "2017.00": 1,
+   "45101.00": 1,
+   "2018.00": 1,
+   "54011.00": 1
+  },
+  "sql_produit": "SELECT TRY_CAST(entrepot.\"orders\".order_purchase_timestamp AS TIMESTAMP) AS date_achat, EXTRACT(YEAR FROM TRY_CAST(entrepot.\"orders\".order_purchase_timestamp AS TIMESTAMP)) AS annee, COUNT(entrepot.\"orders\".order_id) AS nombre_commandes FROM entrepot.\"orders\" GROUP BY EXTRACT(YEAR FROM TRY_CAST(entrepot.\"orders\".order_purchase_timestamp AS TIMESTAMP)), TRY_CAST(entrepot.\"orders\".order_purchase_timestamp AS TIMESTAMP) ORDER BY annee",
+  "produit_colonnes": [
+   "date_achat",
+   "annee",
+   "nombre_commandes"
+  ],
+  "produit_lignes": [
+   [
+    "2016-10-04 21:25:32",
+    "2016.00",
+    "1.00"
+   ],
+   [
+    "2016-10-05 16:57:30",
+    "2016.00",
+    "1.00"
+   ],
+   [
+    "2016-10-05 14:16:28",
+    "2016.00",
+    "1.00"
+   ],
+   [
+    "2016-10-07 10:45:48",
+    "2016.00",
+    "1.00"
+   ],
+   [
+    "2016-10-10 15:01:27",
+    "2016.00",
+    "1.00"
+   ],
+   [
+    "2016-10-07 10:18:50",
+    "2016.00",
+    "1.00"
+   ],
+   [
+    "2016-10-08 22:41:36",
+    "2016.00",
+    "1.00"
+   ],
+   [
+    "2016-10-06 16:43:26",
+    "2016.00",
+    "1.00"
+   ],
+   [
+    "2016-10-08 12:13:38",
+    "2016.00",
+    "1.00"
+   ],
+   [
+    "2016-10-08 20:17:50",
+    "2016.00",
+    "1.00"
+   ],
+   [
+    "2016-10-04 13:11:29",
+    "2016.00",
+    "1.00"
+   ],
+   [
+    "2016-10-05 21:03:33",
+    "2016.00",
+    "1.00"
+   ]
+  ],
+  "produit_nb_lignes": 5000,
+  "produit_nombres": {
+   "2016.00": 329,
+   "1.00": 4973,
+   "2017.00": 4671,
+   "2.00": 27
+  },
+  "produit_erreur": "",
+  "categorie": "a_lire",
+  "preuve": "2 valeur(s) commune(s) sur 6 attendues : le chiffre differe, la cause demande une lecture"
+ },
+ {
+  "modele": "Mistral-Small-3.2-24B",
+  "question": "Quel jour de la semaine recoit le plus de commandes ?",
+  "famille": "series_temporelles",
+  "piege": "",
+  "impossible": false,
+  "verdict": "faux",
+  "raison": "identique",
+  "sql_reference": "SELECT dayname(TRY_CAST(order_purchase_timestamp AS TIMESTAMP)) AS jour_semaine,\n       COUNT(*) AS commandes\nFROM entrepot.orders GROUP BY 1 ORDER BY commandes DESC;",
+  "reference_lignes": [
+   [
+    "Monday",
+    "16196.00"
+   ],
+   [
+    "Tuesday",
+    "15963.00"
+   ],
+   [
+    "Wednesday",
+    "15552.00"
+   ],
+   [
+    "Thursday",
+    "14761.00"
+   ],
+   [
+    "Friday",
+    "14122.00"
+   ],
+   [
+    "Sunday",
+    "11960.00"
+   ],
+   [
+    "Saturday",
+    "10887.00"
+   ]
+  ],
+  "reference_nb_lignes": 7,
+  "reference_nombres": {
+   "16196.00": 1,
+   "15963.00": 1,
+   "15552.00": 1,
+   "14761.00": 1,
+   "14122.00": 1,
+   "11960.00": 1,
+   "10887.00": 1
+  },
+  "sql_produit": "SELECT\n  EXTRACT(DOW FROM TRY_CAST(order_purchase_timestamp AS TIMESTAMP)) AS jour_semaine,\n  COUNT(*) AS nombre_commandes\nFROM\n  entrepot.\"orders\"\nGROUP BY\n  jour_semaine\nORDER BY\n  nombre_commandes DESC\nLIMIT 1000",
+  "produit_colonnes": [
+   "jour_semaine",
+   "nombre_commandes"
+  ],
+  "produit_lignes": [
+   [
+    "1.00",
+    "16196.00"
+   ],
+   [
+    "2.00",
+    "15963.00"
+   ],
+   [
+    "3.00",
+    "15552.00"
+   ],
+   [
+    "4.00",
+    "14761.00"
+   ],
+   [
+    "5.00",
+    "14122.00"
+   ],
+   [
+    "0.00",
+    "11960.00"
+   ],
+   [
+    "6.00",
+    "10887.00"
+   ]
+  ],
+  "produit_nb_lignes": 7,
+  "produit_nombres": {
+   "1.00": 1,
+   "16196.00": 1,
+   "2.00": 1,
+   "15963.00": 1,
+   "3.00": 1,
+   "15552.00": 1,
+   "4.00": 1,
+   "14761.00": 1,
+   "5.00": 1,
+   "14122.00": 1,
+   "0.00": 1,
+   "11960.00": 1,
+   "6.00": 1,
+   "10887.00": 1
+  },
+  "produit_erreur": "",
+  "categorie": "libelle",
+  "preuve": "les 7 valeurs de la reference sont rendues a l'identique ; libelles differents, par exemple « Friday »"
+ },
+ {
+  "modele": "Mistral-Small-3.2-24B",
+  "question": "Quelles categories de produits ont le panier moyen le plus eleve, avec leur nom en anglais ?",
+  "famille": "jointures",
+  "piege": "",
+  "impossible": false,
+  "verdict": "faux",
+  "raison": "71 ligne(s) contre 10",
+  "sql_reference": "SELECT COALESCE(t.product_category_name_english, p.product_category_name) AS categorie,\n       ROUND(AVG(i.price), 2) AS prix_moyen\nFROM entrepot.order_items AS i\nJOIN entrepot.products AS p ON p.product_id = i.product_id\nLEFT JOIN entrepot.product_category_name_translation AS t\n  ON t.product_category_name = p.product_category_name\nWHERE p.product_category_name IS NOT NULL\nGROUP BY 1 ORDER BY prix_moyen DESC;",
+  "reference_lignes": [
+   [
+    "computers",
+    "1098.34"
+   ],
+   [
+    "small_appliances_home_oven_and_coffee",
+    "624.29"
+   ],
+   [
+    "home_appliances_2",
+    "476.12"
+   ],
+   [
+    "agro_industry_and_commerce",
+    "342.12"
+   ],
+   [
+    "musical_instruments",
+    "281.62"
+   ],
+   [
+    "small_appliances",
+    "280.78"
+   ],
+   [
+    "portateis_cozinha_e_preparadores_de_alimentos",
+    "264.57"
+   ],
+   [
+    "fixed_telephony",
+    "225.69"
+   ],
+   [
+    "construction_tools_safety",
+    "208.99"
+   ],
+   [
+    "watches_gifts",
+    "201.14"
+   ],
+   [
+    "air_conditioning",
+    "185.27"
+   ],
+   [
+    "furniture_bedroom",
+    "183.75"
+   ]
+  ],
+  "reference_nb_lignes": 73,
+  "reference_nombres": {
+   "1098.34": 1,
+   "624.29": 1,
+   "476.12": 1,
+   "342.12": 1,
+   "281.62": 1,
+   "280.78": 1,
+   "264.57": 1,
+   "225.69": 1,
+   "208.99": 1,
+   "201.14": 1,
+   "185.27": 1,
+   "183.75": 1,
+   "171.77": 1,
+   "167.36": 1,
+   "164.87": 1,
+   "162.01": 1,
+   "158.80": 1,
+   "155.73": 1,
+   "154.41": 1,
+   "148.02": 1,
+   "146.79": 1,
+   "141.64": 1,
+   "139.96": 1,
+   "139.25": 1,
+   "138.49": 1,
+   "137.56": 1,
+   "137.01": 1,
+   "135.13": 1,
+   "134.96": 1,
+   "134.34": 1,
+   "130.16": 1,
+   "128.60": 1,
+   "117.55": 1,
+   "116.74": 1,
+   "116.51": 1,
+   "115.80": 1,
+   "114.95": 1,
+   "114.34": 1,
+   "111.63": 1,
+   "110.07": 1,
+   "108.09": 1,
+   "108.05": 1,
+   "104.31": 1,
+   "103.98": 1,
+   "96.30": 1,
+   "93.74": 1,
+   "93.30": 1,
+   "91.75": 1,
+   "91.25": 1,
+   "90.79": 1,
+   "90.70": 1,
+   "89.93": 1,
+   "87.56": 1,
+   "84.73": 1,
+   "81.80": 1,
+   "77.33": 1,
+   "75.58": 1,
+   "75.25": 1,
+   "72.84": 1,
+   "71.52": 1,
+   "71.23": 1,
+   "71.21": 1,
+   "70.65": 1,
+   "59.18": 1,
+   "58.41": 1,
+   "57.91": 1,
+   "57.63": 1,
+   "57.52": 1,
+   "54.60": 1,
+   "52.14": 1,
+   "40.19": 1,
+   "33.64": 1,
+   "25.34": 1
+  },
+  "sql_produit": "WITH panier_moyen_par_categorie AS (\n  SELECT\n    p.product_category_name,\n    pct.product_category_name_english,\n    SUM(oi.price) / COUNT(DISTINCT o.order_id) AS panier_moyen\n  FROM\n    entrepot.\"order_items\" oi\n  JOIN\n    entrepot.\"products\" p ON oi.product_id = p.product_id\n  JOIN\n    entrepot.\"product_category_name_translation\" pct ON p.product_category_name = pct.product_category_name\n  JOIN\n    entrepot.\"orders\" o ON oi.order_id = o.order_id\n  WHERE\n    o.order_status = 'delivered'\n  GROUP BY\n    p.product_category_name, pct.product_category_name_english\n)\n\nSELECT\n  product_category_name AS \"Catégorie de produit\",\n  product_category_name_english AS \"Nom en anglais\",\n  panier_moyen AS \"Panier moyen\"\nFROM\n  panier_moyen_par_categorie\nORDER BY\n  panier_moyen DESC\nLIMIT 1000;",
+  "produit_colonnes": [
+   "Catégorie de produit",
+   "Nom en anglais",
+   "Panier moyen"
+  ],
+  "produit_lignes": [
+   [
+    "pcs",
+    "computers",
+    "1235.50"
+   ],
+   [
+    "portateis_casa_forno_e_cafe",
+    "small_appliances_home_oven_and_coffee",
+    "647.08"
+   ],
+   [
+    "eletrodomesticos_2",
+    "home_appliances_2",
+    "475.57"
+   ],
+   [
+    "agro_industria_e_comercio",
+    "agro_industry_and_commerce",
+    "398.68"
+   ],
+   [
+    "instrumentos_musicais",
+    "musical_instruments",
+    "301.66"
+   ],
+   [
+    "eletroportateis",
+    "small_appliances",
+    "300.09"
+   ],
+   [
+    "telefonia_fixa",
+    "fixed_telephony",
+    "260.92"
+   ],
+   [
+    "construcao_ferramentas_seguranca",
+    "construction_tools_safety",
+    "243.86"
+   ],
+   [
+    "climatizacao",
+    "air_conditioning",
+    "216.76"
+   ],
+   [
+    "moveis_escritorio",
+    "office_furniture",
+    "213.84"
+   ],
+   [
+    "relogios_presentes",
+    "watches_gifts",
+    "212.23"
+   ],
+   [
+    "moveis_quarto",
+    "furniture_bedroom",
+    "211.69"
+   ]
+  ],
+  "produit_nb_lignes": 71,
+  "produit_nombres": {
+   "1235.50": 1,
+   "647.08": 1,
+   "475.57": 1,
+   "398.68": 1,
+   "301.66": 1,
+   "300.09": 1,
+   "260.92": 1,
+   "243.86": 1,
+   "216.76": 1,
+   "213.84": 1,
+   "212.23": 1,
+   "211.69": 1,
+   "193.08": 1,
+   "188.93": 1,
+   "171.45": 1,
+   "168.55": 1,
+   "165.94": 1,
+   "165.11": 1,
+   "163.96": 1,
+   "162.68": 1,
+   "158.80": 1,
+   "158.08": 1,
+   "154.46": 1,
+   "151.96": 1,
+   "147.98": 1,
+   "145.39": 1,
+   "145.32": 1,
+   "142.61": 1,
+   "142.55": 1,
+   "141.64": 1,
+   "136.45": 1,
+   "136.12": 1,
+   "136.10": 1,
+   "132.09": 1,
+   "126.81": 1,
+   "126.42": 1,
+   "125.41": 1,
+   "123.89": 1,
+   "121.32": 1,
+   "117.51": 1,
+   "116.85": 1,
+   "112.88": 1,
+   "110.38": 1,
+   "107.20": 1,
+   "105.94": 1,
+   "105.53": 1,
+   "101.44": 1,
+   "98.85": 1,
+   "98.61": 1,
+   "97.88": 1,
+   "95.30": 1,
+   "91.33": 1,
+   "88.38": 1,
+   "82.05": 1,
+   "81.12": 1,
+   "80.56": 1,
+   "79.54": 1,
+   "78.87": 1,
+   "75.70": 1,
+   "75.02": 1,
+   "74.28": 1,
+   "73.19": 1,
+   "73.06": 1,
+   "69.90": 1,
+   "67.61": 1,
+   "65.15": 1,
+   "61.60": 1,
+   "60.83": 1,
+   "60.03": 1,
+   "38.28": 1,
+   "31.68": 1
+  },
+  "produit_erreur": "",
+  "categorie": "a_lire",
+  "preuve": "2 valeur(s) commune(s) sur 73 attendues : le chiffre differe, la cause demande une lecture"
+ },
+ {
+  "modele": "Mistral-Small-3.2-24B",
+  "question": "Les vendeurs de quels etats livrent le plus vite ?",
+  "famille": "jointures",
+  "piege": "",
+  "impossible": false,
+  "verdict": "faux",
+  "raison": "23 ligne(s) contre 13",
+  "sql_reference": "SELECT s.seller_state AS etat_vendeur,\n       ROUND(AVG(DATE_DIFF('day',\n              TRY_CAST(o.order_purchase_timestamp AS TIMESTAMP),\n              TRY_CAST(o.order_delivered_customer_date AS TIMESTAMP))), 2) AS delai_moyen_jours\nFROM entrepot.order_items AS i\nJOIN entrepot.orders AS o ON o.order_id = i.order_id\nJOIN entrepot.sellers AS s ON s.seller_id = i.seller_id\nWHERE o.order_delivered_customer_date IS NOT NULL\nGROUP BY s.seller_state\nORDER BY delai_moyen_jours ASC;",
+  "reference_lignes": [
+   [
+    "RS",
+    "11.49"
+   ],
+   [
+    "RJ",
+    "11.94"
+   ],
+   [
+    "SP",
+    "12.21"
+   ],
+   [
+    "MS",
+    "12.30"
+   ],
+   [
+    "PB",
+    "12.38"
+   ],
+   [
+    "DF",
+    "12.44"
+   ],
+   [
+    "SE",
+    "12.60"
+   ],
+   [
+    "MG",
+    "12.75"
+   ],
+   [
+    "GO",
+    "12.77"
+   ],
+   [
+    "PE",
+    "12.85"
+   ],
+   [
+    "ES",
+    "12.86"
+   ],
+   [
+    "RN",
+    "12.93"
+   ]
+  ],
+  "reference_nb_lignes": 22,
+  "reference_nombres": {
+   "11.49": 1,
+   "11.94": 1,
+   "12.21": 1,
+   "12.30": 1,
+   "12.38": 1,
+   "12.44": 1,
+   "12.60": 1,
+   "12.75": 1,
+   "12.77": 1,
+   "12.85": 1,
+   "12.86": 1,
+   "12.93": 1,
+   "13.25": 1,
+   "13.32": 1,
+   "13.52": 1,
+   "13.73": 1,
+   "13.77": 1,
+   "14.69": 1,
+   "17.43": 1,
+   "17.65": 1,
+   "17.90": 1,
+   "48.00": 1
+  },
+  "sql_produit": "WITH livraisons AS (\n  SELECT\n    s.seller_state,\n    o.order_approved_at,\n    o.order_delivered_customer_date,\n    (TRY_CAST(o.order_delivered_customer_date AS TIMESTAMP) - TRY_CAST(o.order_approved_at AS TIMESTAMP)) AS temps_livraison\n  FROM\n    entrepot.orders o\n  JOIN\n    entrepot.sellers s ON o.order_id = o.order_id\n  WHERE\n    o.order_status = 'delivered'\n    AND o.order_approved_at IS NOT NULL\n    AND o.order_delivered_customer_date IS NOT NULL\n    AND TRY_CAST(o.order_delivered_customer_date AS TIMESTAMP) > TRY_CAST(o.order_approved_at AS TIMESTAMP)\n)\n\nSELECT\n  seller_state AS etat_vendeur,\n  AVG(temps_livraison) AS temps_moyen_livraison_jour,\n  COUNT(*) AS nombre_livraisons\nFROM\n  livraisons\nGROUP BY\n  seller_state\nORDER BY\n  temps_moyen_livraison_jour ASC\nLIMIT 1000",
+  "produit_colonnes": [
+   "etat_vendeur",
+   "temps_moyen_livraison_jour",
+   "nombre_livraisons"
+  ],
+  "produit_lignes": [
+   [
+    "SP",
+    "10 days, 22:36:45.047861",
+    "178234355.00"
+   ],
+   [
+    "PA",
+    "12 days, 3:19:33.279096",
+    "96395.00"
+   ],
+   [
+    "AC",
+    "12 days, 3:19:33.279096",
+    "96395.00"
+   ],
+   [
+    "MA",
+    "12 days, 3:19:33.279096",
+    "96395.00"
+   ],
+   [
+    "PI",
+    "12 days, 3:19:33.279096",
+    "96395.00"
+   ],
+   [
+    "AM",
+    "12 days, 3:19:33.279096",
+    "96395.00"
+   ],
+   [
+    "SE",
+    "12 days, 3:19:33.348846",
+    "192790.00"
+   ],
+   [
+    "RO",
+    "12 days, 3:19:33.348846",
+    "192790.00"
+   ],
+   [
+    "MT",
+    "12 days, 3:19:33.488346",
+    "385580.00"
+   ],
+   [
+    "RN",
+    "12 days, 3:19:33.558096",
+    "481975.00"
+   ],
+   [
+    "MS",
+    "12 days, 3:19:33.558096",
+    "481975.00"
+   ],
+   [
+    "PB",
+    "12 days, 3:19:33.627846",
+    "578370.00"
+   ]
+  ],
+  "produit_nb_lignes": 23,
+  "produit_nombres": {
+   "178234355.00": 1,
+   "96395.00": 5,
+   "192790.00": 2,
+   "385580.00": 1,
+   "481975.00": 2,
+   "578370.00": 1,
+   "867555.00": 1,
+   "1253135.00": 1,
+   "1831505.00": 1,
+   "2217085.00": 1,
+   "2891850.00": 1,
+   "3855800.00": 1,
+   "12434955.00": 1,
+   "16483545.00": 1,
+   "18315050.00": 1,
+   "23520380.00": 1,
+   "33641855.00": 1
+  },
+  "produit_erreur": "",
+  "categorie": "a_lire",
+  "preuve": "0 valeur(s) commune(s) sur 22 attendues : le chiffre differe, la cause demande une lecture"
+ },
+ {
+  "modele": "Mistral-Small-3.2-24B",
+  "question": "Quelle est la note moyenne par categorie de produit, en anglais, pour les categories evaluees au moins cinq cents fois ?",
+  "famille": "jointures",
+  "piege": "",
+  "impossible": false,
+  "verdict": "refuse_garde_fou",
+  "raison": "Cette requete n'est pas du SQL valide.",
+  "sql_reference": "SELECT COALESCE(t.product_category_name_english, p.product_category_name) AS categorie,\n       ROUND(AVG(r.review_score), 3) AS note_moyenne\nFROM entrepot.order_reviews AS r\nJOIN entrepot.order_items AS i ON i.order_id = r.order_id\nJOIN entrepot.products AS p ON p.product_id = i.product_id\nLEFT JOIN entrepot.product_category_name_translation AS t\n  ON t.product_category_name = p.product_category_name\nWHERE p.product_category_name IS NOT NULL\nGROUP BY 1 HAVING COUNT(*) >= 500\nORDER BY note_moyenne DESC;",
+  "reference_lignes": [
+   [
+    "books_general_interest",
+    "4.45"
+   ],
+   [
+    "luggage_accessories",
+    "4.32"
+   ],
+   [
+    "stationery",
+    "4.19"
+   ],
+   [
+    "pet_shop",
+    "4.18"
+   ],
+   [
+    "home_appliances",
+    "4.17"
+   ],
+   [
+    "perfumery",
+    "4.16"
+   ],
+   [
+    "toys",
+    "4.16"
+   ],
+   [
+    "musical_instruments",
+    "4.15"
+   ],
+   [
+    "small_appliances",
+    "4.15"
+   ],
+   [
+    "cool_stuff",
+    "4.15"
+   ],
+   [
+    "fashion_bags_accessories",
+    "4.14"
+   ],
+   [
+    "health_beauty",
+    "4.14"
+   ]
+  ],
+  "reference_nb_lignes": 28,
+  "reference_nombres": {
+   "4.45": 1,
+   "4.32": 1,
+   "4.19": 1,
+   "4.18": 1,
+   "4.17": 1,
+   "4.16": 2,
+   "4.15": 3,
+   "4.14": 2,
+   "4.11": 1,
+   "4.07": 1,
+   "4.05": 2,
+   "4.04": 2,
+   "4.02": 2,
+   "4.01": 1,
+   "3.95": 1,
+   "3.94": 1,
+   "3.93": 1,
+   "3.90": 3,
+   "3.49": 1
+  },
+  "sql_produit": "WITH categories_evaluees AS (\n  SELECT\n    p.product_category_name_english,\n    COUNT(DISTINCT or.order_id) AS nombre_evaluations\n  FROM\n    entrepot.products p\n  JOIN\n    entrepot.order_items oi ON p.product_id = oi.product_id\n  JOIN\n    entrepot.orders or ON oi.order_id = or.order_id\n  JOIN\n    entrepot.order_reviews orr ON or.order_id = orr.order_id\n  GROUP BY\n    p.product_category_name_english\n  HAVING\n    COUNT(DISTINCT or.order_id) >= 500\n)\n\nSELECT\n  ce.product_category_name_english AS \"Categorie de produit (anglais)\",\n  AVG(orr.review_score) AS \"Note moyenne\"\nFROM\n  categories_evaluees ce\nJOIN\n  entrepot.products p ON ce.product_category_name_english = p.product_category_name_english\nJOIN\n  entrepot.order_items oi ON p.product_id = oi.product_id\nJOIN\n  entrepot.orders or ON oi.order_id = or.order_id\nJOIN\n  entrepot.order_reviews orr ON or.order_id = orr.order_id\nGROUP BY\n  ce.product_category_name_english\nORDER BY\n  \"Note moyenne\" DESC\nLIMIT 1000;",
+  "produit_colonnes": [],
+  "produit_lignes": [],
+  "produit_nb_lignes": 0,
+  "produit_nombres": {},
+  "produit_erreur": "garde-fou : Cette requete n'est pas du SQL valide.",
+  "categorie": "outil",
+  "preuve": "garde-fou : garde-fou : Cette requete n'est pas du SQL valide."
+ },
+ {
+  "modele": "Mistral-Small-3.2-24B",
+  "question": "Y a-t-il des doublons dans la table de geolocalisation ?",
+  "famille": "qualite_donnees",
+  "piege": "La table contient un million de lignes pour bien moins de codes postaux.",
+  "impossible": false,
+  "verdict": "faux",
+  "raison": "1 ligne(s) differente(s)",
+  "sql_reference": "SELECT COUNT(*) AS lignes_totales,\n       COUNT(DISTINCT geolocation_zip_code_prefix) AS codes_postaux_distincts\nFROM entrepot.geolocation;",
+  "reference_lignes": [
+   [
+    "1000163.00",
+    "19015.00"
+   ]
+  ],
+  "reference_nb_lignes": 1,
+  "reference_nombres": {
+   "1000163.00": 1,
+   "19015.00": 1
+  },
+  "sql_produit": "SELECT COUNT(*) AS nombre_de_lignes, COUNT(DISTINCT geolocation_lat, geolocation_lng, geolocation_city, geolocation_state, geolocation_zip_code_prefix) AS nombre_de_lignes_uniques FROM entrepot.\"geolocation\"",
+  "produit_colonnes": [
+   "nombre_de_lignes",
+   "nombre_de_lignes_uniques"
+  ],
+  "produit_lignes": [
+   [
+    "1000163.00",
+    "738332.00"
+   ]
+  ],
+  "produit_nb_lignes": 1,
+  "produit_nombres": {
+   "1000163.00": 1,
+   "738332.00": 1
+  },
+  "produit_erreur": "",
+  "categorie": "a_lire",
+  "preuve": "1 valeur(s) commune(s) sur 2 attendues : le chiffre differe, la cause demande une lecture"
+ },
+ {
+  "modele": "Mistral-Small-3.2-24B",
+  "question": "Combien d'avis contiennent un message ecrit par le client ?",
+  "famille": "texte_libre",
+  "piege": "",
+  "impossible": false,
+  "verdict": "faux",
+  "raison": "1 ligne(s) differente(s)",
+  "sql_reference": "SELECT COUNT(*) AS avis_avec_message\nFROM entrepot.order_reviews\nWHERE review_comment_message IS NOT NULL AND TRIM(review_comment_message) <> '';",
+  "reference_lignes": [
+   [
+    "40968.00"
+   ]
+  ],
+  "reference_nb_lignes": 1,
+  "reference_nombres": {
+   "40968.00": 1
+  },
+  "sql_produit": "SELECT COUNT(*) AS nombre_d_avis_avec_message\nFROM entrepot.\"order_reviews\"\nWHERE review_comment_message IS NOT NULL",
+  "produit_colonnes": [
+   "nombre_d_avis_avec_message"
+  ],
+  "produit_lignes": [
+   [
+    "40977.00"
+   ]
+  ],
+  "produit_nb_lignes": 1,
+  "produit_nombres": {
+   "40977.00": 1
+  },
+  "produit_erreur": "",
+  "categorie": "libelle",
+  "preuve": "memes 1 valeurs a 0.1% pres (arrondi ou type different)"
+ },
+ {
+  "modele": "Mistral-Small-3.2-24B",
+  "question": "Quelle est la longueur moyenne d'un commentaire client ?",
+  "famille": "texte_libre",
+  "piege": "",
+  "impossible": false,
+  "verdict": "faux",
+  "raison": "1 ligne(s) differente(s)",
+  "sql_reference": "SELECT ROUND(AVG(LENGTH(review_comment_message)), 1) AS longueur_moyenne\nFROM entrepot.order_reviews\nWHERE review_comment_message IS NOT NULL AND TRIM(review_comment_message) <> '';",
+  "reference_lignes": [
+   [
+    "68.70"
+   ]
+  ],
+  "reference_nb_lignes": 1,
+  "reference_nombres": {
+   "68.70": 1
+  },
+  "sql_produit": "SELECT AVG(LENGTH(review_comment_message)) AS longueur_moyenne_commentaire FROM entrepot.\"order_reviews\" WHERE review_comment_message IS NOT NULL AND review_comment_message != ''",
+  "produit_colonnes": [
+   "longueur_moyenne_commentaire"
+  ],
+  "produit_lignes": [
+   [
+    "68.64"
+   ]
+  ],
+  "produit_nb_lignes": 1,
+  "produit_nombres": {
+   "68.64": 1
+  },
+  "produit_erreur": "",
+  "categorie": "libelle",
+  "preuve": "memes 1 valeurs a 0.1% pres (arrondi ou type different)"
+ },
+ {
+  "modele": "Mistral-Small-3.2-24B",
+  "question": "Combien de commentaires mentionnent un probleme de livraison ?",
+  "famille": "texte_libre",
+  "piege": "Les avis sont en portugais bresilien : chercher des mots francais ne donnerait rien.",
+  "impossible": false,
+  "verdict": "refus_a_tort",
+  "raison": "Pour répondre à cette question, il faudrait analyser le contenu des commentaires dans la table `order_reviews`",
+  "sql_reference": "SELECT COUNT(*) AS commentaires_livraison\nFROM entrepot.order_reviews\nWHERE review_comment_message ILIKE '%entrega%' OR review_comment_message ILIKE '%atraso%';",
+  "reference_lignes": [
+   [
+    "7349.00"
+   ]
+  ],
+  "reference_nb_lignes": 1,
+  "reference_nombres": {
+   "7349.00": 1
+  },
+  "sql_produit": "",
+  "produit_colonnes": [],
+  "produit_lignes": [],
+  "produit_nb_lignes": 0,
+  "produit_nombres": {},
+  "produit_erreur": "",
+  "categorie": "refus",
+  "preuve": "aucun SQL produit sur une question repondable"
+ },
+ {
+  "modele": "Mistral-Small-3.2-24B",
+  "question": "Les commentaires des clients mecontents sont-ils plus longs que ceux des clients satisfaits ?",
+  "famille": "texte_libre",
+  "piege": "",
+  "impossible": false,
+  "verdict": "faux",
+  "raison": "3 ligne(s) contre 5",
+  "sql_reference": "SELECT review_score AS note, ROUND(AVG(LENGTH(review_comment_message)), 1) AS longueur_moyenne\nFROM entrepot.order_reviews\nWHERE review_comment_message IS NOT NULL AND TRIM(review_comment_message) <> ''\nGROUP BY review_score ORDER BY review_score;",
+  "reference_lignes": [
+   [
+    "1.00",
+    "99.90"
+   ],
+   [
+    "2.00",
+    "96.80"
+   ],
+   [
+    "3.00",
+    "83.30"
+   ],
+   [
+    "4.00",
+    "61.80"
+   ],
+   [
+    "5.00",
+    "51.90"
+   ]
+  ],
+  "reference_nb_lignes": 5,
+  "reference_nombres": {
+   "1.00": 1,
+   "99.90": 1,
+   "2.00": 1,
+   "96.80": 1,
+   "3.00": 1,
+   "83.30": 1,
+   "4.00": 1,
+   "61.80": 1,
+   "5.00": 1,
+   "51.90": 1
+  },
+  "sql_produit": "SELECT\n  CASE\n    WHEN review_score <= 2 THEN 'Insatisfait'\n    WHEN review_score >= 4 THEN 'Satisfait'\n    ELSE 'Neutre'\n  END AS satisfaction,\n  AVG(LENGTH(review_comment_message)) AS longueur_moyenne_commentaire\nFROM entrepot.\"order_reviews\"\nWHERE review_comment_message IS NOT NULL\nGROUP BY satisfaction",
+  "produit_colonnes": [
+   "satisfaction",
+   "longueur_moyenne_commentaire"
+  ],
+  "produit_lignes": [
+   [
+    "Neutre",
+    "83.33"
+   ],
+   [
+    "Satisfait",
+    "54.07"
+   ],
+   [
+    "Insatisfait",
+    "99.33"
+   ]
+  ],
+  "produit_nb_lignes": 3,
+  "produit_nombres": {
+   "83.33": 1,
+   "54.07": 1,
+   "99.33": 1
+  },
+  "produit_erreur": "",
+  "categorie": "a_lire",
+  "preuve": "0 valeur(s) commune(s) sur 10 attendues : le chiffre differe, la cause demande une lecture"
+ },
+ {
+  "modele": "Mistral-Small-3.2-24B",
+  "question": "Quelle part des avis est a cinq etoiles ?",
+  "famille": "ratios_taux",
+  "piege": "",
+  "impossible": false,
+  "verdict": "faux",
+  "raison": "1 ligne(s) differente(s)",
+  "sql_reference": "SELECT ROUND(100.0 * SUM(CASE WHEN review_score = 5 THEN 1 ELSE 0 END) / COUNT(*), 2) AS part_cinq_etoiles_pct\nFROM entrepot.order_reviews;",
+  "reference_lignes": [
+   [
+    "57.78"
+   ]
+  ],
+  "reference_nb_lignes": 1,
+  "reference_nombres": {
+   "57.78": 1
+  },
+  "sql_produit": "SELECT\n  COUNT(*) FILTER (WHERE review_score = 5) AS avis_5_etoiles,\n  COUNT(*) AS avis_total,\n  COUNT(*) FILTER (WHERE review_score = 5) / COUNT(*) AS part_avis_5_etoiles\nFROM entrepot.\"order_reviews\"\nLIMIT 1000",
+  "produit_colonnes": [
+   "avis_5_etoiles",
+   "avis_total",
+   "part_avis_5_etoiles"
+  ],
+  "produit_lignes": [
+   [
+    "57328.00",
+    "99224.00",
+    "0.58"
+   ]
+  ],
+  "produit_nb_lignes": 1,
+  "produit_nombres": {
+   "57328.00": 1,
+   "99224.00": 1,
+   "0.58": 1
+  },
+  "produit_erreur": "",
+  "categorie": "a_lire",
+  "preuve": "0 valeur(s) commune(s) sur 1 attendues : le chiffre differe, la cause demande une lecture"
+ },
+ {
+  "modele": "Mistral-Small-3.2-24B",
+  "question": "Le delai de livraison depend-il de l'etat du client ?",
+  "famille": "geographie",
+  "piege": "",
+  "impossible": false,
+  "verdict": "erreur_moteur",
+  "raison": "Catalog Error: Scalar Function with name julianday does not exist!",
+  "sql_reference": "SELECT c.customer_state AS etat,\n       ROUND(AVG(DATE_DIFF('day',\n              TRY_CAST(o.order_purchase_timestamp AS TIMESTAMP),\n              TRY_CAST(o.order_delivered_customer_date AS TIMESTAMP))), 2) AS delai_moyen_jours\nFROM entrepot.orders AS o\nJOIN entrepot.customers AS c ON c.customer_id = o.customer_id\nWHERE o.order_delivered_customer_date IS NOT NULL\nGROUP BY c.customer_state ORDER BY delai_moyen_jours DESC;",
+  "reference_lignes": [
+   [
+    "RR",
+    "29.34"
+   ],
+   [
+    "AP",
+    "27.18"
+   ],
+   [
+    "AM",
+    "26.36"
+   ],
+   [
+    "AL",
+    "24.50"
+   ],
+   [
+    "PA",
+    "23.73"
+   ],
+   [
+    "MA",
+    "21.51"
+   ],
+   [
+    "SE",
+    "21.46"
+   ],
+   [
+    "CE",
+    "21.20"
+   ],
+   [
+    "AC",
+    "21.00"
+   ],
+   [
+    "PB",
+    "20.39"
+   ],
+   [
+    "PI",
+    "19.39"
+   ],
+   [
+    "BA",
+    "19.28"
+   ]
+  ],
+  "reference_nb_lignes": 27,
+  "reference_nombres": {
+   "29.34": 1,
+   "27.18": 1,
+   "26.36": 1,
+   "24.50": 1,
+   "23.73": 1,
+   "21.51": 1,
+   "21.46": 1,
+   "21.20": 1,
+   "21.00": 1,
+   "20.39": 1,
+   "19.39": 1,
+   "19.28": 2,
+   "19.22": 1,
+   "18.40": 1,
+   "18.00": 1,
+   "17.60": 1,
+   "15.72": 1,
+   "15.54": 2,
+   "15.25": 1,
+   "15.24": 1,
+   "14.91": 1,
+   "12.90": 1,
+   "11.95": 1,
+   "11.94": 1,
+   "8.70": 1
+  },
+  "sql_produit": "WITH commandes_livrees AS (SELECT TRY_CAST(o.order_purchase_timestamp AS TIMESTAMP) AS date_commande, TRY_CAST(o.order_delivered_customer_date AS TIMESTAMP) AS date_livraison, c.customer_state FROM entrepot.\"orders\" o JOIN entrepot.\"customers\" c ON o.customer_id = c.customer_id WHERE o.order_status = 'delivered' AND NOT o.order_delivered_customer_date IS NULL AND NOT o.order_purchase_timestamp IS NULL) SELECT customer_state AS \"Etat du client\", AVG(JULIANDAY(date_livraison) - JULIANDAY(date_commande)) AS \"Delai moyen de livraison (jours)\", COUNT(*) AS \"Nombre de commandes\" FROM commandes_livrees GROUP BY customer_state ORDER BY \"Delai moyen de livraison (jours)\" DESC LIMIT 1000",
+  "produit_colonnes": [],
+  "produit_lignes": [],
+  "produit_nb_lignes": 0,
+  "produit_nombres": {},
+  "produit_erreur": "moteur : Catalog Error: Scalar Function with name julianday does not exist!",
+  "categorie": "outil",
+  "preuve": "moteur : moteur : Catalog Error: Scalar Function with name julianday does not exist!"
+ },
+ {
+  "modele": "Mistral-Small-3.2-24B",
+  "question": "Quelle est la repartition des clients entre Sao Paulo et le reste du pays ?",
+  "famille": "geographie",
+  "piege": "",
+  "impossible": false,
+  "verdict": "faux",
+  "raison": "1 ligne(s) contre 2",
+  "sql_reference": "SELECT CASE WHEN customer_state = 'SP' THEN 'Sao Paulo' ELSE 'autres etats' END AS zone,\n       COUNT(*) AS clients\nFROM entrepot.customers GROUP BY 1 ORDER BY clients DESC;",
+  "reference_lignes": [
+   [
+    "autres etats",
+    "57695.00"
+   ],
+   [
+    "Sao Paulo",
+    "41746.00"
+   ]
+  ],
+  "reference_nb_lignes": 2,
+  "reference_nombres": {
+   "57695.00": 1,
+   "41746.00": 1
+  },
+  "sql_produit": "SELECT\n  SUM(CASE WHEN customer_city = 'sao paulo' THEN 1 ELSE 0 END) AS clients_sao_paulo,\n  SUM(CASE WHEN customer_city != 'sao paulo' THEN 1 ELSE 0 END) AS clients_autres_villes\nFROM entrepot.\"customers\"",
+  "produit_colonnes": [
+   "clients_sao_paulo",
+   "clients_autres_villes"
+  ],
+  "produit_lignes": [
+   [
+    "15540.00",
+    "83901.00"
+   ]
+  ],
+  "produit_nb_lignes": 1,
+  "produit_nombres": {
+   "15540.00": 1,
+   "83901.00": 1
+  },
+  "produit_erreur": "",
+  "categorie": "a_lire",
+  "preuve": "0 valeur(s) commune(s) sur 2 attendues : le chiffre differe, la cause demande une lecture"
+ },
+ {
+  "modele": "Mistral-Small-3.2-24B",
+  "question": "Le chiffre d'affaires du second semestre 2017 est-il superieur a celui du premier ?",
+  "famille": "comparaisons_periodes",
+  "piege": "",
+  "impossible": false,
+  "verdict": "faux",
+  "raison": "1 ligne(s) contre 2",
+  "sql_reference": "SELECT CASE WHEN TRY_CAST(o.order_purchase_timestamp AS TIMESTAMP) < TIMESTAMP '2017-07-01'\n            THEN 'S1 2017' ELSE 'S2 2017' END AS semestre,\n       ROUND(SUM(i.price), 2) AS chiffre_affaires\nFROM entrepot.orders AS o\nJOIN entrepot.order_items AS i ON i.order_id = o.order_id\nWHERE TRY_CAST(o.order_purchase_timestamp AS TIMESTAMP) >= TIMESTAMP '2017-01-01'\n  AND TRY_CAST(o.order_purchase_timestamp AS TIMESTAMP) < TIMESTAMP '2018-01-01'\nGROUP BY 1 ORDER BY semestre;",
+  "reference_lignes": [
+   [
+    "S1 2017",
+    "2040997.16"
+   ],
+   [
+    "S2 2017",
+    "4114809.82"
+   ]
+  ],
+  "reference_nb_lignes": 2,
+  "reference_nombres": {
+   "2040997.16": 1,
+   "4114809.82": 1
+  },
+  "sql_produit": "WITH semestre_chiffre_affaires AS (\n  SELECT\n    SUM(payment_value) AS chiffre_affaires,\n    CASE\n      WHEN TRY_CAST(order_approved_at AS TIMESTAMP) BETWEEN TIMESTAMP '2017-01-01' AND TIMESTAMP '2017-06-30' THEN 'Premier semestre'\n      WHEN TRY_CAST(order_approved_at AS TIMESTAMP) BETWEEN TIMESTAMP '2017-07-01' AND TIMESTAMP '2017-12-31' THEN 'Second semestre'\n    END AS semestre\n  FROM\n    entrepot.\"order_payments\"\n  JOIN\n    entrepot.\"orders\" ON entrepot.\"order_payments\".order_id = entrepot.\"orders\".order_id\n  WHERE\n    entrepot.\"orders\".order_status = 'approved'\n    AND TRY_CAST(order_approved_at AS TIMESTAMP) BETWEEN TIMESTAMP '2017-01-01' AND TIMESTAMP '2017-12-31'\n    AND TRY_CAST(order_approved_at AS TIMESTAMP) IS NOT NULL\n  GROUP BY\n    semestre\n)\n\nSELECT\n  semestre,\n  chiffre_affaires,\n  CASE\n    WHEN semestre = 'Premier semestre' THEN 'Non'\n    WHEN semestre = 'Second semestre' AND chiffre_affaires > (\n      SELECT chiffre_affaires\n      FROM semestre_chiffre_affaires\n      WHERE semestre = 'Premier semestre'\n    ) THEN 'Oui'\n    ELSE 'Non'\n  END AS chiffre_affaires_superieur\nFROM\n  semestre_chiffre_affaires\nORDER BY\n  semestre;",
+  "produit_colonnes": [
+   "semestre",
+   "chiffre_affaires",
+   "chiffre_affaires_superieur"
+  ],
+  "produit_lignes": [
+   [
+    "Premier semestre",
+    "241.08",
+    "Non"
+   ]
+  ],
+  "produit_nb_lignes": 1,
+  "produit_nombres": {
+   "241.08": 1
+  },
+  "produit_erreur": "",
+  "categorie": "a_lire",
+  "preuve": "0 valeur(s) commune(s) sur 2 attendues : le chiffre differe, la cause demande une lecture"
+ },
+ {
+  "modele": "Mistral-Small-3.2-24B",
+  "question": "Combien de commandes en janvier 2018 contre janvier 2017 ?",
+  "famille": "comparaisons_periodes",
+  "piege": "",
+  "impossible": false,
+  "verdict": "faux",
+  "raison": "1 ligne(s) contre 2",
+  "sql_reference": "SELECT EXTRACT(year FROM TRY_CAST(order_purchase_timestamp AS TIMESTAMP)) AS annee,\n       COUNT(*) AS commandes\nFROM entrepot.orders\nWHERE EXTRACT(month FROM TRY_CAST(order_purchase_timestamp AS TIMESTAMP)) = 1\n  AND EXTRACT(year FROM TRY_CAST(order_purchase_timestamp AS TIMESTAMP)) IN (2017, 2018)\nGROUP BY 1 ORDER BY 1;",
+  "reference_lignes": [
+   [
+    "2017.00",
+    "800.00"
+   ],
+   [
+    "2018.00",
+    "7269.00"
+   ]
+  ],
+  "reference_nb_lignes": 2,
+  "reference_nombres": {
+   "2017.00": 1,
+   "800.00": 1,
+   "2018.00": 1,
+   "7269.00": 1
+  },
+  "sql_produit": "SELECT\n  COUNT(CASE WHEN TRY_CAST(order_purchase_timestamp AS TIMESTAMP) BETWEEN '2017-01-01' AND '2017-01-31' THEN order_id END) AS commandes_janvier_2017,\n  COUNT(CASE WHEN TRY_CAST(order_purchase_timestamp AS TIMESTAMP) BETWEEN '2018-01-01' AND '2018-01-31' THEN order_id END) AS commandes_janvier_2018\nFROM entrepot.\"orders\"",
+  "produit_colonnes": [
+   "commandes_janvier_2017",
+   "commandes_janvier_2018"
+  ],
+  "produit_lignes": [
+   [
+    "730.00",
+    "7013.00"
+   ]
+  ],
+  "produit_nb_lignes": 1,
+  "produit_nombres": {
+   "730.00": 1,
+   "7013.00": 1
+  },
+  "produit_erreur": "",
+  "categorie": "a_lire",
+  "preuve": "0 valeur(s) commune(s) sur 4 attendues : le chiffre differe, la cause demande une lecture"
+ },
+ {
+  "modele": "Mistral-Small-3.2-24B",
+  "question": "La note moyenne s'est-elle amelioree entre 2017 et 2018 ?",
+  "famille": "comparaisons_periodes",
+  "piege": "",
+  "impossible": false,
+  "verdict": "faux",
+  "raison": "584 ligne(s) contre 2",
+  "sql_reference": "SELECT EXTRACT(year FROM TRY_CAST(review_creation_date AS TIMESTAMP)) AS annee,\n       ROUND(AVG(review_score), 3) AS note_moyenne\nFROM entrepot.order_reviews\nWHERE EXTRACT(year FROM TRY_CAST(review_creation_date AS TIMESTAMP)) IN (2017, 2018)\nGROUP BY 1 ORDER BY 1;",
+  "reference_lignes": [
+   [
+    "2017.00",
+    "4.11"
+   ],
+   [
+    "2018.00",
+    "4.07"
+   ]
+  ],
+  "reference_nb_lignes": 2,
+  "reference_nombres": {
+   "2017.00": 1,
+   "4.11": 1,
+   "2018.00": 1,
+   "4.07": 1
+  },
+  "sql_produit": "WITH notes_par_annee AS (\n  SELECT\n    TRY_CAST(TRY_CAST(review_creation_date AS TIMESTAMP) AS DATE) AS date_avis,\n    EXTRACT(YEAR FROM TRY_CAST(TRY_CAST(review_creation_date AS TIMESTAMP) AS DATE)) AS annee,\n    AVG(review_score) AS note_moyenne\n  FROM entrepot.\"order_reviews\"\n  WHERE review_score IS NOT NULL\n  GROUP BY 1, 2\n)\n\nSELECT\n  annee,\n  note_moyenne\nFROM notes_par_annee\nWHERE annee IN (2017, 2018)\nORDER BY annee",
+  "produit_colonnes": [
+   "annee",
+   "note_moyenne"
+  ],
+  "produit_lignes": [
+   [
+    "2017.00",
+    "3.63"
+   ],
+   [
+    "2017.00",
+    "4.00"
+   ],
+   [
+    "2017.00",
+    "3.49"
+   ],
+   [
+    "2017.00",
+    "4.29"
+   ],
+   [
+    "2017.00",
+    "3.64"
+   ],
+   [
+    "2017.00",
+    "4.30"
+   ],
+   [
+    "2017.00",
+    "4.23"
+   ],
+   [
+    "2017.00",
+    "3.55"
+   ],
+   [
+    "2017.00",
+    "5.00"
+   ],
+   [
+    "2017.00",
+    "4.26"
+   ],
+   [
+    "2017.00",
+    "4.19"
+   ],
+   [
+    "2017.00",
+    "3.47"
+   ]
+  ],
+  "produit_nb_lignes": 584,
+  "produit_nombres": {
+   "2017.00": 342,
+   "3.63": 3,
+   "4.00": 20,
+   "3.49": 1,
+   "4.29": 12,
+   "3.64": 4,
+   "4.30": 14,
+   "4.23": 8,
+   "3.55": 4,
+   "5.00": 17,
+   "4.26": 13,
+   "4.19": 8,
+   "3.47": 1,
+   "4.05": 5,
+   "4.31": 10,
+   "4.38": 5,
+   "4.18": 16,
+   "3.44": 1,
+   "4.24": 21,
+   "4.51": 2,
+   "4.13": 10,
+   "3.35": 3,
+   "4.01": 6,
+   "3.93": 1,
+   "4.06": 9,
+   "4.33": 12,
+   "4.25": 21,
+   "3.65": 3,
+   "3.75": 3,
+   "4.20": 13,
+   "3.86": 8,
+   "1.00": 2,
+   "4.36": 8,
+   "4.14": 11,
+   "4.22": 9,
+   "3.57": 1,
+   "4.12": 5,
+   "4.44": 6,
+   "3.95": 4,
+   "2.83": 1,
+   "4.63": 1,
+   "3.73": 3,
+   "2.69": 2,
+   "3.32": 2,
+   "3.92": 5,
+   "3.67": 4,
+   "4.03": 4,
+   "3.70": 3,
+   "4.10": 11,
+   "3.98": 2,
+   "3.56": 1,
+   "3.80": 3,
+   "4.88": 1,
+   "3.50": 2,
+   "4.09": 7,
+   "4.08": 7,
+   "3.99": 4,
+   "4.16": 9,
+   "4.07": 8,
+   "4.04": 9,
+   "3.96": 1,
+   "3.88": 6,
+   "4.40": 3,
+   "3.76": 2,
+   "4.11": 7,
+   "4.39": 4,
+   "4.80": 2,
+   "4.17": 8,
+   "4.15": 10,
+   "4.37": 3,
+   "3.40": 1,
+   "4.27": 8,
+   "3.87": 3,
+   "4.75": 2,
+   "4.43": 3,
+   "4.21": 5,
+   "4.34": 3,
+   "3.31": 2,
+   "2.95": 1,
+   "4.28": 6,
+   "2.19": 1,
+   "3.00": 3,
+   "4.60": 3,
+   "3.91": 7,
+   "4.50": 3,
+   "4.93": 1,
+   "4.47": 1,
+   "2.97": 1,
+   "4.67": 3,
+   "4.56": 1,
+   "3.12": 3,
+   "3.97": 5,
+   "4.42": 2,
+   "3.94": 7,
+   "3.19": 1,
+   "3.79": 2,
+   "4.32": 6,
+   "2.86": 1,
+   "3.36": 1,
+   "3.25": 3,
+   "4.35": 3,
+   "3.26": 1,
+   "3.71": 2,
+   "3.77": 1,
+   "3.14": 1,
+   "3.83": 3,
+   "3.74": 6,
+   "3.81": 1,
+   "4.02": 3,
+   "3.43": 1,
+   "4.49": 2,
+   "3.46": 2,
+   "3.34": 1,
+   "3.82": 4,
+   "2018.00": 242,
+   "3.90": 1,
+   "3.69": 3,
+   "3.48": 1,
+   "4.54": 1,
+   "3.41": 1,
+   "3.89": 1,
+   "2.82": 1,
+   "3.02": 1,
+   "3.03": 1,
+   "4.71": 1,
+   "2.00": 2,
+   "3.33": 1,
+   "3.78": 2,
+   "4.46": 3,
+   "4.41": 1,
+   "2.70": 1,
+   "3.38": 1,
+   "2.67": 1,
+   "3.13": 1,
+   "3.45": 1,
+   "3.54": 1,
+   "3.68": 1,
+   "3.53": 1
+  },
+  "produit_erreur": "",
+  "categorie": "libelle",
+  "preuve": "les 4 valeurs de la reference sont toutes rendues, parmi 584 lignes contre 2"
+ },
+ {
+  "modele": "Mistral-Small-3.2-24B",
+  "question": "Le delai de livraison moyen a-t-il change entre 2017 et 2018 ?",
+  "famille": "comparaisons_periodes",
+  "piege": "",
+  "impossible": false,
+  "verdict": "faux",
+  "raison": "1 ligne(s) contre 2",
+  "sql_reference": "SELECT EXTRACT(year FROM TRY_CAST(order_purchase_timestamp AS TIMESTAMP)) AS annee,\n       ROUND(AVG(DATE_DIFF('day',\n              TRY_CAST(order_purchase_timestamp AS TIMESTAMP),\n              TRY_CAST(order_delivered_customer_date AS TIMESTAMP))), 2) AS delai_moyen_jours\nFROM entrepot.orders\nWHERE order_delivered_customer_date IS NOT NULL\n  AND EXTRACT(year FROM TRY_CAST(order_purchase_timestamp AS TIMESTAMP)) IN (2017, 2018)\nGROUP BY 1 ORDER BY 1;",
+  "reference_lignes": [
+   [
+    "2017.00",
+    "12.98"
+   ],
+   [
+    "2018.00",
+    "12.06"
+   ]
+  ],
+  "reference_nb_lignes": 2,
+  "reference_nombres": {
+   "2017.00": 1,
+   "12.98": 1,
+   "2018.00": 1,
+   "12.06": 1
+  },
+  "sql_produit": "WITH delais_2017 AS (SELECT AVG(CASE WHEN TRY_CAST(order_delivered_customer_date AS TIMESTAMP) IS NOT NULL AND TRY_CAST(order_purchase_timestamp AS TIMESTAMP) IS NOT NULL THEN DATE_DIFF('day', TRY_CAST(order_purchase_timestamp AS TIMESTAMP), TRY_CAST(order_delivered_customer_date AS TIMESTAMP)) ELSE NULL END) AS delai_moyen_2017 FROM entrepot.\"orders\" WHERE TRY_CAST(order_purchase_timestamp AS TIMESTAMP) BETWEEN '2017-01-01' AND '2017-12-31' AND NOT order_delivered_customer_date IS NULL), delais_2018 AS (SELECT AVG(CASE WHEN TRY_CAST(order_delivered_customer_date AS TIMESTAMP) IS NOT NULL AND TRY_CAST(order_purchase_timestamp AS TIMESTAMP) IS NOT NULL THEN DATE_DIFF('day', TRY_CAST(order_purchase_timestamp AS TIMESTAMP), TRY_CAST(order_delivered_customer_date AS TIMESTAMP)) ELSE NULL END) AS delai_moyen_2018 FROM entrepot.\"orders\" WHERE TRY_CAST(order_purchase_timestamp AS TIMESTAMP) BETWEEN '2018-01-01' AND '2018-12-31' AND NOT order_delivered_customer_date IS NULL) SELECT delais_2017.delai_moyen_2017, delais_2018.delai_moyen_2018, delais_2018.delai_moyen_2018 - delais_2017.delai_moyen_2017 AS difference FROM delais_2017, delais_2018",
+  "produit_colonnes": [
+   "delai_moyen_2017",
+   "delai_moyen_2018",
+   "difference"
+  ],
+  "produit_lignes": [
+   [
+    "12.98",
+    "12.06",
+    "-0.91"
+   ]
+  ],
+  "produit_nb_lignes": 1,
+  "produit_nombres": {
+   "12.98": 1,
+   "12.06": 1,
+   "-0.91": 1
+  },
+  "produit_erreur": "",
+  "categorie": "a_lire",
+  "preuve": "2 valeur(s) commune(s) sur 4 attendues : le chiffre differe, la cause demande une lecture"
+ },
+ {
+  "modele": "Mistral-Small-3.2-24B",
+  "question": "Quel trimestre de 2018 a le mieux marche en volume ?",
+  "famille": "comparaisons_periodes",
+  "piege": "",
+  "impossible": false,
+  "verdict": "faux",
+  "raison": "1 ligne(s) contre 4",
+  "sql_reference": "SELECT EXTRACT(quarter FROM TRY_CAST(order_purchase_timestamp AS TIMESTAMP)) AS trimestre,\n       COUNT(*) AS commandes\nFROM entrepot.orders\nWHERE EXTRACT(year FROM TRY_CAST(order_purchase_timestamp AS TIMESTAMP)) = 2018\nGROUP BY 1 ORDER BY commandes DESC;",
+  "reference_lignes": [
+   [
+    "1.00",
+    "21208.00"
+   ],
+   [
+    "2.00",
+    "19979.00"
+   ],
+   [
+    "3.00",
+    "12820.00"
+   ],
+   [
+    "4.00",
+    "4.00"
+   ]
+  ],
+  "reference_nb_lignes": 4,
+  "reference_nombres": {
+   "1.00": 1,
+   "21208.00": 1,
+   "2.00": 1,
+   "19979.00": 1,
+   "3.00": 1,
+   "12820.00": 1,
+   "4.00": 2
+  },
+  "sql_produit": "WITH trimestres_2018 AS (\n  SELECT\n    CASE\n      WHEN TRY_CAST(order_purchase_timestamp AS TIMESTAMP) BETWEEN TIMESTAMP '2018-01-01' AND TIMESTAMP '2018-03-31' THEN 'T1'\n      WHEN TRY_CAST(order_purchase_timestamp AS TIMESTAMP) BETWEEN TIMESTAMP '2018-04-01' AND TIMESTAMP '2018-06-30' THEN 'T2'\n      WHEN TRY_CAST(order_purchase_timestamp AS TIMESTAMP) BETWEEN TIMESTAMP '2018-07-01' AND TIMESTAMP '2018-09-30' THEN 'T3'\n      WHEN TRY_CAST(order_purchase_timestamp AS TIMESTAMP) BETWEEN TIMESTAMP '2018-10-01' AND TIMESTAMP '2018-12-31' THEN 'T4'\n    END AS trimestre,\n    COUNT(*) AS volume\n  FROM entrepot.\"orders\"\n  WHERE TRY_CAST(order_purchase_timestamp AS TIMESTAMP) BETWEEN TIMESTAMP '2018-01-01' AND TIMESTAMP '2018-12-31'\n  GROUP BY 1\n)\n\nSELECT\n  trimestre,\n  volume\nFROM trimestres_2018\nORDER BY volume DESC\nLIMIT 1",
+  "produit_colonnes": [
+   "trimestre",
+   "volume"
+  ],
+  "produit_lignes": [
+   [
+    "T1",
+    "21040.00"
+   ]
+  ],
+  "produit_nb_lignes": 1,
+  "produit_nombres": {
+   "21040.00": 1
+  },
+  "produit_erreur": "",
+  "categorie": "a_lire",
+  "preuve": "0 valeur(s) commune(s) sur 8 attendues : le chiffre differe, la cause demande une lecture"
+ }
+]

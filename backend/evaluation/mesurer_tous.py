@@ -135,9 +135,27 @@ def normaliser(lignes) -> list:
                 cellules.append(f"{round(float(valeur), DECIMALES):.{DECIMALES}f}")
             else:
                 texte = str(valeur).strip()
-                cellules.append(_temps(texte) or texte)
+                cellules.append(_nombre(texte) or _temps(texte) or texte)
         propres.append(cellules)
     return propres
+
+
+_NOMBRE = re.compile(r"^-?\d+(?:\.\d+)?$")
+
+
+def _nombre(texte: str) -> str | None:
+    """Une chaine qui represente un nombre est comparee comme un nombre.
+
+    Constate en reel le 23 septembre 2026 : un modele rend le trimestre en
+    texte (CAST(... AS VARCHAR), « 1 »), la reference le rend en nombre
+    (« 1.00 » apres arrondi). Meme valeur, meme regroupement ; les distinguer
+    mesurerait un choix de type, pas la justesse de la requete. La forme est
+    restreinte aux decimaux simples : « nan », « inf » ou une notation
+    scientifique restent du texte.
+    """
+    if not _NOMBRE.fullmatch(texte):
+        return None
+    return f"{round(float(texte), DECIMALES):.{DECIMALES}f}"
 
 
 def identique(obtenu: list, attendu: list) -> bool:
