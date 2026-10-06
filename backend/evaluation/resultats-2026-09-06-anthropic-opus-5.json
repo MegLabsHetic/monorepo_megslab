@@ -1,0 +1,1550 @@
+[
+ {
+  "n": 1,
+  "question": "Quelle marge degageons-nous sur les cinq familles de produits qui nous rapportent le plus ?",
+  "niveau": "moyen",
+  "famille": "impossible",
+  "piege": "Question partiellement seduisante : le chiffre d'affaires est calculable (prix de vente ligne a ligne), mais la marge ne l'est pas. Le schema ne contient aucun cout d'achat, prix de revient, cout unitaire fournisseur ni cout logistique reel. Deux substitutions fautives guettent l'assistant : (1) renvoyer le chiffre d'affaires en l'appelant marge, (2) soustraire les frais de port du prix de vente comme s'il s'agissait d'un cout, alors que ces frais sont factures au client, donc un produit et non une charge. Aucune jointure, aucune table de reference n'apporte cette donnee : la reponse honnete est de declarer la donnee absente et de proposer explicitement le chiffre d'affaires par famille comme repli, en le nommant pour ce qu'il est.",
+  "sql_reference": "IMPOSSIBLE",
+  "code_http": 201,
+  "sql_produit": null,
+  "nb_lignes": null,
+  "reponse": "La marge ne peut pas etre calculee avec ce schema : aucune table ne contient de cout d'achat, de cout de revient ou de prix de revient fournisseur. Les seules donnees monetaires disponibles sont le prix de vente (demo_order_items.price), les frais de port (freight_value) et les montants payes (demo_order_payments.payment_value), qui permettent de calculer un chiffre d'affaires mais pas une marge. Si vous le souhaitez, je peux vous donner le chiffre d'affaires des cinq categories de produits les plus vendeuses a la place.",
+  "resultat": null,
+  "cout": 0.023725,
+  "duree_ms": 9262,
+  "graphique": false,
+  "etapes": [
+   {
+    "agent": "data",
+    "statut": "terminee",
+    "duree_ms": 1673,
+    "detail": "10 table(s), 64 colonne(s), 1 937 163 ligne(s)",
+    "cout_dollars": 0.0,
+    "jetons": 0
+   },
+   {
+    "agent": "analyste",
+    "statut": "terminee",
+    "duree_ms": 7588,
+    "detail": "pas de requete possible",
+    "cout_dollars": 0.023725,
+    "jetons": 2559
+   },
+   {
+    "agent": "ml",
+    "statut": "ignoree",
+    "duree_ms": 0,
+    "detail": "pas de resultat",
+    "cout_dollars": 0.0,
+    "jetons": 0
+   },
+   {
+    "agent": "redacteur",
+    "statut": "ignoree",
+    "duree_ms": 0,
+    "detail": "rien a formuler",
+    "cout_dollars": 0.0,
+    "jetons": 0
+   },
+   {
+    "agent": "viz",
+    "statut": "ignoree",
+    "duree_ms": 0,
+    "detail": "pas de resultat",
+    "cout_dollars": 0.0,
+    "jetons": 0
+   }
+  ],
+  "secondes_mesurees": 9.3
+ },
+ {
+  "n": 2,
+  "question": "Par quel canal nos clients nous ont-ils connus, et lequel amene les acheteurs les plus depensiers ?",
+  "niveau": "facile",
+  "famille": "impossible",
+  "piege": "Aucune donnee d'acquisition marketing n'existe dans l'entrepot : pas de source de trafic, pas de campagne, pas de code de parrainage, pas d'horodatage d'inscription, pas de referent web. Le piege est la confusion de vocabulaire : le moyen de paiement (carte, virement, bon d'achat, versements) ressemble a un canal et peut etre pris pour tel, de meme que la ville ou l'Etat du client, qui donnent une segmentation geographique mais jamais un canal d'acquisition. Le second membre de la question (depense moyenne par acheteur) est bien calculable, ce qui rend la reponse partielle d'autant plus tentante ; il n'a aucun sens sans la dimension manquante. La reponse attendue est de dire que la donnee n'est pas collectee et qu'aucune colonne du schema ne s'en approche.",
+  "sql_reference": "IMPOSSIBLE",
+  "code_http": 201,
+  "sql_produit": null,
+  "nb_lignes": null,
+  "reponse": "Cette question ne peut pas etre traitee avec ce schema : aucune table ne renseigne le canal d'acquisition des clients (pas de source de trafic, de campagne marketing, de referent, ni de champ « canal » ou « origine »). Les tables disponibles decrivent les clients (localisation uniquement), les commandes, les articles, les paiements, les avis, les produits et les vendeurs. Le champ le plus proche, demo_order_payments.payment_type, designe le moyen de paiement (boleto, credit_card, debit_card, voucher) et non un canal d'acquisition. Si cela vous convient, je peux calculer la depense moyenne par client selon le moyen de paiement, ou le panier moyen par etat/ville du client.",
+  "resultat": null,
+  "cout": 0.010827,
+  "duree_ms": 6620,
+  "graphique": false,
+  "etapes": [
+   {
+    "agent": "data",
+    "statut": "terminee",
+    "duree_ms": 0,
+    "detail": "10 table(s), 64 colonne(s), 1 937 163 ligne(s) — deja en memoire",
+    "cout_dollars": 0.0,
+    "jetons": 0
+   },
+   {
+    "agent": "analyste",
+    "statut": "terminee",
+    "duree_ms": 6619,
+    "detail": "pas de requete possible",
+    "cout_dollars": 0.010827,
+    "jetons": 2771
+   },
+   {
+    "agent": "ml",
+    "statut": "ignoree",
+    "duree_ms": 0,
+    "detail": "pas de resultat",
+    "cout_dollars": 0.0,
+    "jetons": 0
+   },
+   {
+    "agent": "redacteur",
+    "statut": "ignoree",
+    "duree_ms": 0,
+    "detail": "rien a formuler",
+    "cout_dollars": 0.0,
+    "jetons": 0
+   },
+   {
+    "agent": "viz",
+    "statut": "ignoree",
+    "duree_ms": 0,
+    "detail": "pas de resultat",
+    "cout_dollars": 0.0,
+    "jetons": 0
+   }
+  ],
+  "secondes_mesurees": 6.7
+ },
+ {
+  "n": 3,
+  "question": "Quels sont les cinq États brésiliens où nos clients passent le plus de commandes ?",
+  "niveau": "facile",
+  "famille": "Classements et top-N",
+  "piege": "L'État n'existe pas dans la table des commandes : il faut passer par la table des clients, la jointure est obligatoire. Piège secondaire : chaque commande a sa propre ligne client dans ce jeu de données, donc compter les identifiants clients distincts répond à une autre question que celle posée (nombre de commandes, pas nombre d'acheteurs). Le tri secondaire sur l'État rend le classement déterministe en cas d'égalité.",
+  "sql_reference": "SELECT c.customer_state AS etat,\n       COUNT(*) AS nombre_commandes\nFROM demo_olist.orders AS o\nJOIN demo_olist.customers AS c\n  ON c.customer_id = o.customer_id\nGROUP BY c.customer_state\nORDER BY nombre_commandes DESC, etat ASC\nLIMIT 5;",
+  "code_http": 201,
+  "sql_produit": "SELECT c.customer_state AS etat, COUNT(DISTINCT o.order_id) AS nombre_commandes FROM entrepot.\"demo_orders\" AS o JOIN entrepot.\"demo_customers\" AS c ON c.customer_id = o.customer_id GROUP BY c.customer_state ORDER BY nombre_commandes DESC LIMIT 5",
+  "nb_lignes": null,
+  "reponse": "São Paulo domine très largement avec 41 746 commandes, soit plus du triple du deuxième État. Rio de Janeiro suit avec 12 852 commandes et le Minas Gerais avec 11 635. Viennent ensuite le Rio Grande do Sul (5 466 commandes) et le Paraná (5 045 commandes). La clientèle est donc fortement concentrée dans le Sud-Est du pays.",
+  "resultat": {
+   "colonnes": [
+    "etat",
+    "nombre_commandes"
+   ],
+   "lignes": [
+    [
+     "SP",
+     41746
+    ],
+    [
+     "RJ",
+     12852
+    ],
+    [
+     "MG",
+     11635
+    ],
+    [
+     "RS",
+     5466
+    ],
+    [
+     "PR",
+     5045
+    ]
+   ],
+   "tronque": false
+  },
+  "cout": 0.02873825,
+  "duree_ms": 9212,
+  "graphique": true,
+  "etapes": [
+   {
+    "agent": "data",
+    "statut": "terminee",
+    "duree_ms": 0,
+    "detail": "10 table(s), 64 colonne(s), 1 937 163 ligne(s) — deja en memoire",
+    "cout_dollars": 0.0,
+    "jetons": 0
+   },
+   {
+    "agent": "analyste",
+    "statut": "terminee",
+    "duree_ms": 5299,
+    "detail": "5 ligne(s)",
+    "cout_dollars": 0.012252,
+    "jetons": 3084
+   },
+   {
+    "agent": "ml",
+    "statut": "ignoree",
+    "duree_ms": 0,
+    "detail": "pas une serie a analyser",
+    "cout_dollars": 0.0,
+    "jetons": 0
+   },
+   {
+    "agent": "redacteur",
+    "statut": "terminee",
+    "duree_ms": 3912,
+    "detail": "",
+    "cout_dollars": 0.00905,
+    "jetons": 1036
+   },
+   {
+    "agent": "viz",
+    "statut": "terminee",
+    "duree_ms": 2751,
+    "detail": "barres",
+    "cout_dollars": 0.00743625,
+    "jetons": 935
+   }
+  ],
+  "secondes_mesurees": 9.3
+ },
+ {
+  "n": 4,
+  "question": "Quelles sont les dix familles de produits qui rapportent le plus de chiffre d'affaires, avec leur nom en anglais, en ne comptant que les commandes réellement livrées ?",
+  "niveau": "difficile",
+  "famille": "Classements et top-N",
+  "piege": "Trois pièges cumulés. (1) La traduction anglaise doit être jointe en LEFT JOIN : deux catégories n'ont aucune traduction et disparaîtraient d'un classement en jointure interne. (2) 610 produits n'ont pas de catégorie du tout, d'où le repli COALESCE plutôt qu'un filtre silencieux sur les nuls. (3) « Livrées » impose le filtre order_status = 'delivered' (96478 lignes sur 99441) ; et le chiffre d'affaires se calcule sur le prix des lignes de commande, pas sur les paiements, qui incluent le fret et se dupliquent quand une commande est réglée en plusieurs fois.",
+  "sql_reference": "SELECT COALESCE(t.product_category_name_english, p.product_category_name, 'sans_categorie') AS categorie,\n       ROUND(SUM(i.price), 2) AS chiffre_affaires\nFROM demo_olist.order_items AS i\nJOIN demo_olist.orders AS o\n  ON o.order_id = i.order_id\nJOIN demo_olist.products AS p\n  ON p.product_id = i.product_id\nLEFT JOIN demo_olist.product_category_name_translation AS t\n  ON t.product_category_name = p.product_category_name\nWHERE o.order_status = 'delivered'\nGROUP BY COALESCE(t.product_category_name_english, p.product_category_name, 'sans_categorie')\nORDER BY chiffre_affaires DESC\nLIMIT 10;",
+  "code_http": 201,
+  "sql_produit": "SELECT COALESCE(t.product_category_name_english, p.product_category_name) AS famille_produit_anglais, ROUND(SUM(oi.price), 2) AS chiffre_affaires, COUNT(DISTINCT o.order_id) AS nombre_commandes FROM entrepot.\"demo_order_items\" AS oi JOIN entrepot.\"demo_orders\" AS o ON o.order_id = oi.order_id JOIN entrepot.\"demo_products\" AS p ON p.product_id = oi.product_id LEFT JOIN entrepot.\"demo_product_category_name_translation\" AS t ON t.product_category_name = p.product_category_name WHERE o.order_status = 'delivered' AND NOT p.product_category_name IS NULL GROUP BY 1 ORDER BY chiffre_affaires DESC LIMIT 10",
+  "nb_lignes": null,
+  "reponse": "Sur les seules commandes livrées, la catégorie health_beauty arrive en tête avec 1 233 131,72 € de chiffre d'affaires pour 8 647 commandes, devant watches_gifts (1 166 176,98 € en seulement 5 495 commandes) et bed_bath_table (1 023 434,76 € pour 9 272 commandes, le plus grand nombre de commandes du classement). Suivent sports_leisure (954 852,55 €), computers_accessories (888 724,61 €) et furniture_decor (711 927,69 €). Le bas du top 10 réunit housewares (615 628,69 €), cool_stuff (610 204,10 €), auto (578 966,65 €) et toys (471 286,48 €). On note que watches_gifts et cool_stuff génèrent un chiffre d'affaires élevé avec relativement peu de commandes, signe d'un panier moyen plus important.",
+  "resultat": {
+   "colonnes": [
+    "famille_produit_anglais",
+    "chiffre_affaires",
+    "nombre_commandes"
+   ],
+   "lignes": [
+    [
+     "health_beauty",
+     1233131.72,
+     8647
+    ],
+    [
+     "watches_gifts",
+     1166176.98,
+     5495
+    ],
+    [
+     "bed_bath_table",
+     1023434.76,
+     9272
+    ],
+    [
+     "sports_leisure",
+     954852.55,
+     7530
+    ],
+    [
+     "computers_accessories",
+     888724.61,
+     6530
+    ],
+    [
+     "furniture_decor",
+     711927.69,
+     6307
+    ],
+    [
+     "housewares",
+     615628.69,
+     5743
+    ],
+    [
+     "cool_stuff",
+     610204.1,
+     3559
+    ],
+    [
+     "auto",
+     578966.65,
+     3810
+    ],
+    [
+     "toys",
+     471286.48,
+     3804
+    ]
+   ],
+   "tronque": false
+  },
+  "cout": 0.0344165,
+  "duree_ms": 12002,
+  "graphique": true,
+  "etapes": [
+   {
+    "agent": "data",
+    "statut": "terminee",
+    "duree_ms": 0,
+    "detail": "10 table(s), 64 colonne(s), 1 937 163 ligne(s) — deja en memoire",
+    "cout_dollars": 0.0,
+    "jetons": 0
+   },
+   {
+    "agent": "analyste",
+    "statut": "terminee",
+    "duree_ms": 6560,
+    "detail": "10 ligne(s)",
+    "cout_dollars": 0.019022,
+    "jetons": 3638
+   },
+   {
+    "agent": "ml",
+    "statut": "ignoree",
+    "duree_ms": 0,
+    "detail": "pas une serie a analyser",
+    "cout_dollars": 0.0,
+    "jetons": 0
+   },
+   {
+    "agent": "redacteur",
+    "statut": "terminee",
+    "duree_ms": 5441,
+    "detail": "",
+    "cout_dollars": 0.011204,
+    "jetons": 1548
+   },
+   {
+    "agent": "viz",
+    "statut": "terminee",
+    "duree_ms": 2850,
+    "detail": "barres",
+    "cout_dollars": 0.0041905,
+    "jetons": 1075
+   }
+  ],
+  "secondes_mesurees": 12.1
+ },
+ {
+  "n": 5,
+  "question": "Quels sont les cinq vendeurs qui ont réalisé le plus gros montant de ventes en 2018, et sur combien de commandes distinctes ?",
+  "niveau": "moyen",
+  "famille": "Classements et top-N",
+  "piege": "La date d'achat est stockée en texte : il faut la convertir en timestamp avant de borner l'année, sinon la comparaison est lexicographique et devient fausse dès qu'un format varie. Deuxième piège : une commande compte plusieurs lignes d'articles, donc COUNT(*) surestime les commandes — le comptage distinct sur l'identifiant de commande est obligatoire. Troisième piège : les 625 commandes annulées doivent sortir du montant vendu. Enfin, les ventes du vendeur se lisent sur les lignes de commande (le prix hors fret), pas sur la table des paiements.",
+  "sql_reference": "SELECT i.seller_id AS vendeur,\n       s.seller_city AS ville,\n       s.seller_state AS etat,\n       ROUND(SUM(i.price), 2) AS montant_vendu,\n       COUNT(DISTINCT i.order_id) AS commandes_distinctes\nFROM demo_olist.order_items AS i\nJOIN demo_olist.orders AS o\n  ON o.order_id = i.order_id\nJOIN demo_olist.sellers AS s\n  ON s.seller_id = i.seller_id\nWHERE o.order_status <> 'canceled'\n  AND CAST(o.order_purchase_timestamp AS timestamp) >= TIMESTAMP '2018-01-01 00:00:00'\n  AND CAST(o.order_purchase_timestamp AS timestamp) <  TIMESTAMP '2019-01-01 00:00:00'\nGROUP BY i.seller_id, s.seller_city, s.seller_state\nORDER BY montant_vendu DESC\nLIMIT 5;",
+  "code_http": 201,
+  "sql_produit": "SELECT oi.seller_id AS vendeur, ROUND(SUM(oi.price), 2) AS montant_ventes, COUNT(DISTINCT oi.order_id) AS nombre_commandes_distinctes FROM entrepot.\"demo_order_items\" AS oi JOIN entrepot.\"demo_orders\" AS o ON o.order_id = oi.order_id WHERE EXTRACT(YEAR FROM TRY_CAST(o.order_purchase_timestamp AS TIMESTAMP)) = 2018 GROUP BY oi.seller_id ORDER BY montant_ventes DESC LIMIT 5",
+  "nb_lignes": null,
+  "reponse": "En 2018, le vendeur 4869f7a5dfa277a7dca6462dcf3b52b2 arrive en tête avec 138 414,60 € de ventes réparties sur 723 commandes distinctes. Il est suivi de 955fee9216a65b617aa5c0531780ce60 (117 340,86 € sur 1 105 commandes, le volume de commandes le plus élevé du classement) et de 7d13fca15225358621be4086e1eb0964 (113 628,97 € sur 565 commandes). Viennent ensuite 1025f0e2d44d7041d6cf58b6550e0bfa avec 105 196,71 € sur 680 commandes et fa1c13f2614d7b5c4749cbc52fecda94 avec 95 013,42 € sur seulement 298 commandes, soit un panier moyen nettement plus élevé.",
+  "resultat": {
+   "colonnes": [
+    "vendeur",
+    "montant_ventes",
+    "nombre_commandes_distinctes"
+   ],
+   "lignes": [
+    [
+     "4869f7a5dfa277a7dca6462dcf3b52b2",
+     138414.6,
+     723
+    ],
+    [
+     "955fee9216a65b617aa5c0531780ce60",
+     117340.86,
+     1105
+    ],
+    [
+     "7d13fca15225358621be4086e1eb0964",
+     113628.97,
+     565
+    ],
+    [
+     "1025f0e2d44d7041d6cf58b6550e0bfa",
+     105196.71,
+     680
+    ],
+    [
+     "fa1c13f2614d7b5c4749cbc52fecda94",
+     95013.42,
+     298
+    ]
+   ],
+   "tronque": false
+  },
+  "cout": 0.0344965,
+  "duree_ms": 10132,
+  "graphique": true,
+  "etapes": [
+   {
+    "agent": "data",
+    "statut": "terminee",
+    "duree_ms": 0,
+    "detail": "10 table(s), 64 colonne(s), 1 937 163 ligne(s) — deja en memoire",
+    "cout_dollars": 0.0,
+    "jetons": 0
+   },
+   {
+    "agent": "analyste",
+    "statut": "terminee",
+    "duree_ms": 5886,
+    "detail": "5 ligne(s)",
+    "cout_dollars": 0.018917,
+    "jetons": 3953
+   },
+   {
+    "agent": "ml",
+    "statut": "ignoree",
+    "duree_ms": 0,
+    "detail": "pas une serie a analyser",
+    "cout_dollars": 0.0,
+    "jetons": 0
+   },
+   {
+    "agent": "redacteur",
+    "statut": "terminee",
+    "duree_ms": 4245,
+    "detail": "",
+    "cout_dollars": 0.010294,
+    "jetons": 1442
+   },
+   {
+    "agent": "viz",
+    "statut": "terminee",
+    "duree_ms": 3173,
+    "detail": "barres",
+    "cout_dollars": 0.0052855,
+    "jetons": 1154
+   }
+  ],
+  "secondes_mesurees": 10.2
+ },
+ {
+  "n": 6,
+  "question": "Combien de commandes avons-nous reçues chaque mois en 2017 ?",
+  "niveau": "facile",
+  "famille": "series_temporelles",
+  "piege": "Date en texte : la date d'achat est un VARCHAR, il faut la convertir avant de la tronquer au mois et de la comparer aux bornes de l'année. Un filtre paresseux du type LIKE '2017%' passerait ici par chance mais casse dès que le format change, et le tri du mois doit se faire sur la valeur convertie, pas sur la chaîne. Piège secondaire : ne pas joindre les articles, sinon chaque commande est comptée autant de fois qu'elle contient de lignes.",
+  "sql_reference": "SELECT\n    to_char(date_trunc('month', CAST(o.order_purchase_timestamp AS timestamp)), 'YYYY-MM') AS mois,\n    COUNT(*) AS nombre_commandes\nFROM demo_olist.orders o\nWHERE CAST(o.order_purchase_timestamp AS timestamp) >= TIMESTAMP '2017-01-01'\n  AND CAST(o.order_purchase_timestamp AS timestamp) <  TIMESTAMP '2018-01-01'\nGROUP BY 1\nORDER BY 1",
+  "code_http": 201,
+  "sql_produit": "SELECT STRFTIME(TRY_CAST(o.order_purchase_timestamp AS TIMESTAMP), '%Y-%m') AS mois, COUNT(DISTINCT o.order_id) AS nombre_commandes FROM entrepot.\"demo_orders\" AS o WHERE EXTRACT(YEAR FROM TRY_CAST(o.order_purchase_timestamp AS TIMESTAMP)) = 2017 GROUP BY 1 ORDER BY mois LIMIT 1000",
+  "nb_lignes": null,
+  "reponse": "En 2017, le volume de commandes progresse fortement au fil de l'année : de 800 commandes en janvier à 5 673 en décembre, avec un pic marqué en novembre à 7 544 commandes (effet Black Friday probable). Les mois d'été et d'automne se situent autour de 4 000 à 4 600 commandes (juillet 4 026, août 4 331, septembre 4 285, octobre 4 631), après un printemps plus contrasté (3 700 en mai, 3 245 en juin). Sur les 12 mois, la tendance est en hausse de +408 % entre le début et la fin de la droite ajustée (R² 0,85). Une projection linéaire, à prendre comme simple ordre de grandeur, donne environ 6 740 commandes en janvier 2018, 7 199 en février et 7 658 en mars.",
+  "resultat": {
+   "colonnes": [
+    "mois",
+    "nombre_commandes"
+   ],
+   "lignes": [
+    [
+     "2017-01",
+     800
+    ],
+    [
+     "2017-02",
+     1780
+    ],
+    [
+     "2017-03",
+     2682
+    ],
+    [
+     "2017-04",
+     2404
+    ],
+    [
+     "2017-05",
+     3700
+    ],
+    [
+     "2017-06",
+     3245
+    ],
+    [
+     "2017-07",
+     4026
+    ],
+    [
+     "2017-08",
+     4331
+    ],
+    [
+     "2017-09",
+     4285
+    ],
+    [
+     "2017-10",
+     4631
+    ],
+    [
+     "2017-11",
+     7544
+    ],
+    [
+     "2017-12",
+     5673
+    ]
+   ],
+   "tronque": false
+  },
+  "cout": 0.0297615,
+  "duree_ms": 9663,
+  "graphique": true,
+  "etapes": [
+   {
+    "agent": "data",
+    "statut": "terminee",
+    "duree_ms": 0,
+    "detail": "10 table(s), 64 colonne(s), 1 937 163 ligne(s) — deja en memoire",
+    "cout_dollars": 0.0,
+    "jetons": 0
+   },
+   {
+    "agent": "analyste",
+    "statut": "terminee",
+    "duree_ms": 4283,
+    "detail": "12 ligne(s)",
+    "cout_dollars": 0.016167,
+    "jetons": 4023
+   },
+   {
+    "agent": "ml",
+    "statut": "terminee",
+    "duree_ms": 0,
+    "detail": "hausse, 0 anomalie(s)",
+    "cout_dollars": 0.0,
+    "jetons": 0
+   },
+   {
+    "agent": "redacteur",
+    "statut": "terminee",
+    "duree_ms": 5378,
+    "detail": "",
+    "cout_dollars": 0.010289,
+    "jetons": 1469
+   },
+   {
+    "agent": "viz",
+    "statut": "terminee",
+    "duree_ms": 2532,
+    "detail": "lignes",
+    "cout_dollars": 0.0033055,
+    "jetons": 950
+   }
+  ],
+  "secondes_mesurees": 9.7
+ },
+ {
+  "n": 7,
+  "question": "Nos ventes du premier semestre ont-elles progressé entre 2017 et 2018, et de combien en pourcentage ?",
+  "niveau": "moyen",
+  "famille": "series_temporelles",
+  "piege": "Trois pièges cumulés. (1) Date en texte : il faut convertir avant d'extraire l'année et le mois, et « premier semestre » doit devenir un filtre sur les mois 1 à 6 des deux années, pas une comparaison d'années entières. (2) Statut à filtrer : les commandes annulées et indisponibles ne sont pas du chiffre d'affaires. (3) Source du montant : le chiffre d'affaires se calcule sur le prix des articles ; passer par les paiements gonfle le total (frais de port inclus, et plusieurs lignes de paiement par commande donc doublons). La jointure interne écarte au passage les 775 commandes sans aucun article, ce qui est le comportement voulu. Attention aussi à ne pas conclure trop vite : la hausse est massive parce que la boutique démarrait début 2017, pas parce que le premier semestre 2018 serait exceptionnel.",
+  "sql_reference": "WITH ventes_s1 AS (\n    SELECT\n        EXTRACT(YEAR FROM CAST(o.order_purchase_timestamp AS timestamp))::int AS annee,\n        SUM(i.price) AS chiffre_affaires\n    FROM demo_olist.orders o\n    JOIN demo_olist.order_items i ON i.order_id = o.order_id\n    WHERE o.order_status NOT IN ('canceled', 'unavailable')\n      AND EXTRACT(YEAR  FROM CAST(o.order_purchase_timestamp AS timestamp)) IN (2017, 2018)\n      AND EXTRACT(MONTH FROM CAST(o.order_purchase_timestamp AS timestamp)) BETWEEN 1 AND 6\n    GROUP BY 1\n)\nSELECT\n    ROUND(MAX(chiffre_affaires) FILTER (WHERE annee = 2017), 2) AS ca_s1_2017,\n    ROUND(MAX(chiffre_affaires) FILTER (WHERE annee = 2018), 2) AS ca_s1_2018,\n    ROUND(100.0 * (  MAX(chiffre_affaires) FILTER (WHERE annee = 2018)\n                   - MAX(chiffre_affaires) FILTER (WHERE annee = 2017))\n          / MAX(chiffre_affaires) FILTER (WHERE annee = 2017), 1) AS variation_pct\nFROM ventes_s1",
+  "code_http": 201,
+  "sql_produit": "WITH ventes_semestre AS (SELECT EXTRACT(YEAR FROM TRY_CAST(o.order_purchase_timestamp AS TIMESTAMP)) AS annee, SUM(oi.price) AS montant_ventes, COUNT(DISTINCT o.order_id) AS nombre_commandes FROM entrepot.\"demo_order_items\" AS oi JOIN entrepot.\"demo_orders\" AS o ON o.order_id = oi.order_id WHERE EXTRACT(YEAR FROM TRY_CAST(o.order_purchase_timestamp AS TIMESTAMP)) IN (2017, 2018) AND EXTRACT(MONTH FROM TRY_CAST(o.order_purchase_timestamp AS TIMESTAMP)) BETWEEN 1 AND 6 GROUP BY 1) SELECT ROUND(MAX(CASE WHEN annee = 2017 THEN montant_ventes END), 2) AS ventes_s1_2017, ROUND(MAX(CASE WHEN annee = 2018 THEN montant_ventes END), 2) AS ventes_s1_2018, ROUND(MAX(CASE WHEN annee = 2018 THEN montant_ventes END) - MAX(CASE WHEN annee = 2017 THEN montant_ventes END), 2) AS ecart_absolu, ROUND(100.0 * (MAX(CASE WHEN annee = 2018 THEN montant_ventes END) - MAX(CASE WHEN annee = 2017 THEN montant_ventes END)) / NULLIF(MAX(CASE WHEN annee = 2017 THEN montant_ventes END), 0), 2) AS evolution_pct, MAX(CASE WHEN annee = 2017 THEN nombre_commandes END) AS commandes_s1_2017, MAX(CASE WHEN annee = 2018 THEN nombre_commandes END) AS commandes_s1_2018 FROM ventes_semestre LIMIT 1000",
+  "nb_lignes": null,
+  "reponse": "Oui, les ventes du premier semestre ont fortement progressé entre 2017 et 2018. Elles passent de 2 040 997,16 € sur le S1 2017 à 5 635 712,25 € sur le S1 2018, soit un gain de 3 594 715,09 € et une hausse de 176,13 %. Le nombre de commandes suit la même dynamique, avec 14 431 commandes au S1 2017 contre 41 049 au S1 2018.",
+  "resultat": {
+   "colonnes": [
+    "ventes_s1_2017",
+    "ventes_s1_2018",
+    "ecart_absolu",
+    "evolution_pct",
+    "commandes_s1_2017",
+    "commandes_s1_2018"
+   ],
+   "lignes": [
+    [
+     2040997.16,
+     5635712.25,
+     3594715.09,
+     176.13,
+     14431,
+     41049
+    ]
+   ],
+   "tronque": false
+  },
+  "cout": 0.043071,
+  "duree_ms": 13622,
+  "graphique": false,
+  "etapes": [
+   {
+    "agent": "data",
+    "statut": "terminee",
+    "duree_ms": 0,
+    "detail": "10 table(s), 64 colonne(s), 1 937 163 ligne(s) — deja en memoire",
+    "cout_dollars": 0.0,
+    "jetons": 0
+   },
+   {
+    "agent": "analyste",
+    "statut": "terminee",
+    "duree_ms": 10148,
+    "detail": "1 ligne(s)",
+    "cout_dollars": 0.034262,
+    "jetons": 4910
+   },
+   {
+    "agent": "ml",
+    "statut": "ignoree",
+    "duree_ms": 0,
+    "detail": "pas une serie a analyser",
+    "cout_dollars": 0.0,
+    "jetons": 0
+   },
+   {
+    "agent": "redacteur",
+    "statut": "terminee",
+    "duree_ms": 3473,
+    "detail": "",
+    "cout_dollars": 0.008809,
+    "jetons": 1681
+   },
+   {
+    "agent": "viz",
+    "statut": "ignoree",
+    "duree_ms": 0,
+    "detail": "une seule ligne",
+    "cout_dollars": 0.0,
+    "jetons": 0
+   }
+  ],
+  "secondes_mesurees": 13.7
+ },
+ {
+  "n": 8,
+  "question": "Sur l'année 2018, mois par mois, combien de jours en moyenne les clients ont-ils attendu leur colis, et ce délai s'est-il amélioré d'un mois sur l'autre ?",
+  "niveau": "difficile",
+  "famille": "series_temporelles",
+  "piege": "Deux dates en texte à convertir avant de pouvoir les soustraire : une soustraction sur les chaînes brutes échoue, et un écart calculé sur des chaînes n'a aucun sens. Nuls à exclure : 2 965 commandes n'ont pas de date de réception client, il faut à la fois filtrer sur le statut livré et écarter explicitement les dates absentes (NULL comme chaîne vide) sinon la moyenne est faussée ou la conversion casse. La comparaison d'un mois sur l'autre demande une fonction de fenêtrage LAG appliquée au-dessus de l'agrégat, pas une auto-jointure sur le mois précédent. À noter : le résultat ne contient que huit mois, les commandes de septembre et octobre 2018 n'ayant pas encore de livraison enregistrée dans le jeu de données — c'est le comportement attendu, pas une erreur.",
+  "sql_reference": "WITH livraisons AS (\n    SELECT\n        date_trunc('month', CAST(o.order_purchase_timestamp AS timestamp)) AS mois,\n        EXTRACT(EPOCH FROM (  CAST(o.order_delivered_customer_date AS timestamp)\n                            - CAST(o.order_purchase_timestamp AS timestamp))) / 86400.0 AS jours\n    FROM demo_olist.orders o\n    WHERE o.order_status = 'delivered'\n      AND o.order_delivered_customer_date IS NOT NULL\n      AND o.order_delivered_customer_date <> ''\n      AND CAST(o.order_purchase_timestamp AS timestamp) >= TIMESTAMP '2018-01-01'\n      AND CAST(o.order_purchase_timestamp AS timestamp) <  TIMESTAMP '2019-01-01'\n)\nSELECT\n    to_char(mois, 'YYYY-MM') AS mois,\n    ROUND(AVG(jours)::numeric, 2) AS delai_moyen_jours,\n    ROUND((AVG(jours) - LAG(AVG(jours)) OVER (ORDER BY mois))::numeric, 2) AS variation_vs_mois_precedent\nFROM livraisons\nGROUP BY mois\nORDER BY mois",
+  "code_http": 201,
+  "sql_produit": "WITH delais AS (SELECT STRFTIME(TRY_CAST(o.order_purchase_timestamp AS TIMESTAMP), '%Y-%m') AS mois, DATE_DIFF('DAY', TRY_CAST(o.order_purchase_timestamp AS TIMESTAMP), TRY_CAST(o.order_delivered_customer_date AS TIMESTAMP)) AS delai_jours FROM entrepot.\"demo_orders\" AS o WHERE EXTRACT(YEAR FROM TRY_CAST(o.order_purchase_timestamp AS TIMESTAMP)) = 2018 AND NOT TRY_CAST(o.order_delivered_customer_date AS TIMESTAMP) IS NULL), agreges AS (SELECT mois, COUNT(*) AS nombre_commandes_livrees, ROUND(AVG(delai_jours), 2) AS delai_moyen_jours FROM delais GROUP BY mois) SELECT mois, nombre_commandes_livrees, delai_moyen_jours, ROUND(delai_moyen_jours - LAG(delai_moyen_jours) OVER (ORDER BY mois), 2) AS variation_vs_mois_precedent_jours, ROUND(100.0 * (delai_moyen_jours - LAG(delai_moyen_jours) OVER (ORDER BY mois)) / NULLIF(LAG(delai_moyen_jours) OVER (ORDER BY mois), 0), 2) AS variation_pct FROM agreges ORDER BY mois LIMIT 1000",
+  "nb_lignes": null,
+  "reponse": "Sur les huit premiers mois de 2018, le délai moyen de livraison est passé de 14,01 jours en janvier à 7,66 jours en août, soit une nette amélioration. Après une dégradation en février (16,88 jours, +2,87 jours soit +20,49 %), la tendance est baissière chaque mois : -0,64 jour en mars, -4,82 jours en avril (11,42 jours), puis 9,16 jours en juin (-19,22 %) et 8,89 jours en juillet, avant -1,23 jour en août (-13,84 %). Le volume de commandes livrées reste compris entre 6 096 et 7 069 par mois. Selon une projection linéaire (8 points, R² 0,60), le nombre de commandes livrées recule de 12 % entre le début et la fin de la droite ajustée, avec environ 6 072 en septembre, 5 956 en octobre et 5 839 en novembre — à prendre comme un simple ordre de grandeur.",
+  "resultat": {
+   "colonnes": [
+    "mois",
+    "nombre_commandes_livrees",
+    "delai_moyen_jours",
+    "variation_vs_mois_precedent_jours",
+    "variation_pct"
+   ],
+   "lignes": [
+    [
+     "2018-01",
+     7069,
+     14.01,
+     null,
+     null
+    ],
+    [
+     "2018-02",
+     6556,
+     16.88,
+     2.87,
+     20.49
+    ],
+    [
+     "2018-03",
+     7003,
+     16.24,
+     -0.64,
+     -3.79
+    ],
+    [
+     "2018-04",
+     6798,
+     11.42,
+     -4.82,
+     -29.68
+    ],
+    [
+     "2018-05",
+     6749,
+     11.34,
+     -0.08,
+     -0.7
+    ],
+    [
+     "2018-06",
+     6096,
+     9.16,
+     -2.18,
+     -19.22
+    ],
+    [
+     "2018-07",
+     6156,
+     8.89,
+     -0.27,
+     -2.95
+    ],
+    [
+     "2018-08",
+     6351,
+     7.66,
+     -1.23,
+     -13.84
+    ]
+   ],
+   "tronque": false
+  },
+  "cout": 0.0521565,
+  "duree_ms": 16081,
+  "graphique": true,
+  "etapes": [
+   {
+    "agent": "data",
+    "statut": "terminee",
+    "duree_ms": 0,
+    "detail": "10 table(s), 64 colonne(s), 1 937 163 ligne(s) — deja en memoire",
+    "cout_dollars": 0.0,
+    "jetons": 0
+   },
+   {
+    "agent": "analyste",
+    "statut": "terminee",
+    "duree_ms": 10172,
+    "detail": "8 ligne(s)",
+    "cout_dollars": 0.033422,
+    "jetons": 5086
+   },
+   {
+    "agent": "ml",
+    "statut": "terminee",
+    "duree_ms": 0,
+    "detail": "baisse, 0 anomalie(s)",
+    "cout_dollars": 0.0,
+    "jetons": 0
+   },
+   {
+    "agent": "redacteur",
+    "statut": "terminee",
+    "duree_ms": 5907,
+    "detail": "",
+    "cout_dollars": 0.014254,
+    "jetons": 2070
+   },
+   {
+    "agent": "viz",
+    "statut": "terminee",
+    "duree_ms": 3669,
+    "detail": "lignes",
+    "cout_dollars": 0.0044805,
+    "jetons": 1157
+   }
+  ],
+  "secondes_mesurees": 16.1
+ },
+ {
+  "n": 9,
+  "question": "Sur les colis effectivement recus par nos clients, quelle proportion est arrivee apres la date promise a la commande ?",
+  "niveau": "moyen",
+  "famille": "Defauts de qualite mesures",
+  "piege": "Triple piege. (1) Les 2965 commandes sans date de reception doivent sortir du denominateur : sinon elles comptent comme non-retard et diluent le taux, ou font echouer la conversion. (2) Il faut se limiter au statut 'delivered' : les 2963 commandes annulees, indisponibles, en cours ou juste expediees n'ont rien a comparer. (3) Les deux dates sont en VARCHAR, une comparaison texte donnerait un resultat faux car '2018-1...' se compare mal aux formats mixtes ; le CAST en timestamp puis la reduction au jour sont obligatoires (le client compare des jours promis, pas des heures). Reference verifiee sur l'entrepot : 96 470 colis retenus, 6 534 en retard, soit 6,77 %. Un candidat qui oublie le filtre de statut travaille sur 99 441 lignes et sous-estime le taux.",
+  "sql_reference": "SELECT\n    COUNT(*) AS colis_recus,\n    COUNT(*) FILTER (\n        WHERE CAST(o.order_delivered_customer_date AS timestamp)::date\n              > CAST(o.order_estimated_delivery_date AS timestamp)::date\n    ) AS colis_en_retard,\n    ROUND(\n        100.0 * COUNT(*) FILTER (\n            WHERE CAST(o.order_delivered_customer_date AS timestamp)::date\n                  > CAST(o.order_estimated_delivery_date AS timestamp)::date\n        ) / COUNT(*),\n        2\n    ) AS taux_retard_pct\nFROM demo_olist.orders o\nWHERE o.order_status = 'delivered'\n  AND o.order_delivered_customer_date IS NOT NULL\n  AND o.order_estimated_delivery_date IS NOT NULL;",
+  "code_http": 201,
+  "sql_produit": "SELECT COUNT(*) AS colis_livres, SUM(CASE WHEN TRY_CAST(o.order_delivered_customer_date AS TIMESTAMP) > TRY_CAST(o.order_estimated_delivery_date AS TIMESTAMP) THEN 1 ELSE 0 END) AS colis_en_retard, ROUND(100.0 * SUM(CASE WHEN TRY_CAST(o.order_delivered_customer_date AS TIMESTAMP) > TRY_CAST(o.order_estimated_delivery_date AS TIMESTAMP) THEN 1 ELSE 0 END) / NULLIF(COUNT(*), 0), 2) AS part_en_retard_pct, ROUND(AVG(CASE WHEN TRY_CAST(o.order_delivered_customer_date AS TIMESTAMP) > TRY_CAST(o.order_estimated_delivery_date AS TIMESTAMP) THEN DATE_DIFF('DAY', TRY_CAST(o.order_estimated_delivery_date AS TIMESTAMP), TRY_CAST(o.order_delivered_customer_date AS TIMESTAMP)) END), 2) AS retard_moyen_jours FROM entrepot.\"demo_orders\" AS o WHERE NOT TRY_CAST(o.order_delivered_customer_date AS TIMESTAMP) IS NULL AND NOT TRY_CAST(o.order_estimated_delivery_date AS TIMESTAMP) IS NULL LIMIT 1000",
+  "nb_lignes": null,
+  "reponse": "Sur les 96 476 colis effectivement livrés aux clients, 7 827 sont arrivés après la date de livraison promise lors de la commande, soit 8,11 % des livraisons. Pour ces colis en retard, le dépassement moyen atteint 8,87 jours au-delà de la date estimée. Autrement dit, environ neuf livraisons sur dix respectent l'engagement de délai.",
+  "resultat": {
+   "colonnes": [
+    "colis_livres",
+    "colis_en_retard",
+    "part_en_retard_pct",
+    "retard_moyen_jours"
+   ],
+   "lignes": [
+    [
+     96476,
+     7827,
+     8.11,
+     8.87
+    ]
+   ],
+   "tronque": false
+  },
+  "cout": 0.038905999999999996,
+  "duree_ms": 14060,
+  "graphique": false,
+  "etapes": [
+   {
+    "agent": "data",
+    "statut": "terminee",
+    "duree_ms": 0,
+    "detail": "10 table(s), 64 colonne(s), 1 937 163 ligne(s) — deja en memoire",
+    "cout_dollars": 0.0,
+    "jetons": 0
+   },
+   {
+    "agent": "analyste",
+    "statut": "terminee",
+    "duree_ms": 9112,
+    "detail": "1 ligne(s)",
+    "cout_dollars": 0.031617,
+    "jetons": 5301
+   },
+   {
+    "agent": "ml",
+    "statut": "ignoree",
+    "duree_ms": 0,
+    "detail": "pas une serie a analyser",
+    "cout_dollars": 0.0,
+    "jetons": 0
+   },
+   {
+    "agent": "redacteur",
+    "statut": "terminee",
+    "duree_ms": 4947,
+    "detail": "",
+    "cout_dollars": 0.007289,
+    "jetons": 1457
+   },
+   {
+    "agent": "viz",
+    "statut": "ignoree",
+    "duree_ms": 0,
+    "detail": "une seule ligne",
+    "cout_dollars": 0.0,
+    "jetons": 0
+   }
+  ],
+  "secondes_mesurees": 14.1
+ },
+ {
+  "n": 10,
+  "question": "Dans quels cinq etats bresiliens connaissons-nous le plus de points de localisation reellement differents ?",
+  "niveau": "difficile",
+  "famille": "Defauts de qualite mesures",
+  "piege": "Le referentiel geographique contient 1 000 163 lignes pour seulement 720 154 combinaisons uniques, soit 28 % de doublons purs. Un COUNT(*) direct par etat compte des repetitions et gonfle chaque total sans changer forcement le classement, ce qui rend l'erreur invisible a l'oeil : la reponse naive donne SP 404 268 / MG 126 336 / RJ 121 169 / RS 61 851 / PR 57 859, alors que la verite est SP 285 976 / MG 101 353 / RJ 78 836 / RS 48 093 / PR 45 059. Piege secondaire : dedoublonner sur le seul code postal serait aussi faux, un meme prefixe couvrant plusieurs coordonnees ; le DISTINCT doit porter sur la ligne entiere.",
+  "sql_reference": "SELECT\n    p.geolocation_state AS etat,\n    COUNT(*) AS points_distincts\nFROM (\n    SELECT DISTINCT\n        geolocation_zip_code_prefix,\n        geolocation_lat,\n        geolocation_lng,\n        geolocation_city,\n        geolocation_state\n    FROM demo_olist.geolocation\n) AS p\nGROUP BY p.geolocation_state\nORDER BY points_distincts DESC\nLIMIT 5;",
+  "code_http": 201,
+  "sql_produit": "SELECT g.geolocation_state AS etat, COUNT(DISTINCT (CAST(g.geolocation_lat AS TEXT) || '_' || CAST(g.geolocation_lng AS TEXT))) AS points_distincts, COUNT(*) AS lignes_totales FROM entrepot.\"demo_geolocation\" AS g WHERE NOT g.geolocation_state IS NULL GROUP BY g.geolocation_state ORDER BY points_distincts DESC LIMIT 5",
+  "nb_lignes": null,
+  "reponse": "São Paulo (SP) domine largement avec 274 019 points de localisation distincts pour 404 268 lignes enregistrées. Viennent ensuite le Minas Gerais (MG) avec 100 288 points distincts sur 126 336 lignes, puis Rio de Janeiro (RJ) avec 77 395 points distincts sur 121 169 lignes. Le Rio Grande do Sul (RS) et le Paraná (PR) complètent le classement, avec respectivement 47 533 et 44 436 coordonnées différentes. On note que le taux de doublons est plus marqué à SP et RJ, où les lignes totales dépassent nettement le nombre de points uniques.",
+  "resultat": {
+   "colonnes": [
+    "etat",
+    "points_distincts",
+    "lignes_totales"
+   ],
+   "lignes": [
+    [
+     "SP",
+     274019,
+     404268
+    ],
+    [
+     "MG",
+     100288,
+     126336
+    ],
+    [
+     "RJ",
+     77395,
+     121169
+    ],
+    [
+     "RS",
+     47533,
+     61851
+    ],
+    [
+     "PR",
+     44436,
+     57859
+    ]
+   ],
+   "tronque": false
+  },
+  "cout": 0.0358765,
+  "duree_ms": 11368,
+  "graphique": true,
+  "etapes": [
+   {
+    "agent": "data",
+    "statut": "terminee",
+    "duree_ms": 0,
+    "detail": "10 table(s), 64 colonne(s), 1 937 163 ligne(s) — deja en memoire",
+    "cout_dollars": 0.0,
+    "jetons": 0
+   },
+   {
+    "agent": "analyste",
+    "statut": "terminee",
+    "duree_ms": 6312,
+    "detail": "5 ligne(s)",
+    "cout_dollars": 0.024107,
+    "jetons": 5179
+   },
+   {
+    "agent": "ml",
+    "statut": "ignoree",
+    "duree_ms": 0,
+    "detail": "pas une serie a analyser",
+    "cout_dollars": 0.0,
+    "jetons": 0
+   },
+   {
+    "agent": "redacteur",
+    "statut": "terminee",
+    "duree_ms": 5054,
+    "detail": "",
+    "cout_dollars": 0.007939,
+    "jetons": 1207
+   },
+   {
+    "agent": "viz",
+    "statut": "terminee",
+    "duree_ms": 3657,
+    "detail": "barres",
+    "cout_dollars": 0.0038305,
+    "jetons": 991
+   }
+  ],
+  "secondes_mesurees": 11.4
+ },
+ {
+  "n": 11,
+  "question": "Les acheteurs qui prennent la peine de rediger un commentaire sur une commande bien recue sont-ils plus severes que ceux qui se contentent de mettre une note ?",
+  "niveau": "difficile",
+  "famille": "Defauts de qualite mesures",
+  "piege": "Deux defauts se cumulent. (1) 58 247 avis sur 99 224 (58,7 %) n'ont aucun message : la classe 'a redige un commentaire' ne se definit pas par la presence de la ligne d'avis mais par un texte non vide, et le test doit couvrir le NULL comme la chaine vide ou blanche (btrim), sinon des commentaires vides basculent du mauvais cote. (2) La question porte sur une commande bien recue : les 2 863 avis rattaches a des commandes annulees, indisponibles ou jamais livrees doivent sortir, sinon la note moyenne des redacteurs est tiree vers le bas par des colis absents et l'ecart est surestime. Reference verifiee : avec commentaire 39 090 avis a 3,77, sans commentaire 57 271 avis a 4,42 ; sans le filtre sur les commandes livrees on obtient 3,67 et 4,38, un ecart artificiellement plus large.",
+  "sql_reference": "SELECT\n    CASE\n        WHEN a.review_comment_message IS NULL\n             OR btrim(a.review_comment_message) = ''\n        THEN 'sans commentaire redige'\n        ELSE 'avec commentaire redige'\n    END AS groupe,\n    COUNT(*) AS nombre_avis,\n    ROUND(AVG(a.review_score), 2) AS note_moyenne\nFROM demo_olist.order_reviews a\nJOIN demo_olist.orders o ON o.order_id = a.order_id\nWHERE o.order_status = 'delivered'\nGROUP BY 1\nORDER BY 1;",
+  "code_http": 201,
+  "sql_produit": "SELECT CASE WHEN r.review_comment_message IS NULL OR TRIM(r.review_comment_message) = '' THEN 'Sans commentaire' ELSE 'Avec commentaire' END AS type_avis, COUNT(*) AS nombre_avis, ROUND(AVG(TRY_CAST(r.review_score AS DOUBLE)), 3) AS note_moyenne, ROUND(100.0 * SUM(CASE WHEN r.review_score <= 2 THEN 1 ELSE 0 END) / NULLIF(COUNT(*), 0), 2) AS part_notes_1_ou_2_pct, ROUND(100.0 * SUM(CASE WHEN r.review_score = 5 THEN 1 ELSE 0 END) / NULLIF(COUNT(*), 0), 2) AS part_notes_5_pct FROM entrepot.\"demo_order_reviews\" AS r JOIN entrepot.\"demo_orders\" AS o ON o.order_id = r.order_id WHERE o.order_status = 'delivered' AND NOT TRY_CAST(o.order_delivered_customer_date AS TIMESTAMP) IS NULL AND NOT r.review_score IS NULL GROUP BY 1 ORDER BY note_moyenne DESC LIMIT 1000",
+  "nb_lignes": null,
+  "reponse": "Oui, nettement. Sur les commandes effectivement livrees, les 39 085 avis accompagnes d'un commentaire affichent une note moyenne de 3,773, contre 4,417 pour les 57 268 avis sans texte, soit un ecart de plus de 0,6 point. La difference vient surtout des notes basses : 23,75 % des avis commentes sont des 1 ou 2, contre seulement 5,35 % des avis sans commentaire. Les 5 etoiles restent majoritaires dans les deux cas, mais moins souvent quand un commentaire est redige (52,29 % contre 63,95 %).",
+  "resultat": {
+   "colonnes": [
+    "type_avis",
+    "nombre_avis",
+    "note_moyenne",
+    "part_notes_1_ou_2_pct",
+    "part_notes_5_pct"
+   ],
+   "lignes": [
+    [
+     "Sans commentaire",
+     57268,
+     4.417,
+     5.35,
+     63.95
+    ],
+    [
+     "Avec commentaire",
+     39085,
+     3.773,
+     23.75,
+     52.29
+    ]
+   ],
+   "tronque": false
+  },
+  "cout": 0.042911500000000005,
+  "duree_ms": 13160,
+  "graphique": true,
+  "etapes": [
+   {
+    "agent": "data",
+    "statut": "terminee",
+    "duree_ms": 0,
+    "detail": "10 table(s), 64 colonne(s), 1 937 163 ligne(s) — deja en memoire",
+    "cout_dollars": 0.0,
+    "jetons": 0
+   },
+   {
+    "agent": "analyste",
+    "statut": "terminee",
+    "duree_ms": 8501,
+    "detail": "2 ligne(s)",
+    "cout_dollars": 0.029267,
+    "jetons": 5039
+   },
+   {
+    "agent": "ml",
+    "statut": "ignoree",
+    "duree_ms": 0,
+    "detail": "pas une serie a analyser",
+    "cout_dollars": 0.0,
+    "jetons": 0
+   },
+   {
+    "agent": "redacteur",
+    "statut": "terminee",
+    "duree_ms": 4658,
+    "detail": "",
+    "cout_dollars": 0.009109,
+    "jetons": 1517
+   },
+   {
+    "agent": "viz",
+    "statut": "terminee",
+    "duree_ms": 3245,
+    "detail": "barres",
+    "cout_dollars": 0.0045355,
+    "jetons": 1068
+   }
+  ],
+  "secondes_mesurees": 13.2
+ },
+ {
+  "n": 12,
+  "question": "Depuis le lancement, quel montant total les clients nous ont-ils réglé, et combien vaut un règlement en moyenne ?",
+  "niveau": "facile",
+  "famille": "Agregats simples sur une seule table",
+  "piege": "Doublons de granularite : une meme commande peut etre reglee en plusieurs fois (103 886 reglements pour seulement 99 440 commandes distinctes, cartes + bons d'achat). La moyenne demandee est donc une moyenne PAR REGLEMENT, pas par commande ; un agent qui divise le total par le nombre de commandes se trompe. Piege secondaire : une commande sur les 99 441 n'a aucun reglement, donc COUNT(DISTINCT order_id) ici ne redonne pas le total de la table des commandes. Verifie en reel : 103886 | 99440 | 16008872.12 | 154.10.",
+  "sql_reference": "SELECT\n    COUNT(*)                     AS nombre_reglements,\n    COUNT(DISTINCT order_id)     AS nombre_commandes_reglees,\n    ROUND(SUM(payment_value), 2) AS montant_total,\n    ROUND(AVG(payment_value), 2) AS montant_moyen_reglement\nFROM demo_olist.order_payments;",
+  "code_http": 201,
+  "sql_produit": "SELECT COUNT(*) AS nombre_reglements, ROUND(SUM(p.payment_value), 2) AS montant_total_regle, ROUND(AVG(p.payment_value), 2) AS montant_moyen_par_reglement, COUNT(DISTINCT p.order_id) AS commandes_concernees FROM entrepot.\"demo_order_payments\" AS p WHERE NOT p.payment_value IS NULL LIMIT 1000",
+  "nb_lignes": null,
+  "reponse": "Depuis le lancement, les clients ont réglé un montant total de 16 008 872,12 €, réparti sur 103 886 règlements. Le montant moyen d'un règlement s'établit à 154,10 €. Ces paiements couvrent 99 440 commandes distinctes, ce qui indique que certaines commandes font l'objet de plusieurs règlements.",
+  "resultat": {
+   "colonnes": [
+    "nombre_reglements",
+    "montant_total_regle",
+    "montant_moyen_par_reglement",
+    "commandes_concernees"
+   ],
+   "lignes": [
+    [
+     103886,
+     16008872.12,
+     154.1,
+     99440
+    ]
+   ],
+   "tronque": false
+  },
+  "cout": 0.025171,
+  "duree_ms": 9449,
+  "graphique": false,
+  "etapes": [
+   {
+    "agent": "data",
+    "statut": "terminee",
+    "duree_ms": 0,
+    "detail": "10 table(s), 64 colonne(s), 1 937 163 ligne(s) — deja en memoire",
+    "cout_dollars": 0.0,
+    "jetons": 0
+   },
+   {
+    "agent": "analyste",
+    "statut": "terminee",
+    "duree_ms": 6374,
+    "detail": "1 ligne(s)",
+    "cout_dollars": 0.020072,
+    "jetons": 4480
+   },
+   {
+    "agent": "ml",
+    "statut": "ignoree",
+    "duree_ms": 0,
+    "detail": "pas une serie a analyser",
+    "cout_dollars": 0.0,
+    "jetons": 0
+   },
+   {
+    "agent": "redacteur",
+    "statut": "terminee",
+    "duree_ms": 3074,
+    "detail": "",
+    "cout_dollars": 0.005099,
+    "jetons": 1071
+   },
+   {
+    "agent": "viz",
+    "statut": "ignoree",
+    "duree_ms": 0,
+    "detail": "une seule ligne",
+    "cout_dollars": 0.0,
+    "jetons": 0
+   }
+  ],
+  "secondes_mesurees": 9.5
+ },
+ {
+  "n": 13,
+  "question": "Quelle note moyenne les clients nous donnent-ils, et sur quelle part de leurs avis ont-ils vraiment pris la peine d'ecrire un commentaire ?",
+  "niveau": "facile",
+  "famille": "Agregats simples sur une seule table",
+  "piege": "Nuls a exclure : 58,7 % des avis n'ont pas de message. Il ne faut PAS compter les lignes totales comme des commentaires (COUNT(*) vs COUNT(colonne)), et il ne suffit pas de tester IS NOT NULL : une partie des messages absents sont des chaines vides ou blanches, d'ou le btrim(...) <> ''. Sans ce filtre on annonce 99 224 commentaires au lieu de 40 968. La note moyenne, elle, se calcule bien sur tous les avis : AVG ignore les nuls, il ne faut pas les remplacer par 0, ce qui ferait chuter la moyenne artificiellement. Verifie en reel : 99224 | 4.086 | 40968 | 41.3.",
+  "sql_reference": "SELECT\n    COUNT(*)                    AS nombre_avis,\n    ROUND(AVG(review_score), 3) AS note_moyenne,\n    COUNT(*) FILTER (\n        WHERE review_comment_message IS NOT NULL\n          AND btrim(review_comment_message) <> ''\n    )                           AS avis_avec_commentaire,\n    ROUND(\n        100.0 * COUNT(*) FILTER (\n            WHERE review_comment_message IS NOT NULL\n              AND btrim(review_comment_message) <> ''\n        ) / COUNT(*),\n        1\n    )                           AS part_avec_commentaire_pct\nFROM demo_olist.order_reviews;",
+  "code_http": 201,
+  "sql_produit": "SELECT COUNT(*) AS nombre_avis, ROUND(AVG(TRY_CAST(r.review_score AS DOUBLE)), 3) AS note_moyenne, SUM(CASE WHEN NOT r.review_comment_message IS NULL AND TRIM(r.review_comment_message) <> '' THEN 1 ELSE 0 END) AS avis_avec_commentaire, ROUND(100.0 * SUM(CASE WHEN NOT r.review_comment_message IS NULL AND TRIM(r.review_comment_message) <> '' THEN 1 ELSE 0 END) / NULLIF(COUNT(*), 0), 2) AS part_avec_commentaire_pct FROM entrepot.\"demo_order_reviews\" AS r WHERE NOT r.review_score IS NULL LIMIT 1000",
+  "nb_lignes": null,
+  "reponse": "Sur les 99 224 avis notés, la note moyenne s'établit à 4,086 sur 5, ce qui traduit une satisfaction globalement élevée. En revanche, seuls 40 968 avis sont accompagnés d'un commentaire rédigé, soit 41,29 % du total. Autrement dit, près de six clients sur dix se contentent d'attribuer une note sans laisser de texte.",
+  "resultat": {
+   "colonnes": [
+    "nombre_avis",
+    "note_moyenne",
+    "avis_avec_commentaire",
+    "part_avec_commentaire_pct"
+   ],
+   "lignes": [
+    [
+     99224,
+     4.086,
+     40968,
+     41.29
+    ]
+   ],
+   "tronque": false
+  },
+  "cout": 0.026221,
+  "duree_ms": 9974,
+  "graphique": false,
+  "etapes": [
+   {
+    "agent": "data",
+    "statut": "terminee",
+    "duree_ms": 0,
+    "detail": "10 table(s), 64 colonne(s), 1 937 163 ligne(s) — deja en memoire",
+    "cout_dollars": 0.0,
+    "jetons": 0
+   },
+   {
+    "agent": "analyste",
+    "statut": "terminee",
+    "duree_ms": 5962,
+    "detail": "1 ligne(s)",
+    "cout_dollars": 0.020022,
+    "jetons": 4178
+   },
+   {
+    "agent": "ml",
+    "statut": "ignoree",
+    "duree_ms": 0,
+    "detail": "pas une serie a analyser",
+    "cout_dollars": 0.0,
+    "jetons": 0
+   },
+   {
+    "agent": "redacteur",
+    "statut": "terminee",
+    "duree_ms": 4011,
+    "detail": "",
+    "cout_dollars": 0.006199,
+    "jetons": 1235
+   },
+   {
+    "agent": "viz",
+    "statut": "ignoree",
+    "duree_ms": 0,
+    "detail": "une seule ligne",
+    "cout_dollars": 0.0,
+    "jetons": 0
+   }
+  ],
+  "secondes_mesurees": 10.0
+ },
+ {
+  "n": 14,
+  "question": "Mois par mois sur l'annee 2018, combien de commandes avons-nous recues ?",
+  "niveau": "moyen",
+  "famille": "Agregats simples sur une seule table",
+  "piege": "Date en texte : la date d'achat est un VARCHAR, il faut la convertir (CAST(... AS timestamp)) avant de regrouper, de filtrer et de trier. Deux erreurs classiques : filtrer 2018 par comparaison de chaines ou par LIKE '2018%' au lieu d'un intervalle de dates, et regrouper sur le texte brut puis trier alphabetiquement. Second piege, d'interpretation : la periode s'arrete au 17 octobre 2018, donc septembre (16 commandes) et octobre (4) ne sont pas un effondrement du commerce mais la fin du jeu de donnees ; l'intervalle doit rester borne a droite par TIMESTAMP '2019-01-01' en exclusif pour ne pas rater le 31 decembre. Verifie en reel : 10 lignes, de 7269 commandes en janvier a 4 en octobre.",
+  "sql_reference": "SELECT\n    date_trunc('month', CAST(order_purchase_timestamp AS timestamp)) AS mois,\n    COUNT(*)                                                         AS nombre_commandes\nFROM demo_olist.orders\nWHERE order_purchase_timestamp IS NOT NULL\n  AND CAST(order_purchase_timestamp AS timestamp) >= TIMESTAMP '2018-01-01'\n  AND CAST(order_purchase_timestamp AS timestamp) <  TIMESTAMP '2019-01-01'\nGROUP BY 1\nORDER BY 1;",
+  "code_http": 201,
+  "sql_produit": "SELECT DATE_TRUNC('MONTH', TRY_CAST(o.order_purchase_timestamp AS TIMESTAMP)) AS mois, COUNT(*) AS nombre_commandes FROM entrepot.\"demo_orders\" AS o WHERE TRY_CAST(o.order_purchase_timestamp AS TIMESTAMP) >= CAST('2018-01-01 00:00:00' AS TIMESTAMP) AND TRY_CAST(o.order_purchase_timestamp AS TIMESTAMP) < CAST('2019-01-01 00:00:00' AS TIMESTAMP) GROUP BY 1 ORDER BY mois LIMIT 1000",
+  "nb_lignes": null,
+  "reponse": "En 2018, l'activité se concentre sur les huit premiers mois, avec des volumes assez stables : 7 269 commandes en janvier, 6 728 en février, 7 211 en mars, 6 939 en avril, 6 873 en mai, puis 6 167 en juin, 6 292 en juillet et 6 512 en août. La chute est ensuite brutale : seulement 16 commandes en septembre et 4 en octobre, et aucun enregistrement pour novembre et décembre. Une projection linéaire sur ces 10 points indique une baisse de -75 % entre le début et la fin de la droite ajustée (R² 0,58), avec environ 1 451 commandes attendues en novembre 2018, 732 en décembre et 14 en janvier 2019 — à prendre comme un simple ordre de grandeur. Ces chiffres suggèrent surtout que les données s'arrêtent en cours d'année plutôt qu'un effondrement réel de l'activité.",
+  "resultat": {
+   "colonnes": [
+    "mois",
+    "nombre_commandes"
+   ],
+   "lignes": [
+    [
+     "2018-01-01 00:00:00",
+     7269
+    ],
+    [
+     "2018-02-01 00:00:00",
+     6728
+    ],
+    [
+     "2018-03-01 00:00:00",
+     7211
+    ],
+    [
+     "2018-04-01 00:00:00",
+     6939
+    ],
+    [
+     "2018-05-01 00:00:00",
+     6873
+    ],
+    [
+     "2018-06-01 00:00:00",
+     6167
+    ],
+    [
+     "2018-07-01 00:00:00",
+     6292
+    ],
+    [
+     "2018-08-01 00:00:00",
+     6512
+    ],
+    [
+     "2018-09-01 00:00:00",
+     16
+    ],
+    [
+     "2018-10-01 00:00:00",
+     4
+    ]
+   ],
+   "tronque": false
+  },
+  "cout": 0.033986499999999996,
+  "duree_ms": 9426,
+  "graphique": true,
+  "etapes": [
+   {
+    "agent": "data",
+    "statut": "terminee",
+    "duree_ms": 0,
+    "detail": "10 table(s), 64 colonne(s), 1 937 163 ligne(s) — deja en memoire",
+    "cout_dollars": 0.0,
+    "jetons": 0
+   },
+   {
+    "agent": "analyste",
+    "statut": "terminee",
+    "duree_ms": 4438,
+    "detail": "10 ligne(s)",
+    "cout_dollars": 0.018257,
+    "jetons": 4121
+   },
+   {
+    "agent": "ml",
+    "statut": "terminee",
+    "duree_ms": 0,
+    "detail": "baisse, 0 anomalie(s)",
+    "cout_dollars": 0.0,
+    "jetons": 0
+   },
+   {
+    "agent": "redacteur",
+    "statut": "terminee",
+    "duree_ms": 4987,
+    "detail": "",
+    "cout_dollars": 0.012034,
+    "jetons": 1638
+   },
+   {
+    "agent": "viz",
+    "statut": "terminee",
+    "duree_ms": 2980,
+    "detail": "lignes",
+    "cout_dollars": 0.0036955,
+    "jetons": 1008
+   }
+  ],
+  "secondes_mesurees": 9.5
+ },
+ {
+  "n": 15,
+  "question": "Sur l'annee 2018, dans quels cinq Etats brisiliens avons-nous expedie le plus d'articles a nos clients, et pour quel montant total marchandise plus livraison ?",
+  "niveau": "moyen",
+  "famille": "Jointures sur trois tables ou plus",
+  "piege": "Trois pieges cumules. (1) Date en VARCHAR : le filtre sur 2018 impose un CAST(order_purchase_timestamp AS timestamp) ; une comparaison de chaines passerait ici par chance sur ce format ISO mais est fausse par principe et le modele doit le convertir. (2) Statut a filtrer : sans order_status = 'delivered', les 625 commandes annulees et les 609 indisponibles gonflent le compte d'articles jamais expedies. (3) Jointure orpheline : l'etat vient du client, pas de la commande, donc il faut passer par customers ; et les 775 commandes sans aucune ligne d'article disparaissent d'elles-memes avec le JOIN interne sur order_items, ce qui est le comportement voulu puisqu'on compte des articles. Resultat verifie : SP 26825 articles / 3327997.14, RJ 7275, MG 6871, RS 3168, PR 3105.",
+  "sql_reference": "SELECT c.customer_state AS etat,\n       COUNT(*) AS articles_livres,\n       ROUND(SUM(i.price + i.freight_value), 2) AS montant_total\nFROM demo_olist.orders o\nJOIN demo_olist.customers c ON c.customer_id = o.customer_id\nJOIN demo_olist.order_items i ON i.order_id = o.order_id\nWHERE o.order_status = 'delivered'\n  AND CAST(o.order_purchase_timestamp AS timestamp) >= TIMESTAMP '2018-01-01'\n  AND CAST(o.order_purchase_timestamp AS timestamp) < TIMESTAMP '2019-01-01'\nGROUP BY c.customer_state\nORDER BY articles_livres DESC\nLIMIT 5;",
+  "code_http": 201,
+  "sql_produit": "SELECT c.customer_state AS etat_client, COUNT(*) AS nombre_articles_expedies, ROUND(SUM(i.price), 2) AS montant_marchandise, ROUND(SUM(i.freight_value), 2) AS montant_livraison, ROUND(SUM(i.price + i.freight_value), 2) AS montant_total FROM entrepot.\"demo_orders\" AS o JOIN entrepot.\"demo_customers\" AS c ON c.customer_id = o.customer_id JOIN entrepot.\"demo_order_items\" AS i ON i.order_id = o.order_id WHERE TRY_CAST(o.order_purchase_timestamp AS TIMESTAMP) >= CAST('2018-01-01 00:00:00' AS TIMESTAMP) AND TRY_CAST(o.order_purchase_timestamp AS TIMESTAMP) < CAST('2019-01-01 00:00:00' AS TIMESTAMP) GROUP BY c.customer_state ORDER BY nombre_articles_expedies DESC LIMIT 5",
+  "nb_lignes": null,
+  "reponse": "En 2018, São Paulo domine largement avec 27 279 articles expédiés, pour un total de 3 391 562,39 R$ (2 975 757,23 R$ de marchandise et 415 805,16 R$ de livraison). Viennent ensuite Rio de Janeiro avec 7 495 articles et 1 070 221,14 R$ au total, puis Minas Gerais avec 6 957 articles et 1 007 881,36 R$. Le Rio Grande do Sul (3 204 articles, 460 221,74 R$) et le Paraná (3 148 articles, 453 245,39 R$) ferment ce top 5 à des niveaux très proches. À eux seuls, ces cinq États illustrent la forte concentration des expéditions sur le Sud-Est du pays, SP pesant à lui seul plus que les quatre autres réunis.",
+  "resultat": {
+   "colonnes": [
+    "etat_client",
+    "nombre_articles_expedies",
+    "montant_marchandise",
+    "montant_livraison",
+    "montant_total"
+   ],
+   "lignes": [
+    [
+     "SP",
+     27279,
+     2975757.23,
+     415805.16,
+     3391562.39
+    ],
+    [
+     "RJ",
+     7495,
+     906646.41,
+     163574.73,
+     1070221.14
+    ],
+    [
+     "MG",
+     6957,
+     857267.79,
+     150613.57,
+     1007881.36
+    ],
+    [
+     "RS",
+     3204,
+     387089.8,
+     73131.94,
+     460221.74
+    ],
+    [
+     "PR",
+     3148,
+     385875.82,
+     67369.57,
+     453245.39
+    ]
+   ],
+   "tronque": false
+  },
+  "cout": 0.0387415,
+  "duree_ms": 12144,
+  "graphique": true,
+  "etapes": [
+   {
+    "agent": "data",
+    "statut": "terminee",
+    "duree_ms": 0,
+    "detail": "10 table(s), 64 colonne(s), 1 937 163 ligne(s) — deja en memoire",
+    "cout_dollars": 0.0,
+    "jetons": 0
+   },
+   {
+    "agent": "analyste",
+    "statut": "terminee",
+    "duree_ms": 7401,
+    "detail": "5 ligne(s)",
+    "cout_dollars": 0.023042,
+    "jetons": 4242
+   },
+   {
+    "agent": "ml",
+    "statut": "ignoree",
+    "duree_ms": 0,
+    "detail": "pas une serie a analyser",
+    "cout_dollars": 0.0,
+    "jetons": 0
+   },
+   {
+    "agent": "redacteur",
+    "statut": "terminee",
+    "duree_ms": 4742,
+    "detail": "",
+    "cout_dollars": 0.010999,
+    "jetons": 1591
+   },
+   {
+    "agent": "viz",
+    "statut": "terminee",
+    "duree_ms": 3053,
+    "detail": "barres",
+    "cout_dollars": 0.0047005,
+    "jetons": 1141
+   }
+  ],
+  "secondes_mesurees": 12.2
+ },
+ {
+  "n": 16,
+  "question": "Quelles familles de produits affichent le panier moyen le plus eleve sur les commandes reellement livrees ? Donne-moi les cinq premieres, en ne retenant que les familles qui pesent au moins 300 commandes.",
+  "niveau": "difficile",
+  "famille": "Jointures sur trois tables ou plus",
+  "piege": "Le piege principal est la definition du panier moyen : c'est une moyenne par COMMANDE, pas par ligne d'article. Il faut donc agreger deux fois (d'abord SUM par couple categorie/commande, puis AVG), sinon un AVG direct sur order_items donne le prix moyen d'un article et non un panier. Deux pieges de qualite s'ajoutent : les 610 produits sans categorie, a exclure explicitement sinon ils forment un groupe NULL parasite ; et les 2 categories sans traduction anglaise (13 produits concernes), qu'un JOIN interne sur la table de traduction ferait disparaitre en silence -- d'ou le LEFT JOIN + COALESCE qui retombe sur le libelle portugais. Enfin le filtre de statut 'delivered' et le seuil de 300 commandes evitent qu'une categorie confidentielle a trois ventes chers rafle la premiere place. Resultat verifie : musical_instruments 330.91 (611 commandes), small_appliances 325.30, office_furniture 267.31, watches_gifts 230.09, construction_tools_construction 220.63.",
+  "sql_reference": "WITH panier_par_commande AS (\n    SELECT COALESCE(t.product_category_name_english, p.product_category_name) AS categorie,\n           i.order_id,\n           SUM(i.price + i.freight_value) AS montant\n    FROM demo_olist.order_items i\n    JOIN demo_olist.orders o ON o.order_id = i.order_id\n    JOIN demo_olist.products p ON p.product_id = i.product_id\n    LEFT JOIN demo_olist.product_category_name_translation t\n           ON t.product_category_name = p.product_category_name\n    WHERE o.order_status = 'delivered'\n      AND p.product_category_name IS NOT NULL\n    GROUP BY 1, 2\n)\nSELECT categorie,\n       COUNT(*) AS nb_commandes,\n       ROUND(AVG(montant), 2) AS panier_moyen\nFROM panier_par_commande\nGROUP BY categorie\nHAVING COUNT(*) >= 300\nORDER BY panier_moyen DESC\nLIMIT 5;",
+  "code_http": 201,
+  "sql_produit": "WITH lignes AS (SELECT o.order_id, COALESCE(t.product_category_name_english, p.product_category_name) AS famille_produit, SUM(i.price + i.freight_value) AS montant_commande_famille FROM entrepot.\"demo_orders\" AS o JOIN entrepot.\"demo_order_items\" AS i ON i.order_id = o.order_id JOIN entrepot.\"demo_products\" AS p ON p.product_id = i.product_id LEFT JOIN entrepot.\"demo_product_category_name_translation\" AS t ON t.product_category_name = p.product_category_name WHERE o.order_status = 'delivered' AND NOT p.product_category_name IS NULL GROUP BY o.order_id, COALESCE(t.product_category_name_english, p.product_category_name)) SELECT famille_produit, COUNT(*) AS nombre_commandes, ROUND(AVG(montant_commande_famille), 2) AS panier_moyen, ROUND(SUM(montant_commande_famille), 2) AS chiffre_affaires_total FROM lignes GROUP BY famille_produit HAVING COUNT(*) >= 300 ORDER BY panier_moyen DESC LIMIT 5",
+  "nb_lignes": null,
+  "reponse": "Sur les commandes effectivement livrées, ce sont les instruments de musique qui affichent le panier moyen le plus élevé, à 330,91 € pour 611 commandes et 202 187,12 € de chiffre d'affaires. Viennent ensuite le petit électroménager (325,30 € de panier moyen sur 609 commandes, 198 108,47 €) et le mobilier de bureau (267,31 € sur 1 254 commandes, 335 211,36 €). La catégorie montres et cadeaux se situe à 230,09 € de panier moyen mais domine largement en volume avec 5 495 commandes et 1 264 333,12 € de chiffre d'affaires. Enfin, les outils de construction ferment ce top 5 avec 220,63 € de panier moyen sur 736 commandes, pour 162 382,01 €.",
+  "resultat": {
+   "colonnes": [
+    "famille_produit",
+    "nombre_commandes",
+    "panier_moyen",
+    "chiffre_affaires_total"
+   ],
+   "lignes": [
+    [
+     "musical_instruments",
+     611,
+     330.91,
+     202187.12
+    ],
+    [
+     "small_appliances",
+     609,
+     325.3,
+     198108.47
+    ],
+    [
+     "office_furniture",
+     1254,
+     267.31,
+     335211.36
+    ],
+    [
+     "watches_gifts",
+     5495,
+     230.09,
+     1264333.12
+    ],
+    [
+     "construction_tools_construction",
+     736,
+     220.63,
+     162382.01
+    ]
+   ],
+   "tronque": false
+  },
+  "cout": 0.046671500000000005,
+  "duree_ms": 15216,
+  "graphique": true,
+  "etapes": [
+   {
+    "agent": "data",
+    "statut": "terminee",
+    "duree_ms": 0,
+    "detail": "10 table(s), 64 colonne(s), 1 937 163 ligne(s) — deja en memoire",
+    "cout_dollars": 0.0,
+    "jetons": 0
+   },
+   {
+    "agent": "analyste",
+    "statut": "terminee",
+    "duree_ms": 9817,
+    "detail": "5 ligne(s)",
+    "cout_dollars": 0.031362,
+    "jetons": 4902
+   },
+   {
+    "agent": "ml",
+    "statut": "ignoree",
+    "duree_ms": 0,
+    "detail": "pas une serie a analyser",
+    "cout_dollars": 0.0,
+    "jetons": 0
+   },
+   {
+    "agent": "redacteur",
+    "statut": "terminee",
+    "duree_ms": 5398,
+    "detail": "",
+    "cout_dollars": 0.011039,
+    "jetons": 1615
+   },
+   {
+    "agent": "viz",
+    "statut": "terminee",
+    "duree_ms": 3829,
+    "detail": "barres",
+    "cout_dollars": 0.0042705,
+    "jetons": 1103
+   }
+  ],
+  "secondes_mesurees": 15.3
+ },
+ {
+  "n": 17,
+  "question": "Les vendeurs de quelles regions mettent le plus de temps a faire arriver la commande chez le client ? Classe les cinq regions les plus lentes en jours, en ignorant celles qui totalisent moins de 200 commandes livrees.",
+  "niveau": "difficile",
+  "famille": "Jointures sur trois tables ou plus",
+  "piege": "Piege de doublon, le plus couteux ici : une meme commande contient souvent plusieurs articles du meme vendeur, donc joindre order_items a orders sans DISTINCT compte le delai de la commande autant de fois qu'elle a de lignes et pondere la moyenne vers les vendeurs a gros paniers. Mesure faite : 110 189 lignes d'articles pour seulement 97 811 couples (vendeur, commande) distincts, soit 12,6 % de surcomptage. S'y ajoutent les dates en VARCHAR (deux CAST AS timestamp obligatoires avant la soustraction, sinon Postgres refuse l'operateur), les 2 965 commandes sans date de livraison client a exclure (une soustraction sur NULL produit un NULL silencieux), le filtre de statut 'delivered', et le seuil de 200 commandes qui evite qu'un Etat a une poignee de ventes prenne la tete du classement. Resultat verifie : MA 17.7 jours (389 commandes), BA 13.9, SC 13.7, PR 13.4, ES 13.1.",
+  "sql_reference": "WITH livraison AS (\n    SELECT DISTINCT\n           i.seller_id,\n           o.order_id,\n           EXTRACT(EPOCH FROM (CAST(o.order_delivered_customer_date AS timestamp)\n                             - CAST(o.order_purchase_timestamp AS timestamp)))::numeric / 86400 AS jours\n    FROM demo_olist.order_items i\n    JOIN demo_olist.orders o ON o.order_id = i.order_id\n    WHERE o.order_status = 'delivered'\n      AND o.order_delivered_customer_date IS NOT NULL\n      AND o.order_purchase_timestamp IS NOT NULL\n)\nSELECT s.seller_state AS etat_vendeur,\n       COUNT(*) AS commandes_livrees,\n       ROUND(AVG(l.jours), 1) AS delai_moyen_jours\nFROM livraison l\nJOIN demo_olist.sellers s ON s.seller_id = l.seller_id\nGROUP BY s.seller_state\nHAVING COUNT(*) >= 200\nORDER BY delai_moyen_jours DESC\nLIMIT 5;",
+  "code_http": 201,
+  "sql_produit": "WITH commandes_vendeur AS (SELECT DISTINCT s.seller_state AS etat_vendeur, o.order_id, DATE_DIFF('DAY', TRY_CAST(o.order_purchase_timestamp AS TIMESTAMP), TRY_CAST(o.order_delivered_customer_date AS TIMESTAMP)) AS delai_jours FROM entrepot.\"demo_orders\" AS o JOIN entrepot.\"demo_order_items\" AS i ON i.order_id = o.order_id JOIN entrepot.\"demo_sellers\" AS s ON s.seller_id = i.seller_id WHERE o.order_status = 'delivered' AND NOT TRY_CAST(o.order_delivered_customer_date AS TIMESTAMP) IS NULL AND NOT TRY_CAST(o.order_purchase_timestamp AS TIMESTAMP) IS NULL) SELECT etat_vendeur, COUNT(*) AS nombre_commandes_livrees, ROUND(AVG(delai_jours), 2) AS delai_moyen_jours, ROUND(MEDIAN(delai_jours), 2) AS delai_median_jours FROM commandes_vendeur GROUP BY etat_vendeur HAVING COUNT(*) >= 200 ORDER BY delai_moyen_jours DESC LIMIT 5",
+  "nb_lignes": null,
+  "reponse": "Les vendeurs du Maranhão (MA) sont de loin les plus lents, avec un délai moyen de 17,64 jours entre l'achat et la livraison (médiane de 16 jours) sur 389 commandes livrées. Viennent ensuite Bahia (BA) avec 13,79 jours en moyenne sur 550 commandes, Santa Catarina (SC) avec 13,65 jours sur 3 603 commandes, puis le Paraná (PR) avec 13,33 jours sur un volume important de 7 512 commandes, et l'Espírito Santo (ES) avec 13,04 jours sur 310 commandes. Hormis MA, qui se détache nettement, les quatre autres régions se tiennent dans un mouchoir de poche, entre 13 et 13,8 jours, avec des médianes de 11 à 12 jours.",
+  "resultat": {
+   "colonnes": [
+    "etat_vendeur",
+    "nombre_commandes_livrees",
+    "delai_moyen_jours",
+    "delai_median_jours"
+   ],
+   "lignes": [
+    [
+     "MA",
+     389,
+     17.64,
+     16.0
+    ],
+    [
+     "BA",
+     550,
+     13.79,
+     12.0
+    ],
+    [
+     "SC",
+     3603,
+     13.65,
+     12.0
+    ],
+    [
+     "PR",
+     7512,
+     13.33,
+     11.0
+    ],
+    [
+     "ES",
+     310,
+     13.04,
+     11.0
+    ]
+   ],
+   "tronque": false
+  },
+  "cout": 0.049781500000000006,
+  "duree_ms": 16322,
+  "graphique": true,
+  "etapes": [
+   {
+    "agent": "data",
+    "statut": "terminee",
+    "duree_ms": 0,
+    "detail": "10 table(s), 64 colonne(s), 1 937 163 ligne(s) — deja en memoire",
+    "cout_dollars": 0.0,
+    "jetons": 0
+   },
+   {
+    "agent": "analyste",
+    "statut": "terminee",
+    "duree_ms": 10780,
+    "detail": "5 ligne(s)",
+    "cout_dollars": 0.034077,
+    "jetons": 5245
+   },
+   {
+    "agent": "ml",
+    "statut": "ignoree",
+    "duree_ms": 0,
+    "detail": "pas une serie a analyser",
+    "cout_dollars": 0.0,
+    "jetons": 0
+   },
+   {
+    "agent": "redacteur",
+    "statut": "terminee",
+    "duree_ms": 5541,
+    "detail": "",
+    "cout_dollars": 0.011334,
+    "jetons": 1658
+   },
+   {
+    "agent": "viz",
+    "statut": "terminee",
+    "duree_ms": 3117,
+    "detail": "barres",
+    "cout_dollars": 0.0043705,
+    "jetons": 1095
+   }
+  ],
+  "secondes_mesurees": 16.4
+ }
+]

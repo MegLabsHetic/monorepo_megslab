@@ -1,0 +1,104 @@
+==============================================================================
+  JEU D'EVALUATION MEGSLAB - CONSTRUCTION ET VERIFICATION DES REFERENCES
+  Entrepot : demo_olist  |  9 tables  |  1 547 942 lignes
+  Releve du 22 septembre 2026
+==============================================================================
+
+  Questions totales ................ 117
+  Avec reference SQL executable .... 105
+  References executees avec succes . 105   <-- 100 %
+  Questions sans reponse possible .. 12   (refus attendu)
+
+------------------------------------------------------------------------------
+  REPARTITION PAR FAMILLE
+------------------------------------------------------------------------------
+  famille                     quest.  verif.  imposs.
+  agregats_simples                12      12        0
+  classements                     12      12        0
+  comparaisons_periodes           10      10        0
+  geographie                      11      11        0
+  impossible                      12       0       12
+  jointures                       12      12        0
+  qualite_donnees                 13      13        0
+  ratios_taux                     11      11        0
+  series_temporelles              12      12        0
+  texte_libre                     12      12        0
+  TOTAL                          117     105       12
+
+  Niveaux : facile 14  |  moyen 55  |  difficile 48
+
+------------------------------------------------------------------------------
+  VALIDATION CROISEE AVEC LES CHIFFRES DEJA PUBLIES AU MEMOIRE
+------------------------------------------------------------------------------
+  Commandes sans date de livraison       memoire    2 965   mesure    2 965   OK
+  Avis sans message (NULL)               memoire   58 247   mesure   58 247   OK
+
+------------------------------------------------------------------------------
+  CE QUE LE CORPUS DE TEXTE LIBRE CONTIENT  (nouvelle famille)
+------------------------------------------------------------------------------
+  Avis avec un message ecrit                          40968
+  Longueur moyenne (caracteres)                        68.7
+  Mentionnant un probleme de livraison                 7349
+  Titre rempli, message vide                           1729
+  Message ne contenant que des espaces                    9
+
+  Longueur du commentaire selon la note :
+     note 1  ->    99.9 caracteres   (8745 avis)
+     note 2  ->    96.8 caracteres   (2145 avis)
+     note 3  ->    83.3 caracteres   (3557 avis)
+
+------------------------------------------------------------------------------
+  ECHANTILLON DE REFERENCES VERIFIEES
+------------------------------------------------------------------------------
+
+  [agregats_simples/facile]
+  Q. Combien de commandes avons-nous au total ?
+     | SELECT COUNT(*) AS nombre_commandes FROM entrepot.orders;
+  -> 1 ligne(s)  [['99441']]
+
+  [agregats_simples/facile]
+  Q. Combien de clients distincts avons-nous ?
+     | SELECT COUNT(DISTINCT customer_unique_id) AS clients FROM entrepot.customers;
+  -> 1 ligne(s)  [['96096']]
+
+  [agregats_simples/facile]
+  Q. Combien de vendeurs sont referencés ?
+     | SELECT COUNT(*) AS vendeurs FROM entrepot.sellers;
+  -> 1 ligne(s)  [['3095']]
+
+  [agregats_simples/facile]
+  Q. Combien de produits differents vendons-nous ?
+     | SELECT COUNT(*) AS produits FROM entrepot.products;
+  -> 1 ligne(s)  [['32951']]
+
+  [agregats_simples/facile]
+  Q. Quel est le montant total des paiements enregistres ?
+     | SELECT ROUND(SUM(payment_value), 2) AS total_paiements FROM entrepot.order_payments;
+  -> 1 ligne(s)  [['16008872.12']]
+
+  [agregats_simples/moyen]
+  Q. Quel est le panier moyen par commande, hors frais de port ?
+     | SELECT ROUND(AVG(total), 2) AS panier_moyen
+     | FROM (SELECT order_id, SUM(price) AS total
+     |       FROM entrepot.order_items GROUP BY order_id) AS t;
+  -> 1 ligne(s)  [['137.75']]
+
+------------------------------------------------------------------------------
+  EXEMPLES DE QUESTIONS SANS REPONSE POSSIBLE  (le refus est la bonne reponse)
+------------------------------------------------------------------------------
+
+  Q. Quelle marge realisons-nous sur chaque categorie de produits ?
+     piege : Aucun cout d'achat dans le schema. Le CA est calculable, la marge non. Repli honnete : proposer le C
+
+  Q. Par quel canal marketing nos clients nous ont-ils connus ?
+     piege : Aucune donnee d'acquisition. Rien dans le schema n'en approche.
+
+  Q. Quel est l'age moyen de nos clients ?
+     piege : Aucune donnee demographique. Ni date de naissance ni tranche d'age.
+
+  Q. Combien de clients se sont desabonnes de notre newsletter ce mois-ci ?
+     piege : Aucune table de contact ni d'abonnement.
+
+==============================================================================
+  105/105 references s'executent contre l'entrepot reel. Aucune n'a echoue.
+==============================================================================

@@ -1,0 +1,101 @@
+"""Le parcours connecter -> synchroniser -> suivre le statut fonctionne via l'API."""
+
+import jwt
+from httpx import ASGITransport, AsyncClient
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.core.airbyte_client import AirbyteClient, get_airbyte_client
+from app.core.config import get_settings
+from app.core.database import get_db
+from app.main import create_app
+from app.models.membership import Membership, Role
+from app.models.organization import Organization
+from app.models.user import User
+from app.models.workspace import Workspace
+from app.models.workspace_access import WorkspaceAccess
+from app.services.auth_service import ALGORITHME_JWT
+
+ESPACE_ID = "espace-test"
+
+
+async def _client_authentifie(db: AsyncSession, airbyte_client: AirbyteClient) -> AsyncClient:
+    utilisateur = User(email="ada@example.com", nom_complet="Ada")
+    organisation = Organization(nom="Acme")
+    db.add_all([utilisateur, organisation])
+    await db.flush()
+    espace = Workspace(
+        id=ESPACE_ID,
+        organization_id=organisation.id,
+        nom="General",
+        airbyte_workspace_id="workspace-test",
+        airbyte_destination_id="destination-test",
+        schema_entrepot=f"org_{organisation.id}",
+    )
+    db.add(espace)
+    await db.flush()
+    db.add_all(
+        [
+            Membership(user_id=utilisateur.id, organization_id=organisation.id, role=Role.OWNER),
+            WorkspaceAccess(user_id=utilisateur.id, workspace_id=espace.id, role=Role.ADMIN),
+        ]
+    )
+    await db.commit()
+
+    jeton = jwt.encode({"sub": utilisateur.id}, get_settings().jwt_secret, algorithm=ALGORITHME_JWT)
+
+    app = create_app()
+
+    async def db_de_test():
+        yield db
+
+    app.dependency_overrides[get_db] = db_de_test
+    app.dependency_overrides[get_airbyte_client] = lambda: airbyte_client
+    transport = ASGITransport(app=app)
+    return AsyncClient(
+        transport=transport, base_url="http://test", headers={"Authorization": f"Bearer {jeton}"}
+    )
+
+
+async def test_connecter_puis_synchroniser_puis_suivre_le_statut(
+    db: AsyncSession, airbyte_client_factice: AirbyteClient
+) -> None:
+    async with await _client_authentifie(db, airbyte_client_factice) as client:
+        reponse_connexion = await client.post(
+            f"/espaces/{ESPACE_ID}/sources",
+            json={
+                "nom": "Ma base",
+                "host": "hote",
+                "port": 5432,
+                "database": "base",
+                "username": "user",
+                "mot_de_passe": "mdp",
+            },
+        )
+        assert reponse_connexion.status_code == 201
+        corps = reponse_connexion.json()
+        assert corps["statut"] == "connectee"
+        assert corps["flux_disponibles"] == [
+            {"nom": "customers", "namespace": "public", "colonnes": []}
+        ]
+        assert corps["nb_tables"] == 1
+
+        reponse_liste = await client.get(f"/espaces/{ESPACE_ID}/sources")
+        assert reponse_liste.status_code == 200
+        assert [s["id"] for s in reponse_liste.json()] == [corps["id"]]
+
+        reponse_sync = await client.post(
+            f"/espaces/{ESPACE_ID}/sources/{corps['id']}/synchroniser", json={"flux": ["customers"]}
+        )
+        assert reponse_sync.status_code == 200
+        job_id = reponse_sync.json()["job_id"]
+
+        reponse_statut = await client.get(
+            f"/espaces/{ESPACE_ID}/sources/{corps['id']}/synchronisation/{job_id}"
+        )
+        assert reponse_statut.status_code == 200
+        assert reponse_statut.json()["statut"] == "succeeded"
+
+        reponse_detail = await client.get(f"/espaces/{ESPACE_ID}/sources/{corps['id']}")
+        assert reponse_detail.status_code == 200
+        assert reponse_detail.json()["flux_selectionnes"] == ["customers"]
+        assert reponse_detail.json()["statut"] == "prete"

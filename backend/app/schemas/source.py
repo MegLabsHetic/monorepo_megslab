@@ -1,0 +1,137 @@
+"""Contrats d'entree/sortie des routes de connexion de sources."""
+
+from datetime import datetime
+
+from pydantic import BaseModel, Field
+
+
+class TypeConnecteurReponse(BaseModel):
+    cle: str
+    libelle: str
+    port_defaut: int
+
+
+class SourceImportableReponse(BaseModel):
+    """Une source presente dans Airbyte mais pas encore referencee par MegsLab."""
+
+    id: str
+    nom: str
+    type_source: str
+
+
+class ConnexionBaseDemande(BaseModel):
+    # Le port par defaut depend du type ; l'interface le pre-remplit depuis
+    # GET /sources/connecteurs.
+    type_source: str = "postgres"
+    nom: str = Field(min_length=1)
+    host: str = Field(min_length=1)
+    port: int = 5432
+    database: str = Field(min_length=1)
+    username: str = Field(min_length=1)
+    mot_de_passe: str
+
+
+class FluxReponse(BaseModel):
+    nom: str
+    namespace: str
+    colonnes: list[str]
+
+
+class SourceReponse(BaseModel):
+    """Vue complete d'une source : ce que le catalogue et la fiche detail affichent."""
+
+    id: str
+    nom: str
+    type_source: str
+    statut: str
+    schema_entrepot: str
+    nb_tables: int
+    nb_colonnes: int
+    flux_disponibles: list[FluxReponse]
+    flux_selectionnes: list[str]
+    cree_le: datetime
+    # Ce que la derniere synchronisation reussie a copie, et quand.
+    planification: str = "manuelle"
+    lignes_synchronisees: int | None = None
+    derniere_sync_le: datetime | None = None
+    # Nul pour une source fichier (aucun objet Airbyte) ou si l'URL publique
+    # d'Airbyte n'est pas configuree.
+    lien_airbyte: str | None = None
+
+
+class SynchronisationDemande(BaseModel):
+    flux: list[str] = Field(min_length=1)
+
+
+class PlanificationDemande(BaseModel):
+    # manuelle, horaire, quotidienne ou hebdomadaire
+    frequence: str
+
+
+class ColonneSanteReponse(BaseModel):
+    nom: str
+    type: str
+    pourcentage_nuls: float
+    # Sur un echantillon de vingt mille lignes : sert a reperer une categorie ou une constante.
+    distinctes_echantillon: int
+    modalites: list[str] | None
+
+
+class TableSanteReponse(BaseModel):
+    nom: str
+    nb_lignes: int
+    colonnes: list[ColonneSanteReponse]
+    alertes: list[str]
+
+
+class SanteReponse(BaseModel):
+    """Ce que l'entrepot dit de cette source, table par table, et ce qui merite un regard.
+
+    Les alertes sont des regles explicites (table vide, colonne vide, colonne
+    constante, donnees anciennes), pas un score.
+    """
+
+    derniere_sync_le: datetime | None
+    lignes_synchronisees: int | None
+    alertes: list[str]
+    tables: list[TableSanteReponse]
+
+
+class SynchronisationReponse(BaseModel):
+    job_id: int
+
+
+class StatutSyncReponse(BaseModel):
+    statut: str
+    lignes_synchronisees: int | None = None
+
+
+class TableReponse(BaseModel):
+    nom: str
+    nb_lignes: int
+
+
+class ApercuReponse(BaseModel):
+    colonnes: list[str]
+    lignes: list[list]
+    tronque: bool
+
+
+class ProfilColonneReponse(BaseModel):
+    """Le profil d'une colonne, tel que le moteur l'a calcule.
+
+    Les champs numeriques sont optionnels : ils n'ont pas de sens sur une
+    colonne de texte, et on prefere ne rien afficher plutot qu'un zero invente.
+    """
+
+    colonne: str
+    type: str
+    nb_valeurs: int | None = None
+    pourcentage_nuls: float | None = None
+    # DuckDB compte les valeurs distinctes de facon approximative (HyperLogLog) :
+    # sur une petite table l'estimation peut depasser le nombre de lignes. Le nom
+    # dit l'approximation pour qu'aucune interface ne l'affiche comme un exact.
+    valeurs_distinctes_approx: int | None = None
+    minimum: str | None = None
+    maximum: str | None = None
+    moyenne: str | None = None

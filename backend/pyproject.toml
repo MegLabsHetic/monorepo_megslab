@@ -1,0 +1,22 @@
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+# Les tests d'integration parlent a de vrais services (entrepot, Airbyte) et
+# supposent le tunnel de lecture ouvert : `pytest` doit rester vert sans eux.
+# Pour les lancer : `pytest -m integration`.
+addopts = "-m 'not integration'"
+markers = [
+    "integration: necessite un service externe reel (base de donnees, cle API)",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+# Fichiers generes par `alembic revision --autogenerate` : pas de notre ressort.
+extend-exclude = ["alembic/versions"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP"]
+
+[tool.black]
+line-length = 100
+target-version = ["py312"]
